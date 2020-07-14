@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  test-ssh:
+    container_name: test-ssh
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    image: test-ssh:latest
+    networks:
+      - guacamole-net
+

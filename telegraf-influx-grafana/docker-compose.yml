@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  influxdb:
+    container_name: influxdb
+    image: influxdb:latest
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb:/var/lib/influxdb
+    networks:
+      - monitoring
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:latest
+    depends_on:
+      - influxdb
+    volumes:
+      - $PWD/conf:/etc/telegraf
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - monitoring
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    depends_on:
+      - influxdb
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+
+volumes:
+  influxdb:
+  grafana:
+
+networks:
+  monitoring:

@@ -1,0 +1,38 @@
+version: '3'
+
+services: 
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    env_file:
+      - mysql.env
+    environment:
+      MYSQL_DATABASE: db-wordpress
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - $PWD/data:/var/lib/mysql
+    networks:
+      - mysql-net
+
+  wordpress:
+    container_name: wp-web
+    image: wordpress:latest
+    depends_on:
+      - mysql
+    env_file:
+      - wordpress.env
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: db-wordpress
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - $PWD/html:/var/www/html
+    networks:
+      - mysql-net
+
+networks:
+  mysql-net:

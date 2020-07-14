@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  zabbix:
+    container_name: zabbix-web
+    build: .
+    image: zabbix
+    ports:
+      - "80:80"
+    volumes:
+      - $PWD/html:/usr/share/zabbix
+    networks:
+      - zabbix-net
+
+  db:
+    container_name: zabbix-db
+    image: mysql:5.7
+    env_file:
+      - mysql.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - $PWD/data:/var/lib/mysql
+      - $PWD/conf/create.sql:/docker-entrypoint-initdb.d/zabbix.sql
+    networks:
+      - zabbix-net
+
+networks:
+  zabbix-net:
