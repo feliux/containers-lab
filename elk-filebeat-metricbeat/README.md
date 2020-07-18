@@ -38,7 +38,7 @@ Podemos comprobar los *índices* disponibles con el siguiente comando. Las crede
 
 ---
 
-<img src="./images/index-management.png" width="900" height="500">
+<img src="./images/index-management.png" width="1100" height="500">
 
 ---
 
@@ -50,9 +50,9 @@ Kibana estará accesible en `localhost:5601`.
 
 ---
 
-<img src="./images/index-pattern.png" width="900" height="500">
+<img src="./images/index-pattern.png" width="1100" height="500">
 
-<img src="./images/index-pattern-2.png" width="900" height="500">
+<img src="./images/index-pattern-2.png" width="1100" height="500">
 
 ---
 
@@ -60,7 +60,7 @@ Kibana estará accesible en `localhost:5601`.
 
 ---
 
-<img src="./images/index-pattern-metric.png" width="900" height="500">
+<img src="./images/index-pattern-metric.png" width="1100" height="500">
 
 ---
 
@@ -68,9 +68,9 @@ Podemos seleccionar un *dashboard* pre-configurado para visualizar las estadíst
 
 ---
 
-<img src="./images/dashboard.png" width="900" height="500">
+<img src="./images/dashboard.png" width="1100" height="350">
 
-<img src="./images/dashboard-2.png" width="900" height="500">
+<img src="./images/dashboard-2.png" width="1100" height="500">
 
 ---
 
