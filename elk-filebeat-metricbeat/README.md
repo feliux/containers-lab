@@ -4,7 +4,7 @@ Configuración Docker para el conjunto **Elastic - Logstash - Kibana**. Incluye 
 
 La configuración propuesta monitoriza el directorio Docker. Por un lado, Filebeat recoge los logs de nuestros contenedores, y por otro Metricbeat monitoriza su estado. El flujo de datos sería el siguiente:
 
-~~
+~~~
 Docker-logs -> Filebeat -> Logstash -> Elastic <-> Kibana
 
 Docker-stasts -> Metricbeat -> Elastic <-> Kibana
