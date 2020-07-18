@@ -12,7 +12,7 @@ Docker-stasts -> Metricbeat -> Elastic <-> Kibana
 
 Si se desea dar otro uso entocnes habría que añadir/cambiar los archivos de configuración de cada servicio así como el *compose* correspondiente. En el apartado **Enlaces de interés** se aportan enlaces a la guía de Filebeat y Metricbeat donde podemos ver otros inputs, módulos, etc.
 
-### Ejecuación
+### Ejecución
 
 Para arrancar los servicios ELK
 
@@ -50,9 +50,9 @@ Kibana estará accesible en `localhost:5601`.
 
 ---
 
-<img src="./images/index-pattern.png" width="550" height="500">
+<img src="./images/index-pattern.png" width="700" height="500">
 
-<img src="./images/index-pattern-2.png" width="550" height="500">
+<img src="./images/index-pattern-2.png" width="700" height="500">
 
 ---
 
@@ -60,7 +60,7 @@ Kibana estará accesible en `localhost:5601`.
 
 ---
 
-<img src="./images/index-pattern-metric.png" width="550" height="500">
+<img src="./images/index-pattern-metric.png" width="700" height="500">
 
 ---
 
@@ -68,9 +68,9 @@ Podemos seleccionar un *dashboard* pre-configurado para visualizar las estadíst
 
 ---
 
-<img src="./images/dashboard.png" width="550" height="500">
+<img src="./images/dashboard.png" width="700" height="500">
 
-<img src="./images/dashboard-2.png" width="550" height="500">
+<img src="./images/dashboard-2.png" width="700" height="500">
 
 ---
 
