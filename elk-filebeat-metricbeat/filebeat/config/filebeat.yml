@@ -1,0 +1,39 @@
+# https://github.com/cosminseceleanu/tutorials/blob/master/docker-logs-elk/filebeat/filebeat.yml
+filebeat.inputs:
+  - type: docker
+    containers:
+      path: "/var/lib/docker/containers"
+      stream: "all"
+      ids:
+        - "*"
+      cri.parse_flags: true
+      combine_partial: true
+      exclude_files: ['\.gz$']
+ 
+processors:
+  # decode the log field (sub JSON document) if JSON encoded, then maps it's fields to elasticsearch fields
+- decode_json_fields:
+    fields: ["log", "message"]
+    target: ""
+    # overwrite existing target elasticsearch fields while decoding json fields    
+    overwrite_keys: true
+- add_docker_metadata:
+    host: "unix:///var/run/docker.sock"
+ 
+filebeat.config.modules:
+  path: /usr/share/filebeat/modules.d/*.yml
+  reload.enabled: false
+ 
+output.logstash:
+  hosts: ["logstash:5044"]
+ 
+logging.level: error
+logging.to_files: false
+logging.to_syslog: false
+loggins.metrice.enabled: false
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+ssl.verification_mode: none
