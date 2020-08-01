@@ -1,0 +1,24 @@
+#!/bin/bash
+
+JENKINS_USER=admin
+JENKINS_PASSWORD=changeme
+JENKINS_PROJECT=http://localhost:8080/job/test/build?delay=0sec
+
+# Get branch name from ref head
+if ! [ -t 0 ]; then
+  read -a ref
+fi
+
+IFS='/' read -ra REF <<< "${ref[2]}"
+branch="${REF[2]}"
+
+if [ $branch == "master" ]; then
+crumb=$(curl -u "$JENKINS_USER:$JENKINS_PASSWORD" -s 'http://localhost:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)')
+curl -u "$JENKINS_USER:$JENKINS_PASSWORD" -H "$crumb" -X POST $JENKINS_PROJECT
+
+  if [ $? -eq 0 ]; then
+    echo "----> OK"
+  else
+    echo "----> ERROR"
+  fi
+fi

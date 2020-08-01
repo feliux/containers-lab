@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkins-net
+  git:
+    container_name: git-server
+    hostname: gitlab.server.com
+    image: gitlab/gitlab-ce:latest
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab
+    networks:
+      - jenkins-net
+
+volumes:
+  jenkins-home:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
+
+networks:
+  jenkins-net:
