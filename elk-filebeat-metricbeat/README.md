@@ -10,7 +10,7 @@ Docker-logs -> Filebeat -> Logstash -> Elastic <-> Kibana
 Docker-stasts -> Metricbeat -> Elastic <-> Kibana
 ~~~
 
-Si se desea dar otro uso entocnes habría que añadir/cambiar los archivos de configuración de cada servicio así como el *compose* correspondiente. En el apartado **Enlaces de interés** se aportan enlaces a la guía de Filebeat y Metricbeat donde podemos ver otros inputs, módulos, etc.
+Si se desea dar otro uso entonces habría que añadir/cambiar los archivos de configuración de cada servicio así como el *compose* correspondiente. En el apartado **Enlaces de interés** se aportan enlaces a la guía de Filebeat y Metricbeat donde podemos ver otros inputs, módulos, etc.
 
 ### Ejecución
 
