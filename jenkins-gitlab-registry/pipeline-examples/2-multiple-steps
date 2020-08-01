@@ -1,0 +1,14 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'echo "Este es mi primer pipeline"'
+                sh '''
+                    echo "Por cierto, puedo ejecutar más acciones aquí"
+                    ls -lah
+                '''
+            }
+        }
+    }
+}
