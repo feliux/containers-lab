@@ -60,7 +60,7 @@ drwxr-xr-x 2 user1 hdfs 4096 Feb  2 17:44 .flumespool
 
 Tenemos un proceso en Hadoop que deposita los resultados en `./results/` y que se quieren almacenar en una base de datos MySQL. Tenemos un ejemplo de los datos almacenados en el fichero `results.dat`.
 
-En primer lugar crearemos el usuario `user1` a partir del usuario administrador `root` (password por defecto `hortonworks1`):
+En primer lugar crearemos el usuario `user1` a partir del usuario administrador `root // hortonworks1`:
 
 ~~~
 mysql> create user 'user1' identified by 'hortonworks1'
@@ -158,11 +158,11 @@ $ su user1
 $ crontab -e
 ~~~
 
-Se nos abrirá un archivo temporal el cual podemos modificar con la configuración `cron` que deseemos. Para este proyecto se propone la siguiente configuración:
+Se nos abrirá un archivo temporal el cual podemos modificar con la configuración `cron` que deseemos. Para este proyecto se propone la siguiente configuración de ejecución:
 
-- flume-hdfs.sh - Puesto que los datos llegan a las 0.00h se ejecutará este script a las 0.20h de cada día.
+- `flume-hdfs.sh`: puesto que los datos llegan a las 0.00h se ejecutará este script a las 0.20h de cada día.
 
-- mysql-hdfs.sh - Dado que no sabemos cuando tiene lugar la recepción de datos se propone ejecutar el script cada 20 minutos.
+- `mysql-hdfs.sh`: dado que no sabemos cuando tiene lugar la recepción de datos se propone ejecutar el script cada 20 minutos.
 
 ~~~
 # Configuracion Cron
