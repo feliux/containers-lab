@@ -8,7 +8,7 @@ Despliegue **Hortonworks** Docker.
 
 ~~~
 cd HDP-<version>
-sh docker-deploy-<version>,sh
+sh docker-deploy-<version>.sh
 ~~~
 
 ### Configuración
@@ -23,7 +23,7 @@ yarn-site.xml     Configuración de Yarn.
 capacity-scheduler.xml  Cononfiguración de colas y capacidades.
 ~~~
 
-Directorio de logs
+El directorio de los principales logs es:
 
 ~~~
 /var/log/hadoop/hdfs       Namenode y Datanode
