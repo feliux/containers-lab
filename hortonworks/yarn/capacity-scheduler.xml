@@ -1,0 +1,218 @@
+  <configuration>
+    
+    <property>
+      <name>yarn.scheduler.capacity.maximum-applications</name>
+      <value>999</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.queue-mappings</name>
+      <value>g:direccion:online</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.queue-mappings-override.enable</name>
+      <value>false</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.resource-calculator</name>
+      <value>org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.acl_administer_queue</name>
+      <value>root</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.capacity</name>
+      <value>100</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.default.capacity</name>
+      <value>10</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.default.maximum-capacity</name>
+      <value>30</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.default.minimum-user-limit-percent</name>
+      <value>25</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.default.state</name>
+      <value>RUNNING</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.default.user-limit-factor</name>
+      <value>2</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.acl_administer_jobs</name>
+      <value>javier</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.acl_administer_queue</name>
+      <value>javier</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.acl_submit_applications</name>
+      <value>javier, programadores</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.capacity</name>
+      <value>25</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.maximum-capacity</name>
+      <value>50</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.state</name>
+      <value>RUNNING</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.develop.user-limit-factor</name>
+      <value>2</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.capacity</name>
+      <value>65</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.maximum-capacity</name>
+      <value>100</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.acl_administer_jobs</name>
+      <value>susana,isabel</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.acl_administer_queue</name>
+      <value>maria</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.acl_submit_applications</name>
+      <value> comerciales,direccion</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.capacity</name>
+      <value>50</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.maximum-capacity</name>
+      <value>70</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.state</name>
+      <value>RUNNING</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.online.user-limit-factor</name>
+      <value>1</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.acl_administer_jobs</name>
+      <value>miguel</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.acl_administer_queue</name>
+      <value>juan</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.acl_submit_applications</name>
+      <value>juan,miguel, comerciales</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.capacity</name>
+      <value>25</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.maximum-applications</name>
+      <value>40</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.maximum-capacity</name>
+      <value>25</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.other.state</name>
+      <value>RUNNING</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.queues</name>
+      <value>online,socialnetworks,other</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.acl_administer_jobs</name>
+      <value> redes</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.acl_administer_queue</name>
+      <value> redes</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.acl_submit_applications</name>
+      <value> redes</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.capacity</name>
+      <value>25</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.maximum-capacity</name>
+      <value>50</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.socialnetworks.state</name>
+      <value>STOPPED</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.marketing.state</name>
+      <value>RUNNING</value>
+    </property>
+    
+    <property>
+      <name>yarn.scheduler.capacity.root.queues</name>
+      <value>default,develop,marketing</value>
+    </property>
+    
+  </configuration>
