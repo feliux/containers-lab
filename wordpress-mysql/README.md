@@ -1,13 +1,17 @@
 # Wordpress
 
-Imagen Docker para arrancar [Wordpress](https://es.wikipedia.org/wiki/WordPress) en un contenedor.
+Imagen Docker para arrancar **Wordpress** en un contenedor.
 
 ### Ejecución
 
-Para arrancar el servicio
+Para iniciar los servicios
 
 `docker-compose up -d`
 
 ### Uso
 
-Disponible en `http://localhost:80`
+Disponible en `localhost:80`
+
+### Enlaces de interés
+
+[Wordpress](https://es.wikipedia.org/wiki/WordPress)
