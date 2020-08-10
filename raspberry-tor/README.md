@@ -26,13 +26,13 @@ Proxy para navegación anónima usando la red **Tor**, **Docker** y **RaspberryP
 
 ### Uso
 
-Lo probaremos en FireFox con el plugin [FoxyProxy Standard](https://addons.mozilla.org/es/firefox/addon/foxyproxy-standard/) en donde indicaremos nuestra RaspberryPI como servidor proxy para la navegación HTTP/HTTPS.
+Lo probaremos en FireFox con el plugin **FoxyProxy Standard** en donde indicaremos nuestra RaspberryPI como servidor proxy para la navegación HTTP/HTTPS.
 
 #### Configuración FoxyProxy
 
 Tras la instalación del plugin en el navegador firefox configuraremos los datos de nuestro proxy. Primero indicamos la dirección IP ejecutando `ifconfig` en nuestra Raspberry. Posteriormente añadimos una nueva conexión (pestaña *add* en *options*) con los datos que solicita.
 
-Finalmente podemos consultar la siguiente [web](http://cualesmiip.com/) para ver nuestra IP pública antes y después de activar nuestro proxy.
+Finalmente podemos consultar la siguiente [web](http://cualesmiip.com/) para ver nuestra IP pública antes y después de activar nuestro proxy. En Linux podemos hacer uso del comando `curl ifconfig.me` o bien `wget -qO- ifconfig.co/ip`.
 
 
 #### Enlaces de interés
@@ -40,3 +40,5 @@ Finalmente podemos consultar la siguiente [web](http://cualesmiip.com/) para ver
 [Fuente](https://www.elladodelmal.com/2020/04/aplicaciones-practicas-de-docker-en.html)
 
 [Anonsurf](https://www.wifi-libre.com/topic-1253-impedir-su-rastreo-en-la-red-con-anonsurf.html)
+
+[FoxyProxy Standard](https://addons.mozilla.org/es/firefox/addon/foxyproxy-standard/)
