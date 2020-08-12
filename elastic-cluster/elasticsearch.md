@@ -278,7 +278,7 @@ curl "localhost:9200/_nodes/settings?pretty=true"
 ~~~
 
 
-### Apagar / parar Elasticsearch**
+### Apagar / Parar Elasticsearch**
 
   * Cntrl + c en terminal.
   * Matando el proceso.
@@ -361,9 +361,9 @@ curl -XPUT http://localhost:9200/blog/
 
 #### Consultar y Borrar un documento
 
-Nota: Utilizar "?pretty" para una salida tabulada
-
 Por cada actualización la versión aumentará en +1. Cuando el valor de "exists" es false quiere decir que no se ha encontrado el documento y no mostrará por tanto ningún campo "_source".
+
+Nota: Utilizar "?pretty" para una salida tabulada.
 
 ~~~
 curl -XGET http://192.168.178.79:9200/blog/article/1?pretty
@@ -421,7 +421,7 @@ Por motivos de seguridad que se explicarán posteriormente, si no se tiene la di
 {"error":"ElasticsearchIllegalArgumentException[failed to execute script]; nested: ScriptException[dynamic scripting for [groovy] disabled]; ","status":400}
 ~~~
 
-### campo "version" en Elasticsearch
+### Campo "version" en Elasticsearch
 
 Elasticsearch incrementa la versión del documento cuando este ha sido creado, cambiado o borrado. Puede ser útil para implementar control de concurrencia en el proyecto que se tenga en mente si así se desea/necesita y evitar problemas al hacer actualizaciones en paralelo sobre el mismo documento. Para ello se puede utilizar el campo versión en la solicitud.
 
@@ -452,9 +452,9 @@ Plugins recomendados para empezar a trabajar con ElasticSearch: Kopf / Marvel (C
 /bin/plugin -i lmenezes/elasticsearch-kopf/{version}
 ~~~
 
-Kopf `http://localhost:9200/_plugin/kopf`
+Kopf disponible en `http://localhost:9200/_plugin/kopf`
 
-Marvel `http://localhost:9200/_plugin/marvel/`
+Marvel disponible en `http://localhost:9200/_plugin/marvel/`
 
 ### Búsquedas en Elasticsearch (Querys/Filters
 
@@ -715,7 +715,7 @@ POST /wiki/_search
 
 **Analizar las solicitudes**
 
-[Documentación](http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html
+[Documentación](http://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html)
 
 En este ejemplo se puede ver como Elasticsearch divide el texto en dos términos.
 
@@ -1239,7 +1239,8 @@ Por estas mismas tres fases deben pasar las búsquedas sobre ese campo full-text
 GET /_search?q=2014              # 12 results Se pregunta al campo _all (full text).
 GET /_search?q=2014-09-15        # 12 results Se vuelve a preguntar al campo all, si encuentra el valor 2014 o 09 o 15, por lo que mínimo devuelve 12 resultados.
 GET /_search?q=date:2014-09-15   # 1  result Ahora se ha preguntado al campo date, el cual tiene un valor exacto y el resultado es uno porque solo hay un valor 2014-09-15.
-GET /_search?q=date:2014         # 0  results Si la anterior petición con 2014-09-15 devolvió un resultado, esta lógicamente debe devolver ninguno.~~~
+GET /_search?q=date:2014         # 0  results Si la anterior petición con 2014-09-15 devolvió un resultado, esta lógicamente debe devolver ninguno.
+~~~
 
 Por ejemplo, cuando nos dividimos las cadenas de texto palabras con los espacios en blanco y caracteres en minúsculas, no tenemos que preocuparnos por los usuarios que envían palabras en minúsculas o mayúsculas. Los analizadores son muy usados para mostrar sugerencias en campos de búsqueda según se teclea la palabra deseada.
 
