@@ -165,9 +165,11 @@ En una arquitectura de REST cada solicitud se dirige a un objeto concreto indica
 
 Sintaxis
 
-<code text>curl -X<VERB> '<PROTOCOL>://<HOST>/<PATH>?<QUERY_STRING>' -d '<BODY>'</code>
+~~~
+curl -X<VERB> '<PROTOCOL>://<HOST>/<PATH>?<QUERY_STRING>' -d '<BODY>'
+~~~
 
-<code>
+~~~
 # No especificar GET en curl significa utilizarlo por defecto.
 curl http://192.168.178.79:9200
 
@@ -184,11 +186,11 @@ curl http://192.168.178.79:9200
   },
   "tagline" : "You Know, for Search"
 }
-</code>
+~~~
 
 Comprobar configuración del clúster, sin utilizar "//pretty//" no se muestran saltos de linea.
 
-<code>
+~~~
 curl -XGET http://192.168.178.79:9200/_cluster/health?pretty
 {
   "cluster_name" : "escluster",
@@ -203,11 +205,11 @@ curl -XGET http://192.168.178.79:9200/_cluster/health?pretty
   "unassigned_shards" : 1,
   "number_of_pending_tasks" : 0
 }
-</code>
+~~~
 
 Si se quiere conocer cuantos shards contiene cada nodo y el espacio que ocupan en disco.
 
-<code>
+~~~
 curl -qs "http://dominio:9200/_cat/allocation?v"
 
 shards disk.used disk.avail disk.total disk.percent    host         ip          node
@@ -219,11 +221,11 @@ shards disk.used disk.avail disk.total disk.percent    host         ip          
   9962   509.2gb   1187.4gb    7696.7gb           73   dominio      10.0.204.71 elastic4
      0     8.9gb    115.4gb     124.3gb            7   dominio      10.0.205.70 elastic5
   9963   528.3gb   1563.7gb         9tb           48   dominio      10.0.206.15 elastic6
-</code>
+~~~
 
 Revisar la configuración de los nodos del clúster, útil para saber en qué directorios del sistema se encuentran los directorios de ES.
 
-<code> 
+~~~ 
 curl "localhost:9200/_nodes/settings?pretty=true"
 {
   "cluster_name" : "es",
@@ -273,7 +275,7 @@ curl "localhost:9200/_nodes/settings?pretty=true"
       }
     },
     ...
-</code>
+~~~
 
 
 ### Apagar / parar Elasticsearch**
@@ -282,7 +284,7 @@ curl "localhost:9200/_nodes/settings?pretty=true"
   * Matando el proceso.
   * API REST de Elasticsearch.
 
-<code bash>
+~~~
 curl -XPOST 'http://localhost:9200/_cluster/nodes/_shutdown'
 
 # Consultar IDs de nodos.
@@ -299,7 +301,7 @@ curl -XGET 'http://localhost:9200/_count?pretty' -d '
 {
     "query": { "match_all": {} }
 }'
-</code>
+~~~
 
 ### Crear / Indexar / Consultar / Actualizar un nuevo Documento
 
@@ -307,7 +309,7 @@ curl -XGET 'http://localhost:9200/_count?pretty' -d '
 
 Por ejemplo, imaginemos que estamos creando el sistema de categorías de nuestro blog. Una de las entidades (índice) en este blog es artículos y es la que vamos a agregar.
 
-<code JavaScript>
+~~~
 {
 "id": "1",
 "title": "New version of Elasticsearch released!",
@@ -315,7 +317,7 @@ Por ejemplo, imaginemos que estamos creando el sistema de categorías de nuestro
 "priority": 10,
 "tags": ["announce", "elasticsearch", "release"]
 }
-</code>
+~~~
 
 Hay tipos de datos numéricos (priority, el id no cuenta como tal), texto (title) y arrays (tags).
 
@@ -325,37 +327,37 @@ Agregar al Índice el documento:
 
 Índice:blog, Tipo:artículo, Identificador:1
 
-<code JavaScript>
+~~~
 curl -XPUT http://192.168.178.79:9200/blog/article/1 -d '{"title": "New version of Elasticsearch released!", "content": "Version 1.0 released today!", "tags": ["announce", "elasticsearch", "release"] }'
 
 {"_index":"blog","_type":"article","_id":"1","_version":1,"created":true}
-</code>
+~~~
 
 Si no se especifica un ID, Elasticsearch generará uno único.
 
-<code JavaScript>
+~~~
 curl -XPOST http://192.168.178.79:9200/blog/article/ -d '{"title": "New version of Elasticsearch released!", "content": "Version 1.0 released today!", "tags": ["announce", "elasticsearch", "release"] }'
 
 {"_index":"blog","_type":"article","_id":"AUy_Oh16FzMRuRcZNvt3","_version":1,"created":true}
-</code>
+~~~
 
 Si se están realizando scripts y se desea por algún motivo crear un documento inicializando un valor que luego irá cambiando por ejemplo con un contador, se puede utilizar **upsert** como muestra el siguiente ejemplo. La primera vez que se ejecute creará / indexará el documento inicializando counter a 0, cada vez que se repita ese mismo comando, counter irá sumando +1 a su valor. El uso de *upsert* y sus valores son ejecutados solo en la creación del documento, después no son utilizados.
 
-<code JavaScript>
+~~~
 curl -XPOST http://192.168.178.79:9200/blog/article/3/_update -d '{
 "script": "ctx._source.counter += 1",
 "upsert": {
 "counter" : 0
 }
 }'
-</code>
+~~~
 
 Automáticamente nos ha creado el índice blog, pero si solo queremos crear índice "blog" se debe hacer lo siguiente.
 
-<code bash>
+~~~
 curl -XPUT http://localhost:9200/blog/
 {"acknowledged":true}
-</code>
+~~~
 
 #### Consultar y Borrar un documento
 
@@ -363,7 +365,7 @@ Nota: Utilizar "?pretty" para una salida tabulada
 
 Por cada actualización la versión aumentará en +1. Cuando el valor de "exists" es false quiere decir que no se ha encontrado el documento y no mostrará por tanto ningún campo "_source".
 
-<code JavaScript>
+~~~
 curl -XGET http://192.168.178.79:9200/blog/article/1?pretty
 # Existe.
 {
@@ -387,13 +389,13 @@ curl -XGET http://192.168.178.79:9200/blog/article/AUy_Oh16FzMRuRcZNvt3?pretty
   "_id" : "AUy_Oh16FzMRuRcZNvt3",
   "found" : false
 }
-</code>
+~~~
 
 #### Actualizar documentos en el índice
 
 Al actualizar documentos en el índice ElasticSearch debe primero buscar internamente el documento, tomar sus datos del campo "_source", retirar el viejo documento, aplicar los cambios en el campo "_source", y luego darlo de alta en el índice como un nuevo documento. La causa es que no se puede actualizar la información una vez que se almacena en un índice invertido Lucene.
 
-<code JavaScript>
+~~~
 # Modificaremos el campo content y editaremos la versión 1.0 a 10.2.
 curl -XPOST http://192.168.178.79:9200/blog/article/1/_update -d '{"script": "ctx._source.content = \"Version 10.2 released today\""}'
 
@@ -412,31 +414,31 @@ curl -XGET http://192.168.178.79:9200/blog/article/1/?pretty
 
 # Agregar un nuevo parámetro si no existe 
 curl -XPOST http://192.168.178.79:9200/blog/article/3/_update -d '{"script": "ctx._source.Nuevocampo = \"AAAAAAAAAAAA\""}'
-</code>
+~~~
 
 Por motivos de seguridad que se explicarán posteriormente, si no se tiene la directiva "//script.disable_dynamic: false//" se obtendrá un mensaje como el siguiente.
-<code JavaScript>
+~~~
 {"error":"ElasticsearchIllegalArgumentException[failed to execute script]; nested: ScriptException[dynamic scripting for [groovy] disabled]; ","status":400}
-</code>
+~~~
 
 ### campo "version" en Elasticsearch
 
 Elasticsearch incrementa la versión del documento cuando este ha sido creado, cambiado o borrado. Puede ser útil para implementar control de concurrencia en el proyecto que se tenga en mente si así se desea/necesita y evitar problemas al hacer actualizaciones en paralelo sobre el mismo documento. Para ello se puede utilizar el campo versión en la solicitud.
 
-<code javaScript>
+~~~
 curl -XGET "http://192.168.178.79:9200/blog/article/1/?version=1&pretty"
 # La versión actual es 17, pero se intenta borrar dada la versión 1 mostrando el siguiente error.
 {
   "error" : "VersionConflictEngineException[[blog][2] [article][1]: version conflict, current [17], provided [1]]",
   "status" : 409
 }
-</code>
+~~~
 
 ElasticSearch también se puede basar en el número de versión proporcionado por nosotros, para ello debe ser utilizado "version" y "version_type" como en el siguiente ejemplo
 
-<code JavaScript>
+~~~
 curl -XPOST "http://192.168.178.79:9200/blog/article/8/_update?version=123454&version_type=external" -d '{...}
-</code>
+~~~
 
 ### Generar datos para comenzar a practicar con ElasticSearch (stream2es) + Plugins
 
@@ -446,9 +448,9 @@ curl -XPOST "http://192.168.178.79:9200/blog/article/8/_update?version=123454&ve
 
 Plugins recomendados para empezar a trabajar con ElasticSearch: Kopf / Marvel (Consola Sense).
 
-<code bash>.
+~~~.
 /bin/plugin -i lmenezes/elasticsearch-kopf/{version}
-</code>
+~~~
 
 Kopf `http://localhost:9200/_plugin/kopf`
 
@@ -458,7 +460,7 @@ Marvel `http://localhost:9200/_plugin/marvel/`
 
 Se pueden buscar y consultar índices, tipos y documentos. Es posible especificar múltiples índices y tipos (Multi-index, Multitype).
 
-<code JavaScript>
+~~~
 # Buscar documentos en el índice blog.
 curl -XGET "http://192.168.178.79:9200/blog/_search"
 
@@ -473,13 +475,13 @@ curl -XGET "http://192.168.178.79:9200/_all/artículo/_search"
 
 # Consultar toda la información sobre el cluster de Elasticsearch.
 curl -XGET "http://192.168.178.79:9200/blog/_search?pretty&q=title:elasticsearch'
-</code>
+~~~
 
 ### Interpretar campos en respuestas Elasticsearch / Filtrar por el valor de campos de documento
 
 Filtrando por el campo título valor "//elastic//" + cualquier otro texto a continuación (*).
 
-<code JavaScript>
+~~~
 curl -XGET "http://192.168.178.79:9200/blog/_search?pretty&q=title:elasticsear*"
 {
   "took" : 2,             # Tiempo en obtener la respuesta en milisegundos.
@@ -501,7 +503,7 @@ curl -XGET "http://192.168.178.79:9200/blog/_search?pretty&q=title:elasticsear*"
     }]
   }
 }
-</code>
+~~~
 
 Durante la indexación, la biblioteca Lucene subyacente analiza los documentos y los índices de los datos de acuerdo a la configuración Elasticsearch. Por defecto ES indicará a Lucene que indexe y analice tanto los datos basadas en cadenas como en números.
 
@@ -518,8 +520,9 @@ Lógicamente los filtros son más rápidos ya que las consultas tienen que encon
 Como regla general, se debe utilizar las cláusulas de las querys para la búsqueda de texto completo o para cualquier condición que debe afectar a la puntuación de relevancia. El uso de las cláusulas de filtro se debe utilizar para todo lo demás.
 
 
-Estructura de una Query DSL.
-<code javascript>
+Estructura de una Query DSL
+
+~~~
 {
     QUERY_NAME: {
         FIELD_NAME: {
@@ -528,11 +531,11 @@ Estructura de una Query DSL.
         }
     }
 }
-</code>
+~~~
 
 Preguntando por una frase (literal) en Elasticsearch en el índice wiki.
 
-<code javascript>
+~~~
 POST /wiki/_search
 {
     "query": {
@@ -541,29 +544,29 @@ POST /wiki/_search
         }
     }
 }
-</code>
+~~~
 
 #### Consultas/filtros más importantes y habituales
 
 **Filtros**
 
 - term y terms: Filtra por valores exactos (números, fechas, booleanos o no analizados)
-<code javascript>
+~~~
 { "term": { "age":    26           }}
 { "term": { "date":   "2014-09-01" }}
 { "term": { "public": true         }}
 { "term": { "tag":    "full_text"  }}
-</code>
+~~~
 
 Con terms podemos especificar multiples valores.
 
-<code javascript>
+~~~
 { "terms": { "tag": [ "search", "full_text", "nosql" ] }}
-</code>
+~~~
 
 - range: Permite filtrar por rangos de fechas y números. gt (>), gte (= >), lt (<), lte(= <).
 
-<code javascript>
+~~~
 {
     "range": {
         "age": {
@@ -572,21 +575,21 @@ Con terms podemos especificar multiples valores.
         }
     }
 }
-</code>
+~~~
 
 - exists y missing: Si se encuentra o no en el documento un determinado campo.
 
-<code javascript>
+~~~
 {
     "exists":   {
         "field":    "title"
     }
 }
-</code>
+~~~
 
 - bool: Permite unir varios filtros con sus parámetros must (and), must_not (not) y should (or).
 
-<code javascript>
+~~~
 {
     "bool": {
         "must":     { "term": { "folder": "inbox" }},
@@ -597,51 +600,51 @@ Con terms podemos especificar multiples valores.
         ]
     }
 }
-</code>
+~~~
 
 **Querys**
 
 - match_all: Busca en todos los documentos, la predeterminada si no se especifica otra. Por norma se usa junto a filtros. Estas dos consultas serían iguales. (match_all es el equivalente a "{}")
 
-<code javascript>
+~~~
 POST /_search
 {
     "query": {
         "match_all": {}
     }
 }
-</code>
+~~~
 
-<code javascript>
+~~~
 GET /_search{}
 POST /_search{}
-</code>
+~~~
 
 - match: Busca un fulltext o exact value (para ello siempre mejor un filtro) en al menos un campo.
 
-<code javascript>
+~~~
 { "match": { "tweet": "About Search" }}
-</code>
+~~~
 
 Si el campo contiene un valor exacto, tal como un número, una fecha, un booleano, o un campo de cadena not_analyzed, se buscará dicho que el valor exacto.
 
-<code javascript>
+~~~
 { "match": { "age":    26           }}
 { "match": { "date":   "2014-09-01" }}
 { "match": { "public": true         }}
 { "match": { "tag":    "full_text"  }}
-</code>
+~~~
 
 - multi_match: Permite hacer la misma query en múltiples campos.
 
-<code javascript>
+~~~
 {
     "multi_match": {
         "query":    "full text search",
         "fields":   [ "title", "body" ]
     }
 }
-</code>
+~~~
 
 - bool: Al igual que el filtro bool, permite combinar varias cláusulas de consulta.
 
@@ -649,7 +652,7 @@ Si el campo contiene un valor exacto, tal como un número, una fecha, un boolean
   * must_not: Cláusulas que no deben coincidir para que el documento se incluya.
   * should: Si esta cláusulas coincide aumenta el _score; de lo contrario no tiene ningún efecto (se utiliza para refinar la relevancia de los documentos). Si no hay cláusula "must", al menos "should" debe coincidir con algún documento.
 
-<code javascript>
+~~~
 {
     "bool": {
         "must":     { "match": { "title": "how to make millions" }},
@@ -660,11 +663,11 @@ Si el campo contiene un valor exacto, tal como un número, una fecha, un boolean
         ]
     }
 }
-</code>
+~~~
 
 **Combinar filtros y querys**
 
-<code javascript>
+~~~
 POST /wiki/_search
 {
   "query": {
@@ -683,11 +686,11 @@ POST /wiki/_search
     }
   }
 }
-</code>
+~~~
 
 Consultar mútiples campos en una query DSL (también aplicable a los filtros).
 
-<code javascript>
+~~~
 POST /wiki/_search
 {
   "query": {
@@ -700,7 +703,7 @@ POST /wiki/_search
     }
   }
 }
-</code>
+~~~
 
 *Explicación:* Debe incluir las cadenas "//In paradise, fast by the tree of life//" y "//Amaranth//" en sus respectivos campos y luego, en el campo text debe encontrarse también o bien "Oscar" o bien "synonym". Recordemos que "must" se comporta como un "AND" y should como "OR".
 
@@ -716,7 +719,7 @@ POST /wiki/_search
 
 En este ejemplo se puede ver como Elasticsearch divide el texto en dos términos.
 
-<code JavaScript>
+~~~
 curl -XGET "http://192.168.178.79:9200/blog/_analyze?field=title&pretty" -d 'Elasticsearch Server'
 
 {
@@ -734,7 +737,7 @@ curl -XGET "http://192.168.178.79:9200/blog/_analyze?field=title&pretty" -d 'Ela
     "position" : 2
   } ]
 }
-</code>
+~~~
 
 **Buscar dentro de campos fulltext cadenas de texto literales** (ej. "//caca de vaca//")
 
@@ -747,7 +750,7 @@ Enumeración y explicación básica de algunos parámetros utilizados en las con
 
 <code curl>
 curl -XGET 'localhost:9200/books/_search?pretty&q=published:2013&df=title&explain=true&default_operator=AND'
-</code>
+~~~
 
 - **q** Permite especificar la consulta para buscar algo en los documentos utilizando la sintaxis de consulta de Lucene que se mostrará más adelante.
 
@@ -820,7 +823,7 @@ Se pueden utilizar **patrones con expresiones regulares** si van dentro de "/", 
 
 Ejemplos como pruebas de concepto
 
-<code Javascript>
+~~~
 curl -XGET "http://dominio:9200/blog/_search?pretty&q=+Nuevocampo:(AAAAAAA+BBBB)+counter:(8+3)&default_operator=OR"
 {
   "took" : 2,
@@ -992,38 +995,38 @@ curl -XGET "http://dominio:9200/blog/_search?pretty&q=_exists_:title"
 
 # Buscará palabras que se parezcan a Elasticserach (por ejemplo, elasticsearch).
 curl -XGET "http://dominio:9200/blog/_search?pretty&q=title:Elasticserach~"
-</code>
+~~~
 
 ### Creación de Índices
 
 La creación de índices de manera automática puede ser un problema si se comete un simple error tipográfico en un envío masivo de datos, lo normal es deshabilitar la opción de creación automática de índices en `elasticsearch.yml`.
 
-<code text>
+~~~
 action.auto_create_index: false
-</code>
+~~~
 
 la siguiente definición permite la creación automática únicamente de índices que comienzan con "a", pero no "an".
 
-<code text>
+~~~
 action.auto_create_index: -an*,+a*,-*
-</code>
+~~~
 
 El orden juega un papel importante ya que ejecuta la primera coincidencia, de poner +a delante se anularía la restricción "-an".
 
 La creación manual de un índice es necesaria para especificar la cantidad de fragmentos y sus réplicas, para el ejemplo se crearán tres índices lucene (el primario y dos copias).
 
-<code javascript>
+~~~
 curl -XPUT http://localhost:9200/blog/ -d '{
 "settings" : {
 "number_of_shards" : 1,
 "number_of_replicas" : 2
 }
 }'
-</code>
+~~~
 
 Mostrar todos los índices.
 
-<code bash>
+~~~
 curl 'localhost:9200/_cat/indices?v'
 
 health status index              pri rep docs.count docs.deleted store.size pri.store.size 
@@ -1031,7 +1034,7 @@ green  open   .marvel-2015.05.13   1   1        596            0      3.1mb     
 green  open   .marvel-2015.04.24   1   1       2771            0      8.6mb          4.3mb 
 green  open   .marvel-2015.05.14   1   1        634            0      3.2mb          1.6mb 
 green  open   blog                 5   1          8            0     45.5kb         22.8kb 
-</code>
+~~~
 
 ### Mapping
 
@@ -1043,7 +1046,7 @@ Aunque Elasticsearch es un motor de búsqueda sin esquemas, se puede averiguar l
 
 A veces los valores numéricos se proporcionan dentro de un campo de cadena, para que reciban el tratamiento numérico que merece se puede utilizar la opción //"numeric_detection" : true// al crear la estructura del índice (mapping).
 
-<code javascript>c
+~~~c
 url -XPUT http://localhost:9200/blog/?pretty -d '{
 "mappings" : {
 "article": {
@@ -1051,11 +1054,11 @@ url -XPUT http://localhost:9200/blog/?pretty -d '{
 }
 }
 }'
-</code>
+~~~
 
 Otro tipo de dato que puede causar problemas es el de fecha. Elasticsearch intenta adivinar fechas dadas como marcas de tiempo o cadenas que coinciden con el formato de fecha. Podemos definir la lista de formatos de fecha reconocidas utilizando la propiedad "//dynamic_date_formats//" para especificar uno o varios formatos a utilizar. Este comando crea un índice con un único tipo: article.
 
-<code javascript>
+~~~
 curl -XPUT 'http://localhost:9200/blog/' -d '{
 "mappings" : {
 "article" : {
@@ -1063,11 +1066,11 @@ curl -XPUT 'http://localhost:9200/blog/' -d '{
 }
 }
 }'
-</code>
+~~~
 
 Para desactivar la agregación de campos de forma automática se debe establecer la propiedad "dynamic" a false. Cualquier intento de agregación de campos diferentes a los definidos (id, content y author) en el tipo "article" será ignorado.
 
-<code javascript>
+~~~
 curl -XPUT 'http://localhost:9200/blog/' -d '{
 "mappings" : {
 "article" : {
@@ -1080,7 +1083,7 @@ curl -XPUT 'http://localhost:9200/blog/' -d '{
 }
 }
 }'
-</code>
+~~~
 
 Supongamos que queremos crear un índice con las siguiente estructura:
 
@@ -1088,11 +1091,11 @@ Supongamos que queremos crear un índice con las siguiente estructura:
 
 Creamos el fichero "posts.json" para no utilizar siempre la linea de comandos al crear el index.
 
-<code bash>
+~~~
 curl -XPOST 'http://localhost:9200/posts' -d @posts.json
-</code>
+~~~
 
-<code javascript>
+~~~
 {
 "mappings": {
 "post": {
@@ -1105,7 +1108,7 @@ curl -XPOST 'http://localhost:9200/posts' -d @posts.json
 }
 }
 }
-</code>
+~~~
 
 ### Tipos de Datos
 
@@ -1147,9 +1150,9 @@ Tipos de datos principales (Core Type).
 
 Ejemplo de definición un campo "number".
 
-<code javascript>
+~~~
 "price" : { "type" : "float", "store" : "yes", "precision_step" : "4"}
-</code>
+~~~
 
 Atributos específicos de los tipos numéricos.
 
@@ -1164,16 +1167,16 @@ Puede ser true o false.
 
 Se almacenan los ficheros (mp3, pdf, png, exe,...) en Base64. Este campo no permite ser buscado, se debe utilizar index_name.
 
-<code javascript>
+~~~
 "image" : { "type" : "binary" }
-</code>
+~~~
 
 **Date**
 
 Se utilizan para indexar fechas.
-<code javascript>
+~~~
 "published" : { "type" : "date", "store" : "yes", "format" :"YYYY-mm-dd" }
-</code>
+~~~
 
 
   * format: Este atributo especifica el formato de la fecha, por defecto "dateOptionalTime" ej. 2012-07-14T12:30:00.
@@ -1186,7 +1189,7 @@ NOTA: Un término se refiere a un valor exacto, no es lo mismo Caca, CACA y CaCa
 
 Se utilizan para tener los mismos valores en varios campos core_types), por ejemplo, uno para la búsqueda y otro para clasificación.
 
-<code javascript>
+~~~
 {
     "tweet" : {
         "properties" : {
@@ -1200,7 +1203,7 @@ Se utilizan para tener los mismos valores en varios campos core_types), por ejem
         }
     }
 }
-</code>
+~~~
 
 La definición anterior creará dos campos: nos referiremos a la primera como el nombre de "name" y el segundo "name.facet". No se tiene que especificar dos campos separados durante la indexación, con "name" es suficiente.
 
@@ -1208,9 +1211,9 @@ La definición anterior creará dos campos: nos referiremos a la primera como el
 
 Tiene el atributo precision_step a valor de 4, se recomienda aumentar para búsquedas por rangos.
 
-<code javascript>
+~~~
 "address" : { "type" : "ip", "store" : "yes" }
-</code>
+~~~
 
 **Tipo token_count**
 
@@ -1232,11 +1235,11 @@ El proceso de análisis consiste en tokenizar (dividir) un texto en términos in
 
 Por estas mismas tres fases deben pasar las búsquedas sobre ese campo full-text para que sea efectivo.
 
-<code bash>
+~~~
 GET /_search?q=2014              # 12 results Se pregunta al campo _all (full text).
 GET /_search?q=2014-09-15        # 12 results Se vuelve a preguntar al campo all, si encuentra el valor 2014 o 09 o 15, por lo que mínimo devuelve 12 resultados.
 GET /_search?q=date:2014-09-15   # 1  result Ahora se ha preguntado al campo date, el cual tiene un valor exacto y el resultado es uno porque solo hay un valor 2014-09-15.
-GET /_search?q=date:2014         # 0  results Si la anterior petición con 2014-09-15 devolvió un resultado, esta lógicamente debe devolver ninguno.</code>
+GET /_search?q=date:2014         # 0  results Si la anterior petición con 2014-09-15 devolvió un resultado, esta lógicamente debe devolver ninguno.~~~
 
 Por ejemplo, cuando nos dividimos las cadenas de texto palabras con los espacios en blanco y caracteres en minúsculas, no tenemos que preocuparnos por los usuarios que envían palabras en minúsculas o mayúsculas. Los analizadores son muy usados para mostrar sugerencias en campos de búsqueda según se teclea la palabra deseada.
 
@@ -1267,7 +1270,7 @@ NOTA: El Stemming es le proceso de reducir palabras a su forma más básica, com
 
 Define donde se va a encontrar un valor, si en disco o en memoria RAM.
 
-<code javascript>
+~~~
 {
   "mappings" : {
      "post" : {
@@ -1280,7 +1283,7 @@ Define donde se va a encontrar un valor, si en disco o en memoria RAM.
       }  
   }
 }
-</code>
+~~~
 
   * default: Este es un formato de valores doc que se utiliza cuando no se especifica ningún formato. Ofrece un buen rendimiento con bajo uso de memoria.
   * disk: Almacena los datos en el disco sin requerir prácticamente memoria. Sin embargo, existe una degradación de rendimiento al utilizar esta estructura de datos para operaciones de parseo o clasificación.
@@ -1294,13 +1297,13 @@ En vez de indexar documentos uno por uno se puede realizar por lotes. ElasticSea
   * delete: Borra documentos.
   * create: Crea nuevos documentos solo cuando no hay ninguno previamente indexado, si existe, dará un fallo al intentar ingresarlo.
 
-<code text>
+~~~
 "error" : "DocumentAlreadyExistsException[[direccion][1] [contact][5]: document already exists]"
-</code>
+~~~
  
 Los ficheros por lotes se deben definir sin tabulaciones, todo en una linea y no más de 100Mb por fichero de lotes, pero se puede adaptar con la directiva http.max_content_length. Cada linea de un fichero por lotes es un objeto JSON con una descripción de la operación a realizar + el objeto JSON en si. Solo cuando se quiere borrar un documento se debe especificar únicamente la operación.
 
-<code javascript>
+~~~
 { "index": { "_index": "addr", "_type": "contact", "_id": 1 }}
 { "name": "Fyodor Dostoevsky", "country": "RU" }
 { "create": { "_index": "addr", "_type": "contact", "_id": 2 }}
@@ -1309,12 +1312,12 @@ Los ficheros por lotes se deben definir sin tabulaciones, todo en una linea y no
 { "name": "Joseph Heller", "country": "US" }
 { "delete": { "_index": "addr", "_type": "contact", "_id": 4 }}
 { "delete": { "_index": "addr", "_type": "contact", "_id": 1 }}
-</code>
+~~~
 
 
-<code bash>
+~~~
 curl -XPOST 'localhost:9200/_bulk?pretty' --data-binary @test.json
-</code>
+~~~
 
 NOTA: En el indexado por lotes, si se necesita más velocidad, se puede usar User Datagram Protocol (UDP), pero solo en ambientes donde la velocidad prima sobre la pérdida de datos.
 
@@ -1325,7 +1328,7 @@ En ES hay dos tipos de identificadores internos para los documentos: "_uid" y "_
   - **_uid**: Único identificador del documento compuesto de un identificador (_id) y un tipo. Documentos de diferente tipo que están en el mismo índice pueden tener el mismo identificador para que ElasticSearch pueda distinguirlos. 
   - **_id**: Guarda el identificador durante el tiempo de indexado, se pueden definir sus propiedades en el mapping, por ejemplo si solo queremos que se indexe pero no analice y no se almacene en el índice (Cuidado: en este caso los documentos requerirán un _uid único).
 
-<code javascript>
+~~~
 {
 "book" : {
   "_id" : {
@@ -1337,11 +1340,11 @@ En ES hay dos tipos de identificadores internos para los documentos: "_uid" y "_
 .
 .
 }
-</code>
+~~~
 
 Si queremos usar un "_id" igual a otro campo del documento indexado es también posible.
 
-<code javascript>
+~~~
 {
 "book" : {
 "_id" : {
@@ -1354,7 +1357,7 @@ Si queremos usar un "_id" igual a otro campo del documento indexado es también 
   }
  }
 }
-</code>
+~~~
 
 
 **Campo _type**
@@ -1364,20 +1367,20 @@ Como dijimos antes, cada documento en ES es descrito por su identificador (_id) 
 
 Buscar por tipo "contact" en todos los índices.
 
-<code bash>
+~~~
 curl -XGET 'localhost:9200/_all/contact/_search?q=name:Dav*+country:ES&default_operator=AND&pretty'
 
 # Como el tipo "contact" no es guardado ni analizado esta consulta con expresión regular "conta*" no funcionará.
 curl -XGET 'localhost:9200/_all/conta*/_search?q=name:Dav*+country:ES&default_operator=AND&pretty'
-</code>
+~~~
 
 **Campo _all**
 
 Contiene los datos de todos los otros campos para facilitar así las búsquedas. Esto permite hacer búsquedas cuando no se quieren especificar campos y se quiere buscar en todos los índices, por eso esta consulta muestra el mismo resultado que la anterior (no especifica el tipo "contact").
 
-<code bash>
+~~~
 curl -XGET 'localhost:9200/_all/_search?q=name:Dav*+country:ES&default_operator=AND&pretty'
-</code>
+~~~
 
 Está siempre habilitado y hace que los índices sean algo más grandes pero no en todos los casos será necesario. Para decidir si un campo se debe o no guardar en _all se puede utilizar include_in_all. Si es habilitado tiene las siguientes propiedades configurables: store, term_vector, analyzer, index_analyzer y search_analyzer.
 
@@ -1393,7 +1396,7 @@ Guarda información sobre le índice a los cuales los documentos son indexados, 
 
 Por defecto no habilitado, si se habilita especifica el tamaño de _source y es almacenado en el documento. Para activarlo
 
-<code javascript>
+~~~
 {
 "book" : {
 "_size" : {
@@ -1407,7 +1410,7 @@ Por defecto no habilitado, si se habilita especifica el tamaño de _source y es 
   }
  }
 }
-</code>
+~~~
 
 **Campo _timestamp**
 
@@ -1417,7 +1420,7 @@ Desactivado por defecto. Especifica cuando el documento fue indexado, es solo in
 
 EL tiempo de vida de un documento, por defecto viene desactivado. Si se activa es indexado y guardado, pero no analizado.
 
-<code javascript>
+~~~
 {
 "book" : {
 "_ttl" : {
@@ -1431,7 +1434,7 @@ EL tiempo de vida de un documento, por defecto viene desactivado. Si se activa e
   }
  }
 }
-</code>
+~~~
 
 ### Validar consultas
 
@@ -1439,14 +1442,14 @@ Las consultas se pueden validar sintácticamente para averiguar si es correcta u
 
 Sintaxis
 
-<code text>
+~~~
 /_validate/query
-</code>
-<code text>
+~~~
+~~~
 /_validate/query?explain
-</code>
+~~~
 
-<code javascript>
+~~~
 POST /wiki/page/_validate/query?explain
 {
   "query": {
@@ -1459,11 +1462,11 @@ POST /wiki/page/_validate/query?explain
     }
   }
 }
-</code>
+~~~
 
 Repuesta (Validación): (Valida la query y la explica)
 
-<code javascript>
+~~~
 {
    "valid": true,
    "_shards": {
@@ -1479,7 +1482,7 @@ Repuesta (Validación): (Valida la query y la explica)
       }
    ]
 }
-</code>
+~~~
 
 ### Ordenar respuestas (Sort)
 
@@ -1489,13 +1492,13 @@ NOTA: Unix time = POSIX time = Epoch time (erróneamente nombrado).
 
 Si no se indica orden, solo el campo, son ordenados ascendentemente. El _score por defecto es siempre descendente.
 
-<code text>
+~~~
 "sort": { "body": { "order": "asc" }} = "sort":  "body"
-</code>
+~~~
 
 También es posible ordenar de manera multinivel, cuando son ordenados por el primer criterio y uno o dos tienen el mismo valor sort, se puede utilizar otro nivel para reoordenar la salida, por ejemplo por puntuación / relevancia "score".
 
-<code javascript>
+~~~
 GET /blog/_search
 {
   "query": {
@@ -1513,22 +1516,22 @@ GET /blog/_search
     { "_score": { "order": "asc" }}
   ]
 }
-</code>
+~~~
 
 Cuando se ordena por campos que tienen varios valores, no hay ningún orden establecido, pero para números y fechas se puede utilizar "min", "max","avg" o "sum".
 
-<code bash>
+~~~
 "sort": {
     "dates": {
         "order": "asc",
         "mode":  "min"
     }
 }
-</code>
+~~~
 
 Cuando se ordena por cadenas, estas deben tener un solo término y se puede usar "min" (por defecto) y "max". Los campos string normalmente son analized y por lo tanto son divididos en varios términos. Para solucionar esto, se puede tener el mismo campo con dos propiedades diferentes, una para ser analizado y otra para ser ordenado. Si se quiere poder tener dentro del mismo documento el mismo campo con dos mappings diferentes se debe usar mapping multifield.
 
-<code javascript>
+~~~
 "tweet": { 
     "type":     "string",
     "analyzer": "english",
@@ -1539,14 +1542,14 @@ Cuando se ordena por cadenas, estas deben tener un solo término y se puede usar
         }
     }
 }
-</code>
+~~~
 
   * tweet: full-text y analyzed
   * tweet.raw: full-text y not_analyzed
 
 Ejemplo de uso
 
-<code javascript>
+~~~
 GET /_search
 {
     "query": {
@@ -1556,7 +1559,7 @@ GET /_search
     },
     "sort": "tweet.raw"
 }
-</code>
+~~~
 
 ### Puntuación/Relevancia de los documentos
 
@@ -1570,7 +1573,7 @@ Para entender como se ha calculado la puntuación para cada resultado devuelto y
 
 Para saber por qué un documento es o no devuelto por una query, se puede usar "explain". Por ejemplo, veamos la siguiente consulta directamente el campo "_id".
 
-<code javascript>
+~~~
 GET /us/tweet/12
 {
    "_index": "us",
@@ -1585,9 +1588,9 @@ GET /us/tweet/12
       "user_id": 1
    }
 }
-</code>
+~~~
 
-<code javascript>
+~~~
 GET /us/tweet/12/_explain
 {
    "query" : {
@@ -1597,11 +1600,11 @@ GET /us/tweet/12/_explain
       }
    }
 }
-</code>
+~~~
 
 Devuelve la siguiente explicación. (No se encontró ni el user_id 4 ni la cadena honeyXXXmoon)
 
-<code javascript>
+~~~
 {
    "_index": "us",
    "_type": "tweet",
@@ -1618,13 +1621,13 @@ Devuelve la siguiente explicación. (No se encontró ni el user_id 4 ni la caden
       ]
    }
 }
-</code>
+~~~
 
 ### Resaltado de búsquedas (Highlight)
 
 Resaltará mediante la etiqueta HTML "<em>" la cadena "honeymoon" si se devuelve algún resultado tras la query.
 
-<code javascript>
+~~~
 POST /us/tweet/_search
 {
   "query": {
@@ -1638,13 +1641,13 @@ POST /us/tweet/_search
     }
   }
 }
-</code>
+~~~
 
 ### Agrupaciones y medias
 
 Muestra al final cuantos empleados hay en cada campo interest y su media de edad.
 
-<code Javascript>
+~~~
 GET /megacorp/employee/_search
 {
     "aggs" : {
@@ -1658,7 +1661,7 @@ GET /megacorp/employee/_search
         }
     }
 }
-</code>
+~~~
 
 ### Estadísticas/Información sobre clúster, índices y nodos
 
@@ -1680,27 +1683,27 @@ Todos los plugins y herramientas de terceros que muestran gráficas o valores de
 
 Muestra a grandes rasgos el estado de un índice o del clúster mostrando el nombre del clúster, su estado, número de nodos, de shards (asignados y sin asignar), tareas pendientes, etc. 
 
-<code bash>
+~~~
 # Consultar estado del cluster = Consultar estado de todos los indices separados por comas.
 curl -XGET 'http://localhost:9200/_cluster/health?pretty'
 
 # Consultar estado de los índices logstash-2015.08.23 y logstash-2015.08.28.
 curl -XGET 'http://localhost:9200/_cluster/health/logstash-2015.08.23,logstash-2015.08.28?pretty'
-</code>
+~~~
 
 **Cluster Stats API**
 
  Muestra métricas básicas en los índices (número de fragmentos, espacio que ocupan, uso de memoria) e información sobre los nodos actuales que forman el clúster (número y tipo de nodos, sistema operativo, JVM, memoria RAM, CPU y plugins instalados).
 
-<code bash>
+~~~
 curl -XGET 'http://localhost:9200/_cluster/stats?human&pretty'
-</code>
+~~~
 
 **Nodes Stats API**
 
 Estadísticas por nodo. Retorna los valores de número de indices, sistema operativo (CPU, memoria RAM, swap, etc), procesos, JVM, transporte, conexiones http, sistema de ficheros, breaker y la pila de hilos.
 
-<code bash>
+~~~
 # Estadísticas de todos los nodos.
 curl -XGET 'http://localhost:9200/_nodes/stats?pretty'
 
@@ -1709,19 +1712,19 @@ curl -XGET 'http://localhost:9200/_nodes/nodeId1,nodeId2/stats?pretty'
 
 # Filtrar información mostrando solo lo relativo a las conexiones http y JVM del nodo "es1".
 curl -XGET 'http://localhost:9200/_nodes/es1/stats/http,jvm/?pretty'
-</code>
+~~~
 
 **Estadísticas de índices**
 
 Proporciona estadísticas sobre diferentes operaciones realizadas sobre índices.
 
-<code bash>
+~~~
 # Estadísticas de todos los índices del clúster.
 curl -XGET 'http://localhost:9200/_stats?pretty'
 
 # Estadísticas de determinados índices.
 curl http://localhost:9200/index1,index2/_stats
-</code>
+~~~
 
 **API cat**
 
@@ -1731,7 +1734,7 @@ Utilizando esta API se muestra una versión compacta, estadística y amigable de
   * El parámetro "//?h//" permite especificar las cabeceras "//?h=ip,port,heapPercent,name//"
   * El parámetro "//?bytes=b//" permite especificar una unidad de medida (Bytes, Megabytes,..).
 
-<code>
+~~~
 curl -qs http://dominio:9200/_cat
 =^.^=
 /_cat/allocation
@@ -1755,11 +1758,11 @@ curl -qs http://dominio:9200/_cat
 /_cat/plugins
 /_cat/fielddata
 /_cat/fielddata/{fields}
-</code>
+~~~
 
 Ejemplos
 
-<code>
+~~~
 curl -qs "http://localhost:9200/_cat/plugins?v"
 
 name          component version        type url              
@@ -1775,7 +1778,7 @@ logstash-2014.11.13 4     p      STARTED 1366319   618mb 101.50.201.24 elastic3
 logstash-2014.11.13 2     r      STARTED 1366319   618mb 102.50.201.25 elastic1
 logstash-2014.11.13 0     r      STARTED 1365753 613.7mb 103.50.201.26 elastic9
 
-</code>
+~~~
 
 ### Administrar Índices con Curator
 
@@ -1783,69 +1786,69 @@ Cuando se tienen muchos índices o índices indeseados como pueden ser los del p
 
 Para instalar curator en CentOS es necesario instalar como dependencia `python-pbr`.
 
-<code bash>
+~~~
 yum install python-pbr
-</code>
+~~~
 
 Instalar/actualizar `curator`.
 
-<code bash>
+~~~
 pip2 install elasticsearch-curator
 pip install -U elasticsearch-curator
-</code>
+~~~
 
 Error el instalar `curator`
 
-<code>
+~~~
 error: invalid command 'egg_info'
-</code>
+~~~
 
 Solución: dos posibilidades.
 
-<code>
+~~~
 # Opción 1.
 pip2 install --upgrade setuptools
 
 #  Opción 2
 easy_install -U setuptools
-</code>
+~~~
 
 Sintaxis de `curator`
 
-<code bash>
+~~~
 curator --help
 curator COMMAND --help
 curator COMMAND SUBCOMMAND --help
-</code>
+~~~
 
 Las opciones "show" y "dry-run" son únicamente informativas y no tienen riesgo.
 
 Borrar todos los índices que tengan más de 30 días y tengan el patrón '%Y.%m.%d' en el nombre.
 
-<code bash>
+~~~
 curator --host localhost delete indices --older-than 30 --time-unit days --timestring '%Y.%m.%d'
-</code>
+~~~
 
 NOTA: Los índices Kibana son omitidos por defecto.
 
 Borrar todos los índices ".marvel" con un tiempo de vida superior a un día
 
-<code bash>
+~~~
 curator --host localhost delete indices --older-than 1 --time-unit days --prefix .marvel --timestring %Y.%m.%d
-</code>
+~~~
 
 Mostrar todos los índices con el patrón '%Y.%m.%d'
 
-<code bash>
+~~~
 curator --host 10.0.0.2 show indices --timestring '%Y.%m.%d'
-</code>
+~~~
 
 Cerrar/abrir un índice cerrado
 
-<code bash>
+~~~
 curator --host localhost close indices --index "logstash-2015.06.08"
 curator --host localhost open indices --index "logstash-2015.06.08"
-</code>
+~~~
 
 ### Error de conexión
 
@@ -1854,13 +1857,13 @@ curator --host localhost open indices --index "logstash-2015.06.08"
 
 **Error**
 
-<code bash>
+~~~
 Error: Got unexpected extra arguments (...)
-</code>
+~~~
 
 **Solución**: Si se usan wildcards, estas deben estar entrecomilladas
 
-<code bash>
+~~~
 # Mal
 curator delete indices --regex .marvel* --older-than 21 --time-unit days --timestring \%Y.\%m.\%d
 
@@ -1869,6 +1872,6 @@ curator delete indices --regex ".marvel*" --older-than 21 --time-unit days --tim
 
 # Bien (Mismo efecto que el anterior pero sin usar expresiones regulares, solo indicando el prefijo).
 curator  --host localhost delete indices  --prefix ".marvel" --older-than 30 --time-unit days --timestring %Y.%m.%d
-</code>
+~~~
 
 ## FIN
