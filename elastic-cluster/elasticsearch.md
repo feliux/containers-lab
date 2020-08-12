@@ -748,7 +748,7 @@ curl -XGET "http://192.168.178.79:9200/blog/_analyze?field=title&pretty" -d 'Ela
 
 Enumeración y explicación básica de algunos parámetros utilizados en las consultas, no preocuparse si algo no se entiende ya que se verá más tarde en profundidad.
 
-<code curl>
+~~~
 curl -XGET 'localhost:9200/books/_search?pretty&q=published:2013&df=title&explain=true&default_operator=AND'
 ~~~
 
