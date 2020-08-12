@@ -1,0 +1,130 @@
+version: '3'
+
+services:
+  master1:
+    container_name: master1
+    image: elasticsearch:7.8.0
+    environment:
+      - cluster.name=elastic-cluster
+      - node.name=master1
+      - node.master=true
+      - node.data=false
+      - node.ingest=true
+      - node.max_local_storage_nodes=3
+      - network.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - discovery.seed_hosts=master2,slave1,slave2
+      - cluster.initial_master_nodes=master1,maaster2
+      - transport.tcp.port=9300
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - datamaster1:/usr/share/elasticsearch/data
+    networks:
+      - elastic-net
+
+  master2:
+    container_name: master2
+    image: elasticsearch:7.8.0
+    environment:
+      - cluster.name=elastic-cluster
+      - node.name=master2
+      - node.master=true
+      - node.data=false
+      - node.ingest=true
+      - node.max_local_storage_nodes=3
+      - network.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - discovery.seed_hosts=master1,slave1,slave2
+      - cluster.initial_master_nodes=master1,master2
+      - transport.tcp.port=9300
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - datamaster2:/usr/share/elasticsearch/data
+    networks:
+      - elastic-net
+
+  slave1:
+    container_name: slave1
+    image: elasticsearch:7.8.0
+    environment:
+      - cluster.name=elastic-cluster
+      - node.name=slave
+      - node.master=false
+      - node.data=true
+      - node.ingest=true
+      - node.max_local_storage_nodes=3
+      - network.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - discovery.seed_hosts=master1,master2,slave2
+      - cluster.initial_master_nodes=master1,master2
+      - transport.tcp.port=9300
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - dataslave1:/usr/share/elasticsearch/data
+    networks:
+      - elastic-net
+
+  slave2:
+    container_name: slave2
+    image: elasticsearch:7.8.0
+    environment:
+      - cluster.name=elastic-cluster
+      - node.name=slave
+      - node.master=false
+      - node.data=true
+      - node.ingest=true
+      - node.max_local_storage_nodes=3
+      - network.host=0.0.0.0
+      - bootstrap.memory_lock=true
+      - discovery.seed_hosts=master1,master2,slave1
+      - cluster.initial_master_nodes=master1,master2
+      - transport.tcp.port=9300
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - dataslave2:/usr/share/elasticsearch/data
+    networks:
+      - elastic-net
+
+  kibana:
+    container_name: kibana
+    image: kibana:7.8.1
+    environment:
+      ELASTICSEARCH_HOSTS: http://master1:9200
+    depends_on:
+      - master1
+    ports:
+      - "5601:5601"
+    networks:
+      - elastic-net
+
+volumes:
+  datamaster1:
+  datamaster2:
+  dataslave1:
+  dataslave2:
+
+networks:
+  elastic-net:
