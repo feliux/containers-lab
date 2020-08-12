@@ -1624,26 +1624,6 @@ Devuelve la siguiente explicación. (No se encontró ni el user_id 4 ni la caden
 }
 ~~~
 
-### Resaltado de búsquedas (Highlight)
-
-Resaltará mediante la etiqueta HTML "<em>" la cadena "honeymoon" si se devuelve algún resultado tras la query.
-
-~~~
-POST /us/tweet/_search
-{
-  "query": {
-    "match": {
-      "tweet": "honeymoon"
-    }
-  },
-  "highlight": {
-    "fields": {
-      "tweet": {}
-    }
-  }
-}
-~~~
-
 ### Agrupaciones y medias
 
 Muestra al final cuantos empleados hay en cada campo interest y su media de edad.
