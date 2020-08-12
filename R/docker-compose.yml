@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  rstudio:
+    container_name: rstudio
+    hostname: rstudio
+    image: rocker/verse:latest
+    environment:
+      PASSWORD: changeme
+    ports:
+      - "8787:8787"
+    networks:
+      - rlab-net
+
+  shiny:
+    container_name: shiny
+    hostname: shiny
+    image: rocker/shiny-verse:latest
+    user: root
+    ports:
+      - "3838:3838"
+    volumes:
+      - $PWD/shinyapps:/srv/shiny-server
+      - shinylogs:/var/log/shiny-server
+    networks:
+      - rlab-net
+
+volumes:
+  shinylogs:
+
+networks:
+  rlab-net:
