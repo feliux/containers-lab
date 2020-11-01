@@ -1,0 +1,8 @@
+FROM apache/airflow
+
+RUN pip install --no-cache-dir --user \
+    minio \
+    numpy \
+    pandas \
+    scikit-learn \
+    scipy

@@ -1,0 +1,9 @@
+FROM jupyter/all-spark-notebook:latest
+
+USER root
+
+RUN pip install --no-cache-dir \
+    psycopg2-binary\
+    minio
+
+USER jovyan
