@@ -1,0 +1,133 @@
+version: '3'
+
+services:
+  jupyter:
+    container_name: ds-spark-jupyter
+    build:
+      context: .
+      dockerfile: Dockerfile-jupyter
+    image: jupyter-psql-minio:latest
+    env_file:
+      - ./environment/jupyter.env
+      - ./environment/minio.env
+      - ./environment/custom.env
+    entrypoint: sh -c "start-notebook.sh --NotebookApp.token=$$JUPYTER_PASSWORD"
+    restart: "always"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./jupyter/notebooks:/home/jovyan/work/notebooks
+    networks:
+      - data-science
+
+  postgres:
+    container_name: ds-psql
+    image: postgres:latest
+    env_file:
+      - ./environment/postgres.env
+      - ./environment/custom.env
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+      - ./postgres/:/docker-entrypoint-initdb.d/
+    networks:
+      - data-science
+
+  minio:
+    container_name: ds-minio
+    image: minio/minio
+    env_file:
+      - ./environment/minio.env
+    command: server /data
+    restart: "always"
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio:/data
+    networks:
+      - data-science
+
+  airflow-scheduler:
+    container_name: ds-scheduler
+    build:
+      context: .
+      dockerfile: Dockerfile-airflow
+    image: myairflow-scheduler
+    env_file:
+      - ./environment/airflow.env
+      - ./environment/minio.env
+      - ./environment/custom.env
+    command: scheduler
+    depends_on:
+      - postgres
+    restart: "always"
+    volumes:
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/dags/:/opt/airflow/dags
+    networks:
+      - data-science
+
+  airflow-webserver:
+    container_name: ds-airflow
+    build:
+      context: .
+      dockerfile: Dockerfile-airflow
+    image: myairflow-webserver
+    env_file:
+      - ./environment/airflow.env
+      - ./environment/minio.env
+      - ./environment/custom.env
+    entrypoint: ./scripts/entrypoint.sh
+    depends_on:
+      - postgres
+      - airflow-scheduler
+    restart: "always"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/dags/:/opt/airflow/dags
+      - ./airflow/scripts:/opt/airflow/scripts
+    networks:
+      - data-science
+
+  apistar:
+    container_name: ds-apistar
+    build:
+      context: .
+      dockerfile: Dockerfile-apistar
+    image: myapistar
+    env_file:
+      - ./environment/minio.env
+    command: gunicorn app:app -b 0.0.0.0:8000
+    restart: "always"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apistar:/usr/src/app
+    networks:
+      - data-science
+
+  portainer:
+    container_name: ds-portainer
+    image: portainer/portainer-ce
+    command: -H unix:///var/run/docker.sock
+    restart: "always"
+    ports:
+      - "9090:9000"
+    volumes:
+      - portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - data-science
+
+volumes:
+  postgres:
+  minio:
+  portainer:
+
+networks:
+  data-science:
+    driver: bridge

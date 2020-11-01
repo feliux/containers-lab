@@ -1,0 +1,16 @@
+FROM python:3.8
+
+WORKDIR /usr/src/app
+
+RUN pip install --no-cache-dir \
+    apistar==0.5.41 \
+    gunicorn \
+    dill \
+    minio \
+    psycopg2-binary \
+    numpy \
+    pandas \
+    scipy \
+    scikit-learn
+
+EXPOSE 8000
