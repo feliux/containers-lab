@@ -48,6 +48,8 @@ Services availables on the following port
 
     - Execute webserver and scheduler with different partition logs: follow [link](https://github.com/puckel/docker-airflow/issues/214#issuecomment-492164257) and [link](https://github.com/helm/charts/issues/23589#issuecomment-688708233)
 
+    - Problems with Airflow privileges: consider to run `chmod -R 777 airflow/`
+
 ## References
 
 [Jupyter Docker Stacks](https://jupyter-docker-stacks.readthedocs.io/en/latest/)
