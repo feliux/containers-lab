@@ -10,6 +10,8 @@ This repository contains some services for running on docker containers.
 
 - **elk-filebeat-metricbeat**. Stack ELK.
 
+- **gitlab-runner**. Use Gitlab Runner for CI.
+
 - **gpu-scipy-pytorch-notebook**. Run pytorch-notebooks on GPU.
 
 - **guacamole-mysql-nginx**. Remote access to servers.
