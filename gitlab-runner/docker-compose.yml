@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  git:
+    container_name: git-server
+    hostname: git-server
+    image: gitlab/gitlab-ce:latest
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab
+    networks:
+      git-net:
+        ipv4_address: "172.20.0.2"
+
+  runner:
+    container_name: git-runner
+    hostname: git-runner
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    depends_on:
+      - git
+    volumes:
+      - gitlab-runner-config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      git-net:
+        ipv4_address: "172.20.0.3"
+
+volumes:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
+  gitlab-runner-config:
+
+networks:
+  git-net:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24

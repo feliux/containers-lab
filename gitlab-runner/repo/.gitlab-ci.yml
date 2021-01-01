@@ -1,0 +1,98 @@
+image: python:3.8-slim
+
+stages:
+  - static_analysis
+  - formatting
+  - security
+  - documentation
+#  - complexity
+
+before_script:
+  - python --version
+  - pip install -r requirements.txt
+
+mypy:
+  stage: static_analysis
+  script:
+  - python -m mypy app/app.py
+  allow_failure: true
+  only:
+    - master
+
+flake8:
+  stage: static_analysis
+  script:
+  - flake8 --max-line-length=120 --max-complexity 5 app/app.py
+  allow_failure: true
+  only:
+    - master
+
+pycodestyle:
+  stage: static_analysis
+  script:
+  - pycodestyle app/app.py
+  allow_failure: true
+  only:
+    - master
+
+pylint:
+  stage: static_analysis
+  script:
+  - pylint app/app.py
+  allow_failure: true
+  only:
+    - master
+
+isort:
+  stage: formatting
+  script:
+  - python -m isort app/app.py --diff
+  allow_failure: true
+  only:
+    - master
+
+black:
+  stage: formatting
+  script:
+  - python -m black app/app.py --check
+  allow_failure: true
+  only:
+    - master
+
+bandit:
+  stage: security
+  script:
+  - bandit -r app/app.py
+  only:
+    - master
+
+safety:
+  stage: security
+  script:
+  - safety check
+  only:
+    - master
+
+dodgy:
+  stage: security
+  script:
+  - dodgy
+  only:
+    - master
+
+pydocstyle:
+  stage: documentation
+  script:
+  - pydocstyle app/app.py
+  allow_failure: true
+  only:
+    - master
+
+#wily:
+#  stage: complexity
+#  script:
+#  - wily build app/
+#  - wily report app/app.py
+#  allow_failure: true
+#  only:
+#    - master
