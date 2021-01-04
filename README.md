@@ -20,6 +20,8 @@ This repository contains some services for running on docker containers.
 
 - **jenkins-gitlab-registry**. Tools for code versioning and CI/CD.
 
+- **minio-registry**. Use Minio to save docker images and python packages.
+
 - **R**. Deploy R services for data science.
 
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.

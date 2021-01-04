@@ -1,0 +1,20 @@
+version: 0.1
+log:
+    fields:
+        service: registry
+http:
+    addr: :5000
+storage:
+    cache:
+        layerinfo: inmemory
+    s3:
+        accesskey: changeme
+        secretkey: changeme
+        region: us-east-1
+        regionendpoint: http://172.20.0.2:9000/
+        bucket: docker
+        encrypt: false
+        secure: false
+        v4auth: true
+        chunksize: 5242880
+        rootdirectory: /

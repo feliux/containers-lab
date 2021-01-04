@@ -1,0 +1,5 @@
+setup.py
+Hello_Universe.egg-info/PKG-INFO
+Hello_Universe.egg-info/SOURCES.txt
+Hello_Universe.egg-info/dependency_links.txt
+Hello_Universe.egg-info/top_level.txt

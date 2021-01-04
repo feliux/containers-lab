@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  minio:
+    container_name: minio
+    image: minio/minio
+    env_file:
+      - ./environment/minio.env
+    command: server /data
+    restart: "always"
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio:/data
+    networks:
+      data-science:
+        ipv4_address: "172.20.0.2"
+  
+  registry:
+    container_name: registry
+    #image: registry:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./environment/minio.env
+    depends_on:
+      - minio
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    #  - ./registry/config.yml:/etc/docker/registry/config.yml
+    networks:
+      data-science:
+        ipv4_address: "172.20.0.3"
+    
+volumes:
+  minio:
+  registry-data:
+
+networks:
+  data-science:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
