@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="Hello_Universe",
+    name="helloworld",
     version="0.0.1",
     author="Your Name",
     author_email="your_email@example.com",
