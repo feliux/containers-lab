@@ -30,18 +30,20 @@ $ docker run localhost:5000/hello-world
 
 ### Python package
 
-En el directorio `./package` se encuentra la estructura típica de un paquete PyPi. Se rata de un módulo `HelloUniverse` instalable mediante `pip`. El paquete se encuentra en el directorio `package/dist` tras ejecutar la siguiente instrucción
+En el directorio `./package` se encuentra la estructura típica de un paquete PyPi. Se rata de un módulo `helloworld` instalable mediante `pip`. El paquete se encuentra en el directorio `package/dist` tras ejecutar la siguiente instrucción
 
 ~~~
 $ cd package
 $ python setup.py sdist --formats=gztar
+o bien
+$ python setup.py sdist bdist_wheel
 ~~~
 
 Si quisieramos instalar el paquete de prueba
 
 ~~~
-$ pip install Hello_Universe-0.0.1.tar.gz
-$ python -c "from hello import SayHello; SayHello()"
+$ pip install helloworld-0.0.1.tar.gz
+$ python -c "from helloworld import SayHello; SayHello()"
 ~~~
 
 Para almacenar el paquete en Minio tenemos el script `to_minio.py`
