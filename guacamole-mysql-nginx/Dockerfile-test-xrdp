@@ -1,0 +1,8 @@
+FROM ubuntu:20.04
+
+USER root
+WORKDIR /tmp
+
+COPY assets/install_packages.sh .
+
+RUN ./install_packages.sh

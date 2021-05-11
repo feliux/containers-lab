@@ -5,8 +5,7 @@ services:
     container_name: test-ssh
     build:
       context: .
-      dockerfile: Dockerfile-test
-    image: test-ssh:latest
+      dockerfile: Dockerfile-test-ssh
+    image: test-ssh:0.1.0
     networks:
       - guacamole-net
-
