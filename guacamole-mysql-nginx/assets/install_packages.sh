@@ -6,8 +6,8 @@
 set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
-export USER=guacamole
-export PASSWORD=changeme
+export USER=ubuntu
+export PASSWORD=ubuntu
 
 # Update the package listing
 apt update
@@ -17,23 +17,19 @@ apt -y upgrade
 
 # Install a new package without unnecessary recommended packages
 apt -y install --no-install-recommends \
-  xfce4 \
-  xfce4-clipman-plugin \
-  xfce4-cpugraph-plugin \
-  xfce4-netload-plugin \
-  xfce4-screenshooter \
-  xfce4-taskmanager \
-  xfce4-terminal \
-  xfce4-xkb-plugin \
+  lubuntu-desktop \
+  sudo \
   xorgxrdp \
   dbus-x11 \
   xrdp \
-  git \
-  curl \
-  krb5-user
+  wget \
+  gpg-agent
 
-adduser $USER --home /home/$USER
-passwd $USER $PASSWORD
+# Create user and allow him to start xrdp
+useradd -m -p $PASSWORD -s /bin/bash $USER
+HASH=$(openssl passwd -1 $PASSWORD)
+echo "$USER:$HASH" | /usr/sbin/chpasswd -e
+echo "%$USER ALL=NOPASSWD: /usr/sbin/service xrdp start" >> /etc/sudoers.d/xrdp
 
 # Delete cached files we don't need anymore
 apt clean

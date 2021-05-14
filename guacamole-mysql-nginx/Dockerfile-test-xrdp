@@ -1,8 +1,17 @@
 FROM ubuntu:20.04
 
 USER root
+
 WORKDIR /tmp
 
 COPY assets/install_packages.sh .
 
+COPY assets/entrypoint.sh /opt
+
 RUN ./install_packages.sh
+
+USER ubuntu
+
+WORKDIR /home/ubuntu
+
+ENTRYPOINT /opt/entrypoint.sh && /bin/bash
