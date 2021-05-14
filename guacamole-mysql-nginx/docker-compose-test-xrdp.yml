@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+    test-xrdp:
+        container_name: test-xrdp
+        build:
+          context: .
+          dockerfile: Dockerfile-test-xrdp
+        image: test-xrdp:0.1.0
+        stdin_open: true
+        tty: true
+        #entrypoint: tail -f /dev/null
+        ports:
+          - "3389:3389"
+        networks:
+          - guacamole-net
+
+networks:
+    guacamole-net:

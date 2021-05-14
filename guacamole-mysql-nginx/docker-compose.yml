@@ -4,29 +4,47 @@ services:
   db:
     container_name: guacamole-db
     image: mysql:5.7
+    restart: always
     env_file:
-      - guacamole.env
+      - environment/guacamole.env
+    # if guacamole web is located on another host
+    # ports:
+    #   - "3306:3306"
     volumes:
-      - $PWD/conf/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
-      - $PWD/data:/var/lib/mysql
+      - ./conf/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - guacamole-db:/var/lib/mysql
     networks:
       - guacamole-net
 
-  daemon:
+  guacamole-daemon:
     container_name: guacamole-daemon
     image: guacamole/guacd
+    restart: always
     depends_on:
       - db
+    # if guacamole-web is located on another host
+    # ports:
+    #   - "4822:4822"
     networks:
       - guacamole-net
 
-  web:
+  guacamole-web:
     container_name: guacamole-web
     image: guacamole/guacamole
     env_file:
-      - guacamole.env
+      - environment/guacamole.env
     depends_on:
-      - daemon
+      - db
+      - guacamole-daemon
+    # if guacamole-daemon is located on another host
+    # environment:
+    #   GUACD_HOSTNAME: "192.168.1.33"
+    #   GUACD_PORT: "4822"
+    #   MYSQL_HOSTNAME: "192.168.1.33"
+    #   MYSQL_PORT: "3306"
+    # without nginx
+    # ports:
+    #   - "8080:8080"
     networks:
       - guacamole-net
 
@@ -34,13 +52,16 @@ services:
     container_name: guacamole-proxy
     image: nginx:latest
     depends_on:
-      - web
+      - guacamole-web
     ports:
       - "80:80"
     volumes:
-      - $PWD/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./conf/nginx.conf:/etc/nginx/nginx.conf
     networks:
       - guacamole-net
+  
+volumes:
+  guacamole-db:
 
 networks:
   guacamole-net:
