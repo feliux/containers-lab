@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  nessus:
+    container_name: nessus
+    image: tenableofficial/nessus:8.15.0
+    env_file:
+      - ./environment/nessus.env
+    ports:
+      - "8834:8834"
+    networks:
+      - nessus
+
+networks:
+  nessus:

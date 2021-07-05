@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  trivy:
+    container_name: trivy
+    image: aquasec/trivy:0.16.0
+    # environment:
+    #   SCAN_IMAGE_NAME: "postgres:13"
+    command: image --ignore-unfixed postgres:13
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - $HOME/.cache/:/root/.cache/
