@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  zap:
+    container_name: zap
+    image: owasp/zap2docker-stable
+    command: bash zap-webswing.sh
+    ports:
+      - "8080:8080"
+      - "8090:8090"
