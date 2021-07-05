@@ -22,12 +22,18 @@ This repository contains some services for running on docker containers.
 
 - **minio-registry**. Use Minio to save docker images and python packages.
 
+- **nessus**. Scan vulnerabilities with Nessus.
+
 - **R**. Deploy R services for data science.
 
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
 
 - **telegraf-influx-grafana**. Monitoring Docker sockets.
 
+- **trivy**. Scan Docker images with Trivy.
+
 - **wordpress-mysql**. Deploy a Wordpress server.
 
 - **zabbix-mysql**. Deploy a Zabbix container for monitoring servers/services.
+
+- **zap**. Pentesting applications with ZAP.
