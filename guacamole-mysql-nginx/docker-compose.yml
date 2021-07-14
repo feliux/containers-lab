@@ -4,7 +4,6 @@ services:
   db:
     container_name: guacamole-db
     image: mysql:5.7
-    restart: always
     env_file:
       - environment/guacamole.env
     # if guacamole web is located on another host
@@ -19,7 +18,6 @@ services:
   guacamole-daemon:
     container_name: guacamole-daemon
     image: guacamole/guacd
-    restart: always
     depends_on:
       - db
     # if guacamole-web is located on another host
