@@ -26,6 +26,8 @@ This repository contains some services for running on docker containers.
 
 - **R**. Deploy R services for data science.
 
+- **splunk**. Deploy Splunk docker infrastructure.
+
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
 
 - **telegraf-influx-grafana**. Monitoring Docker sockets.

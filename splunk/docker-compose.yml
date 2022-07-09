@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  splunk:
+    container_name: so1
+    hostname: so1
+    image: splunk/splunk:latest
+    environment:
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_APPS_URL: "https://splunkbase.splunk.com/app/2882/release/3.2.0/download,https://splunkbase.splunk.com/app/2890/release/5.3.1/download,https://splunkbase.splunk.com/app/4607/release/3.9.0/download"
+      SPLUNKBASE_USERNAME: changeme
+      SPLUNKBASE_PASSWORD: changeme
+      SPLUNK_PASSWORD: changeme
+    ports:
+      - "8000:8000"
+      - "8088:8088"
+      - "2375:2375"
+      - "2376:2376"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - splunk-net
+
+networks:
+  splunk-net:

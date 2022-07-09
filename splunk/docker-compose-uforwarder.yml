@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  forwarder:
+    container_name: uf1
+    hostname: uf1
+    image: splunk/universalforwarder:latest
+    environment:
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_STANDALONE_URL: so1
+      SPLUNK_PASSWORD: changeme
+    networks:
+      - splunk-net
+
+networks:
+  splunk-net:
