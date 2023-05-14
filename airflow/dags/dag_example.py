@@ -1,19 +1,19 @@
-from datetime import datetime, timedelta
 import logging
 import os
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 
-### TASK ###
+
 def log_hello_world():
     logging.info("Hello world!")
     
-### DAG ###
-default_args={
+
+default_args = {
         "owner":"airflow",
         "depends_on_past":"false",
         "start_date":datetime.today()-timedelta(days=1),
-        }
+}
 
 dag = DAG(
     dag_id="dag_hello_world", 

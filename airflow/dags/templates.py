@@ -7,21 +7,20 @@ default_args = {
 }
 
 cleandata_dag = DAG(
-    "cleandata",
-    default_args=default_args,
-    schedule_interval="@daily"
+  "cleandata",
+  default_args=default_args,
+  schedule_interval="@daily"
 )
 
-# Create a templated command to execute
-# "bash cleandata.sh datestring"
+# Create a templated command to execute "bash cleandata.sh datestring"
 templated_command = """bash cleandata.sh {{ ds_nodash }}"""
 
 # Modify clean_task to use the templated command
 clean_task = BashOperator(
-    task_id="cleandata_task",
-    bash_command=templated_command,
-    params={
-        "ds_nodash": "YYYYMMDD"
-        },
-        dag=cleandata_dag
+  task_id="cleandata_task",
+  bash_command=templated_command,
+  params={
+      "ds_nodash": "YYYYMMDD"
+  },
+  dag=cleandata_dag
 )

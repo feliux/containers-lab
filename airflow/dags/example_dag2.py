@@ -4,6 +4,15 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.email_operator import EmailOperator
 
+
+def python_version():
+   import sys
+   return sys.version
+
+def sleep(length_of_time):
+   time.sleep(length_of_time)
+
+
 dag = DAG(
    dag_id = "update_state",
    default_args={
@@ -16,13 +25,6 @@ part1 = BashOperator(
    bash_command="echo $RANDOM",
    dag=dag
 )
-
-def python_version():
-   import sys
-   return sys.version
-
-def sleep(length_of_time):
-   time.sleep(length_of_time)
 
 part2 = PythonOperator(
    task_id="get_python_version",

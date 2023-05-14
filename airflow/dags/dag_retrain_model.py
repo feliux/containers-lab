@@ -1,17 +1,17 @@
-from datetime import datetime, timedelta
 import logging
 import os
 import re
+import joblib
 import pandas as pd
+from datetime import datetime, timedelta
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from minio import Minio
-import joblib
 from sqlalchemy import create_engine
 
-### TASK ###
+
 def retrain_model():
     logging.info("fetching data from Minio")
     minio_client = Minio(
@@ -62,7 +62,6 @@ def retrain_model():
     #df.to_sql(name="new_data", con=connection, index=False, if_exists="append")
 
 
-### DAG ###
 default_args={
     "owner":"airflow",
     "depends_on_past":"false",

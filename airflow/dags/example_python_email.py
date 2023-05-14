@@ -2,10 +2,6 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.email_operator import EmailOperator
 
-process_sales_dag = DAG(
-   dag_id = "process_sales_dag",
-   default_args={"start_date": "2019-10-01"}
-)
 
 def pull_file(URL, savepath):
     r = requests.get(URL)
@@ -14,7 +10,12 @@ def pull_file(URL, savepath):
     # Use the print method for logging
     print(f"File pulled from {URL} and saved to {savepath}")
 
-# Create the task
+
+process_sales_dag = DAG(
+   dag_id = "process_sales_dag",
+   default_args={"start_date": "2019-10-01"}
+)
+
 pull_file_task = PythonOperator(
     task_id="pull_file",
     # Add the callable
@@ -24,7 +25,6 @@ pull_file_task = PythonOperator(
     dag=process_sales_dag
 )
 
-# Define the task
 email_manager_task = EmailOperator(
     task_id="email_manager",
     to="manager@example.com",
@@ -34,5 +34,4 @@ email_manager_task = EmailOperator(
     dag=process_sales_dag
 )
 
-# Set the order of tasks
 pull_file_task >> email_manager_task

@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
 import logging
 import os
+import pandas as pd
+from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-import pandas as pd
 from sqlalchemy import create_engine
 
-### TASK ###
+
 def generate_synthetic_data():
     logging.info("fetching random data")
     psql_host = os.environ["POSTGRES_HOST"]
@@ -23,15 +23,14 @@ def generate_synthetic_data():
         con=connection,
         index=False,
         if_exists="append"
-        )
+    )
 
 
-### DAG ###
-default_args={
+default_args = {
         "owner":"airflow",
         "depends_on_past":"false",
         "start_date":datetime.today()-timedelta(days=1),
-        }
+}
 
 dag = DAG(
     dag_id="dag_generate_data",

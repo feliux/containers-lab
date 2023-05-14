@@ -3,6 +3,17 @@ from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime, timedelta
 
+
+# Create a function to determine if years are different
+def year_check(**kwargs):
+    current_year = int(kwargs["ds_nodash"][0:4])
+    previous_year = int(kwargs["prev_ds_nodash"][0:4])
+    if current_year == previous_year:
+        return "current_year_task"
+    else:
+        return "new_year_task"
+
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -28,16 +39,6 @@ branch_dag = DAG(
     default_args=default_args
 )
 
-# Create a function to determine if years are different
-def year_check(**kwargs):
-    current_year = int(kwargs["ds_nodash"][0:4])
-    previous_year = int(kwargs["prev_ds_nodash"][0:4])
-    if current_year == previous_year:
-        return "current_year_task"
-    else:
-        return "new_year_task"
-
-# Define the BranchPythonOperator
 branch_task = BranchPythonOperator(
     task_id="branch_task",
     start_date=datetime(2020,2,20),
@@ -50,11 +51,11 @@ current_year_task = DummyOperator(
     task_id="current_year_task",
     start_date=datetime(2020,2,20),
 )
+
 new_year_task = DummyOperator(
     task_id="new_year_task",
     start_date=datetime(2020,2,20),
 )
 
-# Define the dependencies
 branch_dag >> current_year_task
 branch_dag >> new_year_task

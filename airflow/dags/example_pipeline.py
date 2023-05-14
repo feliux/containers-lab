@@ -7,7 +7,18 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.email_operator import EmailOperator
 from datetime import datetime, timedelta
 
-# Update the default arguments and apply them to the DAG.
+
+def check_weekend(**kwargs):
+    dt = datetime.strptime(kwargs["execution_date"],"%Y-%m-%d")
+    # If dt.weekday() is 0-4, it"s Monday - Friday. If 5 or 6, it"s Sat / Sun.
+    if (dt.weekday() < 5):
+        return "email_report_task"
+    else:
+        return "no_email_task"
+
+def process_data():
+    pass
+
 
 default_args = {
   "start_date": datetime(2019,1,1),
@@ -32,16 +43,12 @@ bash_task = BashOperator(
     dag=dag
 )
 
-def process_data():
-    pass
-
 python_task = PythonOperator(
     task_id="run_processing",
     python_callable=process_data,
     provide_context=True,
     dag=dag
 )
-
 
 email_subject="""
   Email report for {{ params.department }} on {{ ds_nodash }}
@@ -63,16 +70,6 @@ no_email_task = DummyOperator(
     dag=dag
 )
 
-
-def check_weekend(**kwargs):
-    dt = datetime.strptime(kwargs["execution_date"],"%Y-%m-%d")
-    # If dt.weekday() is 0-4, it"s Monday - Friday. If 5 or 6, it"s Sat / Sun.
-    if (dt.weekday() < 5):
-        return "email_report_task"
-    else:
-        return "no_email_task"
-    
-    
 branch_task = BranchPythonOperator(
     task_id="check_if_weekend",
     python_callable=check_weekend,
@@ -80,6 +77,5 @@ branch_task = BranchPythonOperator(
     dag=dag
 )
 
-    
 sensor >> bash_task >> python_task
 python_task >> branch_task >> [email_report_task, no_email_task]
