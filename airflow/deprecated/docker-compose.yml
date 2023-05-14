@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: ds-psql
+    image: postgres:latest
+    env_file:
+      - ./environment/postgres.env
+      - ./environment/custom.env
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+      - ./postgres/:/docker-entrypoint-initdb.d/
+    networks:
+      - data-science
+
+  minio:
+    container_name: ds-minio
+    image: minio/minio
+    env_file:
+      - ./environment/minio.env
+    command: server /data
+    restart: "always"
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio:/data
+    networks:
+      - data-science
+
+  airflow-scheduler:
+    container_name: ds-scheduler
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myairflow-scheduler
+    env_file:
+      - ./environment/airflow.env
+      - ./environment/minio.env
+      - ./environment/custom.env
+    command: scheduler
+    depends_on:
+      - postgres
+    restart: "always"
+    volumes:
+      - ./dags/:/opt/airflow/dags
+    networks:
+      - data-science
+
+  airflow-webserver:
+    container_name: ds-airflow
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myairflow-webserver
+    env_file:
+      - ./environment/airflow.env
+      - ./environment/minio.env
+      - ./environment/custom.env
+    entrypoint: ./scripts/entrypoint.sh
+    depends_on:
+      - postgres
+      - airflow-scheduler
+    restart: "always"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags/:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    networks:
+      - data-science
+
+volumes:
+  postgres:
+  minio:
+  portainer:
+
+networks:
+  data-science:
+    driver: bridge
