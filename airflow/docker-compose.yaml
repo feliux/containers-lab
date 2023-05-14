@@ -1,0 +1,177 @@
+---
+version: '3'
+services:
+  postgres:
+    container_name: psql-airflow
+    image: postgres:13
+    env_file:
+      - ./environment/postgres.env
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - airflow-network
+
+  # redis:
+  #   container_name: redis-airflow
+  #   image: redis:latest
+  #   ports:
+  #     - 6379:6379
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 30s
+  #     retries: 50
+  #   restart: always
+  #   networks:
+  #     - airflow-network
+
+  rabbitmq:
+    container_name: rabbitmq-airflow
+    image: rabbitmq:3.8-management
+    hostname: rabbitmq-airflow
+    env_file:
+      - ./environment/rabbitmq.env
+    ports:
+      - 15672:15672
+      - 5672:5672
+    restart: always
+    networks:
+      - airflow-network
+
+  airflow-webserver:
+    container_name: airflow-webserver
+    hostname: webserver
+    image: apache/airflow:2.1.0
+    env_file:
+      - ./environment/airflow.env
+    command: webserver
+    user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+    ports:
+      - 8080:8080
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    #  - ./plugins:/opt/airflow/plugins
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      # - redis
+      - rabbitmq
+      - postgres
+    networks:
+      - airflow-network
+
+  airflow-scheduler:
+    container_name: airflow-scheduler
+    hostname: scheduler
+    image: apache/airflow:2.1.0
+    env_file:
+      - ./environment/airflow.env
+    command: scheduler
+    user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    #  - ./plugins:/opt/airflow/plugins
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      # - redis
+      - rabbitmq
+      - postgres
+    networks:
+      - airflow-network
+
+  airflow-worker:
+    # container_name: airflow-worker
+    # hostname: worker
+    image: apache/airflow:2.1.0
+    env_file:
+      - ./environment/airflow.env
+    command: celery worker
+    user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    #  - ./plugins:/opt/airflow/plugins
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      # - redis
+      - rabbitmq
+      - postgres
+    networks:
+      - airflow-network
+
+  airflow-init:
+    container_name: airflow-init
+    image: apache/airflow:2.1.0
+    env_file:
+      - ./environment/airflow.env
+      - ./environment/airflow-init.env
+    command: version
+    user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+    # volumes:
+    #   - ./dags:/opt/airflow/dags
+    #   - ./scripts:/opt/airflow/scripts
+    #   - ./plugins:/opt/airflow/plugins
+    depends_on:
+      # - redis
+      - rabbitmq
+      - postgres
+    networks:
+      - airflow-network
+
+  airflow-flower:
+    container_name: airflow-flower
+    image: apache/airflow:2.1.0
+    env_file:
+      - ./environment/airflow.env
+    command: celery flower -A user1:pass1,user2:pass2
+    user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+    ports:
+      - 5555:5555
+    # volumes:
+    #   - ./dags:/opt/airflow/dags
+    #   - ./scripts:/opt/airflow/scripts
+    #   - ./plugins:/opt/airflow/plugins
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      # - redis
+      - rabbitmq
+      - postgres
+    networks:
+      - airflow-network
+
+volumes:
+  postgres-db-volume:
+
+networks:
+  airflow-network:
+    driver: bridge
