@@ -1,0 +1,19 @@
+---
+version: '3'
+services:
+  distroless-fastapi:
+    container_name: distroless-fastapi
+    hostname: uvicorn
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: distroless/fastapi:1.0.0
+    restart: always
+    ports:
+      - 5000:5000
+    networks:
+      - distroless-network
+
+networks:
+  distroless-network:
+    driver: bridge
