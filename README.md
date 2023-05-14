@@ -5,6 +5,7 @@ This repository contains some services for running on docker containers.
 - **airflow**. Deploy Airflow infrastructure.
 - **cloudera**. Deploy Cloudera ecosystem on Docker.
 - **data-science-lab**. Launch an awesome data science toolstack.
+- **distroless-python**. Build a distroless image for serving Uvicorn/FastAPI service.
 - **elastic-cluster**. Basic Elastic cluster configuration.
 - **elk-filebeat-metricbeat**. Stack ELK.
 - **gitlab-runner**. Use Gitlab Runner for CI.
