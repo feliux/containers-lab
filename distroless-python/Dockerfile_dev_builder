@@ -1,0 +1,16 @@
+# docker build -t python-builder:1.0.0 -f Dockerfile_dev_builder .
+# docker run --name test-builder python-builder:1.0.0
+FROM python:3.9-slim-bullseye
+
+WORKDIR /tmp
+
+RUN pip install --upgrade pip && \
+    pip install --no-warn-script-location virtualenv && \
+    python -m venv .env
+
+COPY requirements.txt .
+
+RUN . .env/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
+
+ENTRYPOINT ["/usr/bin/tail", "-f", "/dev/null"]
