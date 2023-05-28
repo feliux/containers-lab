@@ -17,6 +17,7 @@ This repository contains some services for running on docker containers.
 - **nessus**. Scan vulnerabilities with Nessus.
 - **R**. Deploy R services for data science.
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
+- **sonarqube**. Deploy SonarQube for SAST.
 - **splunk**. Deploy Splunk docker infrastructure.
 - **telegraf-influx-grafana**. Monitoring Docker sockets.
 - **trivy**. Scan Docker images with Trivy.
