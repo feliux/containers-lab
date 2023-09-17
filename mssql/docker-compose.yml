@@ -1,0 +1,18 @@
+version: "3.1"
+
+services:
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-preview-ubuntu-22.04
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: Changeme!
+      MSSQL_PID: Developer
+    ports:
+      - 1433:1433
+    networks:
+      - mssql-net
+
+networks:
+  mssql-net:

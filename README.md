@@ -14,6 +14,9 @@ This repository contains some services for running on docker containers.
 - **hortonworks**. Deploy Hortonworks ecosystem on Docker.
 - **jenkins-gitlab-registry**. Tools for code versioning and CI/CD.
 - **minio-registry**. Use Minio to save docker images and python packages.
+- **mongodb**. Deploy a simple MongoDB server.
+- **mssql**. Deploy a simple Microsoft Server SQL.
+- **mysql**. Deploy a simple MySQL instance.
 - **nessus**. Scan vulnerabilities with Nessus.
 - **R**. Deploy R services for data science.
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
