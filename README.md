@@ -12,6 +12,7 @@ This repository contains some services for running on docker containers.
 - **gitlab-runner**. Use Gitlab Runner for CI.
 - **gpu-scipy-pytorch-notebook**. Run pytorch-notebooks on GPU.
 - **guacamole-mysql-nginx**. Remote access to servers.
+- **intellij**. Dockerfile for IntelliJ.
 - **hortonworks**. Deploy Hortonworks ecosystem on Docker.
 - **jenkins-gitlab-registry**. Tools for code versioning and CI/CD.
 - **minio-registry**. Use Minio to save docker images and python packages.
@@ -19,6 +20,7 @@ This repository contains some services for running on docker containers.
 - **mssql**. Deploy a simple Microsoft Server SQL.
 - **mysql**. Deploy a simple MySQL instance.
 - **nessus**. Scan vulnerabilities with Nessus.
+- **postman**. Dockerfile for Postman.
 - **R**. Deploy R services for data science.
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
 - **sonarqube**. Deploy SonarQube for SAST.

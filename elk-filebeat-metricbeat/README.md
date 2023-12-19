@@ -12,7 +12,7 @@ Docker-stasts -> Metricbeat -> Elastic <-> Kibana
 
 Si se desea dar otro uso entonces habría que añadir/cambiar los archivos de configuración de cada servicio así como el *compose* correspondiente. En el apartado **Enlaces de interés** se aportan enlaces a la guía de Filebeat y Metricbeat donde podemos ver otros inputs, módulos, etc.
 
-### Ejecución
+## Ejecución
 
 Para arrancar los servicios ELK
 
@@ -30,7 +30,29 @@ O bien todo a la vez (ELK + Filebeat)
 
 `docker-compose -f docker-compose-metricbeat.yml up -d`
 
-### Uso
+### Extra. Docker command
+
+```sh
+$ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+$ docker pull docker.elastic.co/kibana/kibana:7.6.0
+
+$ docker network create --driver bridge elastic-net
+
+$ docker run --network=elastic-net -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.0
+$ docker run --link <elastic-container-name-or-ID>:elasticsearch -p 5601:5601 kibana:7.6.0
+$ docker run --network=elastic-net -d --name kibana -p 5601:5601 kibana:7.6.0
+
+$ curl -XGET 'http://127.0.0.1:9200/megacorp/employee/1' -H 'Content-Type: application/json' -d '{"query":{"match_all":{}}}'
+```
+
+Servicios disponibles es
+
+~~~
+http://localhost:5601/app/kibana
+http://localhost:9200/
+~~~
+
+## Uso
 
 Podemos comprobar los *índices* disponibles con el siguiente comando. Las credenciales de acceso se encuentran en los archivos de configuración. Por defecto hemos puesto `elastic // changeme`
 
@@ -42,7 +64,7 @@ Podemos comprobar los *índices* disponibles con el siguiente comando. Las crede
 
 ---
 
-### Visualización. Kibana
+## Visualización. Kibana
 
 Kibana estará accesible en `localhost:5601`.
 
@@ -74,7 +96,7 @@ Podemos seleccionar un *dashboard* pre-configurado para visualizar las estadíst
 
 ---
 
-#### Enlaces de interés
+## Enlaces de interés
 
 [Elastic](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)
 
