@@ -3,6 +3,7 @@
 This repository contains some services for running on docker containers.
 
 - **airflow**. Deploy Airflow infrastructure.
+- **cartodb**.
 - **cloudera**. Deploy Cloudera ecosystem on Docker.
 - **data-science-lab**. Launch an awesome data science toolstack.
 - **distroless-python**. Build a distroless image for serving Uvicorn/FastAPI service.
@@ -22,6 +23,7 @@ This repository contains some services for running on docker containers.
 - **nessus**. Scan vulnerabilities with Nessus.
 - **postman**. Dockerfile for Postman.
 - **R**. Deploy R services for data science.
+- **rabbitmq**.
 - **raspberry-tor**. Anonymous browsing with RaspberryPi.
 - **sonarqube**. Deploy SonarQube for SAST.
 - **splunk**. Deploy Splunk docker infrastructure.
