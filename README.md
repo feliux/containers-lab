@@ -8,6 +8,7 @@ This repository contains some services for running on docker containers.
 - **distroless-python**. Build a distroless image for serving Uvicorn/FastAPI service.
 - **elastic-cluster**. Basic Elastic cluster configuration.
 - **elk-filebeat-metricbeat**. Stack ELK.
+- **firefox-chrome**. Dockerfile for web browsers.
 - **gitlab-runner**. Use Gitlab Runner for CI.
 - **gpu-scipy-pytorch-notebook**. Run pytorch-notebooks on GPU.
 - **guacamole-mysql-nginx**. Remote access to servers.
