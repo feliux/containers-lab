@@ -1,0 +1,78 @@
+version: '3'
+
+services:
+  psql:
+    container_name: keycloak-psql
+    image: postgres:13
+    env_file:
+      - ./environment/postgre.env
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-keycloak:/var/lib/postgresql/data/
+    networks:
+      - keycloak-net
+
+  keycloak:
+    container_name: keycloak
+    image: jboss/keycloak:12.0.4
+    env_file:
+      - ./environment/postgre.env
+      - ./environment/keycloak.env
+    depends_on:
+      - psql
+    ports:
+      - "8080:8080"
+    # volumes:
+    #   - ./krb5.conf:/etc/krb5.conf
+    networks:
+      - keycloak-net
+
+  freeipa-server:
+    container_name: freeipa-server
+    hostname: ipa.example.test
+    image: freeipa/freeipa-server:fedora-30
+    environment:
+      PASSWORD: Secret123
+      IPA_SERVER_INSTALL_OPTS: -U -r EXAMPLE.TEST #--no-ntp
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 0
+    tty: true
+    #read_only: true
+    ports:
+      - "53:53/udp"
+      - "53:53"
+      # HTTP/HTTPs
+      - "80:80"
+      - "443:443"
+      # LDAP
+      - "389:389"
+      - "636:636"
+      # Kerberos
+      - "88:88/udp"
+      - "88:88"
+      - "464:464/udp"
+      - "464:464"
+      # NTP
+      - "123:123/udp"
+    volumes:
+      - freeipa-data:/data:Z
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      # - ./krb5.conf:/etc/krb5.conf
+    networks:
+      - keycloak-net
+
+  client:
+    container_name: ubuntu-client
+    image: ubuntu:20.04
+    entrypoint: tail -f /dev/null
+    networks:
+      - keycloak-net
+
+volumes:
+  postgres-keycloak:
+  freeipa-data:
+
+networks:
+  keycloak-net:
