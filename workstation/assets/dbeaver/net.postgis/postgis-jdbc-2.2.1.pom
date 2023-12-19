@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+	
+    <parent>
+        <groupId>net.postgis</groupId>
+        <artifactId>postgis-java-aggregator</artifactId>
+        <version>2.2.1</version>
+    </parent>
+
+    <artifactId>postgis-jdbc</artifactId>
+    <version>2.2.1</version>
+    <packaging>jar</packaging>
+
+    <name>Postgis JDBC Driver</name>
+    <description>PostGIS adds support for geographic objects to the PostgreSQL object-relational database.</description>
+
+    <properties>
+        <testWithDatabase>false</testWithDatabase>
+        <jdbcDriverClassName>org.postgresql.Driver</jdbcDriverClassName>
+        <jdbcUrl>jdbc:postgresql://localhost:5432/postgis1</jdbcUrl>
+        <jdbcUsername>postgis1</jdbcUsername>
+        <jdbcPassword>postgis1</jdbcPassword>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>[9.4.1208.jre7,)</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <systemPropertyVariables>
+                        <testWithDatabase>${testWithDatabase}</testWithDatabase>
+                        <jdbcDriverClassName>${jdbcDriverClassName}</jdbcDriverClassName>
+                        <jdbcUrl>${jdbcUrl}</jdbcUrl>
+                        <jdbcUsername>${jdbcUsername}</jdbcUsername>
+                        <jdbcPassword>${jdbcPassword}</jdbcPassword>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
