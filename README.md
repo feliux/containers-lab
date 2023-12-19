@@ -11,6 +11,7 @@ This repository contains some services for running on docker containers.
 - **elk-filebeat-metricbeat**. Stack ELK.
 - **firefox-chrome**. Dockerfile for web browsers.
 - **gitlab-runner**. Use Gitlab Runner for CI.
+- **gpu**.
 - **gpu-scipy-pytorch-notebook**. Run pytorch-notebooks on GPU.
 - **guacamole-mysql-nginx**. Remote access to servers.
 - **intellij**. Dockerfile for IntelliJ.
