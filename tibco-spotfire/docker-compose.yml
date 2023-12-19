@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: spotfire-psql
+    build:
+      context: .
+      dockerfile: Dockerfile_psql
+    image: spotfire-psql:13.0.0.1
+    env_file:
+      - ./environment/postgres.env
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-spotfire:/var/lib/postgresql/data/
+    networks:
+      - spotfire
+    
+  spotfire:
+    container_name: spotfire
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spotfire:11.2.0.1 # 11.2.0 from Dockerfile and .1 our spotfire version
+    env_file:
+      - ./environment/postgres.env
+      - ./environment/spotfire.env
+    stdin_open: true
+    tty: true
+    depends_on:
+      - postgres
+    ports:
+      - "80:80"
+      - "9443:9443"
+      - "9080:9080"
+      - "5701:5701"
+    networks:
+      - spotfire
+
+volumes:
+  postgres-spotfire:
+
+networks:
+  spotfire:

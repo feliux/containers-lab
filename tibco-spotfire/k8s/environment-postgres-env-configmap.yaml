@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  ACTIONDB_NAME: spotfire_actionlog
+  ACTIONDB_PASSWORD: log_changeme
+  ACTIONDB_USER: spotfire_actionlog
+  POSTGRES_DB: rootdb
+  POSTGRES_PASSWORD: changeme
+  POSTGRES_USER: rootuser
+  SERVERDB_NAME: spotfire_server
+  SERVERDB_PASSWORD: spotfire_changeme
+  SERVERDB_USER: spotfire_user
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: postgres-environment-postgres-env
+  name: environment-postgres-env

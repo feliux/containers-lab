@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/spotfire: "true"
+        io.kompose.service: postgres
+    spec:
+      containers:
+        - env:
+            - name: ACTIONDB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_NAME
+                  name: environment-postgres-env
+            - name: ACTIONDB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_PASSWORD
+                  name: environment-postgres-env
+            - name: ACTIONDB_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_USER
+                  name: environment-postgres-env
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_DB
+                  name: environment-postgres-env
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: environment-postgres-env
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_USER
+                  name: environment-postgres-env
+            - name: SERVERDB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_NAME
+                  name: environment-postgres-env
+            - name: SERVERDB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_PASSWORD
+                  name: environment-postgres-env
+            - name: SERVERDB_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_USER
+                  name: environment-postgres-env
+          image: spotfire-psql:13.0.0.1
+          name: spotfire-psql
+          ports:
+            - containerPort: 5432
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: postgres-spotfire
+      restartPolicy: Always
+      volumes:
+        - name: postgres-spotfire
+          persistentVolumeClaim:
+            claimName: postgres-spotfire
+status: {}
