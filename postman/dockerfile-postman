@@ -1,0 +1,32 @@
+FROM debian:jessie-slim
+
+RUN apt update && \
+    apt upgrade -y && \
+    apt install wget -y && \
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+# The first line ALWAYS fails ->  "|| true" command to continue
+RUN dpkg -i google-chrome-stable_current_amd64.deb || true && \
+    apt --fix-broken install -y && \
+    dpkg -i google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb
+
+# Change 1000 with the result from 'id -u' command (user id) & 'id -g' command (group id)
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/postman && \
+    echo "postman:x:${uid}:${gid}:postman,,,:/home/postman:/bin/bash" >> /etc/passwd && \
+    echo "postman:x:${uid}:" >> /etc/group && \
+    mkdir /etc/sudoers.d && \
+    echo "postman ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/postman && \
+    chmod 0440 /etc/sudoers.d/postman && \
+    chown ${uid}:${gid} -R /home/postman && \
+    mkdir /home/postman/Projects && \
+    chmod 777 /home/postman/Projects
+
+USER postman
+
+ENV HOME /home/postman
+
+WORKDIR /home/postman
+
+CMD /usr/bin/google-chrome --app-id=fhbjgbiflinjbdggehcddcbncdddomop
