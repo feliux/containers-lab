@@ -4,6 +4,18 @@
 
 Splunk available on `localhost:8000` with following credentials `admin // changeme`
 
+### Extra
+
+```sh
+$ docker pull splunk/splunk:latest
+$ docker network create --driver bridge splunk-net
+
+$ docker run -d -e "SPLUNK_START_ARGS=--accept-license" -e "SPLUNK_USER=<user>" -e "SPLUNK_PASSWORD=<password>"  -v /home/<user>/<path>:/opt/splunk/var -- network splunk-net -p 8000:8000 --name splunk splunk/splunk:latest
+$ docker run -d -e "SPLUNK_START_ARGS=--accept-license" -e "SPLUNK_PASSWORD=<password>"  -v /home/<user>/<path>:/opt/splunk/var -- network splunk-net -p 8000:8000 --name splunk splunk/splunk:latest
+
+$ wget http://localhost:8000
+```
+
 ## References
 
 [Splunk DockerHub](https://hub.docker.com/r/splunk/splunk)

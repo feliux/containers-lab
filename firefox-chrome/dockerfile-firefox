@@ -1,0 +1,25 @@
+FROM debian:jessie-slim
+
+# FF versions in Debian: http://mozilla.debian.net/
+RUN echo "deb http://http.debian.net/debian unstable main" >> /etc/apt/sources.list && \
+    apt update && apt install -t unstable firefox -y
+
+# Change 1000 with the result from 'id -u' command (user id) & 'id -g' command (group id)
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/firefox && \
+    echo "firefox:x:${uid}:${gid}:firefox,,,:/home/firefox:/bin/bash" >> /etc/passwd && \
+    echo "firefox:x:${uid}:" >> /etc/group && \
+    mkdir /etc/sudoers.d && \
+    echo "firefox ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/firefox && \
+    chmod 0440 /etc/sudoers.d/firefox && \
+    chown ${uid}:${gid} -R /home/firefox && \
+    mkdir /home/firefox/Downloads && \
+    chmod 777 /home/firefox/Downloads
+
+USER firefox
+
+ENV HOME /home/firefox
+
+WORKDIR /home/firefox
+
+CMD /usr/bin/firefox

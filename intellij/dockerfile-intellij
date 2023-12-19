@@ -1,0 +1,40 @@
+FROM alpine:3.10
+
+ENV LANG C.UTF-8
+
+ARG INTELLIJ_APP=ideaIU-2019.1.3.tar.gz
+
+RUN wget https://download.jetbrains.com/idea/$INTELLIJ_APP && \
+    tar -xf $INTELLIJ_APP && \
+    mv /idea-IU-191.7479.19 /opt/idea && \
+    rm $INTELLIJ_APP
+
+RUN apk --no-cache --update add \
+    openjdk8 openjdk8-dbg
+
+RUN apk --no-cache --update add \
+    cmake g++ git linux-headers libpthread-stubs make gradle
+
+RUN apk --no-cache --update add \
+    bash bash-completion coreutils file openssl openssh font-noto
+
+RUN apk --no-cache --update add \
+    gdb musl-dbg strace
+		
+# 'shadow' gives the capabilities to create an user 
+RUN apk --no-cache --update add shadow && \
+    useradd --create-home --shell /bin/bash intellij && \
+    passwd -d intellij && \
+    chmod 777 /home/intellij/
+
+USER intellij
+
+ENV HOME /home/intellij
+
+WORKDIR /home/intellij
+
+ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
+ENV JDK_HOME  /usr/lib/jvm/java-1.8-openjdk
+ENV JAVA_EXE  /usr/lib/jvm/java-1.8-openjdk/bin/java
+
+CMD /opt/idea/bin/idea.sh

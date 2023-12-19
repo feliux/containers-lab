@@ -1,0 +1,24 @@
+version: "3.1"
+
+services:
+
+  mongo:
+    image: mongo:5
+    restart: always
+    #command: --serviceExecutor adaptive
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+      MONGO_INITDB_DATABASE: myddbb
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mongo-net
+
+volumes:
+  mongo-data:
+
+networks:
+  mongo-net:
