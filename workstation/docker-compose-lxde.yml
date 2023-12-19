@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+    lubuntu-xrdp:
+        container_name: lubuntu-xrdp
+        hostname: workstation
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: workstation:0.1.0
+        stdin_open: true
+        tty: true
+        #entrypoint: tail -f /dev/null
+        ports:
+          - "3389:3389"
+        networks:
+          - guacamole-net
+
+    postgres:
+      container_name: test-psql
+      image: postgres:13
+      environment:
+        - POSTGRES_PASSWORD=changeme
+        - POSTGRES_USER=root
+        - POSTGRES_DB=test
+      ports:
+        - "5432:5432"
+      networks:
+        - guacamole-net
+networks:
+    guacamole-net:

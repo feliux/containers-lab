@@ -10,6 +10,7 @@ This repository contains some services for running on docker containers.
 - **elastic-cluster**. Basic Elastic cluster configuration.
 - **elk-filebeat-metricbeat**. Stack ELK.
 - **firefox-chrome**. Dockerfile for web browsers.
+- **freeipa-keycloack**. Launch a FreeIPA server integrated with Keycloack.
 - **gitlab-runner**. Use Gitlab Runner for CI.
 - **gpu**.
 - **gpu-scipy-pytorch-notebook**. Run pytorch-notebooks on GPU.
@@ -29,7 +30,9 @@ This repository contains some services for running on docker containers.
 - **sonarqube**. Deploy SonarQube for SAST.
 - **splunk**. Deploy Splunk docker infrastructure.
 - **telegraf-influx-grafana**. Monitoring Docker sockets.
+- **tibco-spotfire**. Deploy TIBCO Spotfire Server.
 - **trivy**. Scan Docker images with Trivy.
 - **wordpress-mysql**. Deploy a Wordpress server.
+- **workstation**. Deploy a ubuntu container for developing.
 - **zabbix-mysql**. Deploy a Zabbix container for monitoring servers/services.
 - **zap**. Pentesting applications with ZAP.

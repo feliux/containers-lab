@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: spotfire
+  name: spotfire
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: spotfire
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/spotfire: "true"
+        io.kompose.service: spotfire
+    spec:
+      containers:
+        - env:
+            - name: ACTIONDB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_NAME
+                  name: environment-postgres-env
+            - name: ACTIONDB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_PASSWORD
+                  name: environment-postgres-env
+            - name: ACTIONDB_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: ACTIONDB_USER
+                  name: environment-postgres-env
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: ADMIN_PASSWORD
+                  name: environment-spotfire-env
+            - name: ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: ADMIN_USER
+                  name: environment-spotfire-env
+            - name: CONFIG_TOOL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: CONFIG_TOOL_PASSWORD
+                  name: environment-spotfire-env
+            - name: DB_DRIVER
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_DRIVER
+                  name: environment-spotfire-env
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_URL
+                  name: environment-spotfire-env
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_DB
+                  name: environment-postgres-env
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: environment-postgres-env
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_USER
+                  name: environment-postgres-env
+            - name: SERVERDB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_NAME
+                  name: environment-postgres-env
+            - name: SERVERDB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_PASSWORD
+                  name: environment-postgres-env
+            - name: SERVERDB_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: SERVERDB_USER
+                  name: environment-postgres-env
+            - name: SET_AUTO_TRUST
+              valueFrom:
+                configMapKeyRef:
+                  key: SET_AUTO_TRUST
+                  name: environment-spotfire-env
+          image: spotfire:11.2.0.1
+          name: spotfire
+          ports:
+            - containerPort: 80
+            - containerPort: 9443
+            - containerPort: 9080
+            - containerPort: 5701
+          resources: {}
+          stdin: true
+          tty: true
+      restartPolicy: Always
+status: {}

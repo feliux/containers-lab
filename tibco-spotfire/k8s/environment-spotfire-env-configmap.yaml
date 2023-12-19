@@ -1,0 +1,14 @@
+apiVersion: v1
+data:
+  ADMIN_PASSWORD: spotfire_changeme
+  ADMIN_USER: spotfire_admin
+  CONFIG_TOOL_PASSWORD: config_password
+  DB_DRIVER: org.postgresql.Driver
+  DB_URL: jdbc:postgresql://spotfire-psql:5432/spotfire_server
+  SET_AUTO_TRUST: "true"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: spotfire-environment-spotfire-env
+  name: environment-spotfire-env

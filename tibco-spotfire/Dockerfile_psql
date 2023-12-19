@@ -1,0 +1,7 @@
+FROM postgres:13
+
+WORKDIR /tmp
+COPY postgres/sql .
+
+WORKDIR /docker-entrypoint-initdb.d
+COPY postgres/scripts .
