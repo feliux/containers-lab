@@ -3,7 +3,7 @@ version: '3'
 services:
   nessus:
     container_name: nessus
-    image: tenableofficial/nessus:8.15.0
+    image: tenable/nessus:10.6.4-ubuntu
     env_file:
       - ./environment/nessus.env
     ports:
