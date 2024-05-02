@@ -1,6 +1,6 @@
 # Containers Lab
 
-This repository contains some services for running on containers.
+This repository contains some services running on containers.
 
 - [**airflow**](./airflow/). Deploy Airflow infrastructure.
 - [**cartodb**](./cartodb/).
