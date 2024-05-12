@@ -19,6 +19,7 @@ This repository contains some services running on containers.
 - [**intellij**](./intellij/). Dockerfile for IntelliJ.
 - [**jenkins-gitlab-registry**](./jenkins-gitlab-registry/). Tools for code versioning and CI/CD.
 - [**minio-registry**](./minio-registry/). Use Minio to save docker images and python packages.
+- [**mlflow-minio-psql**](./mlflow-minio-psql/). Deploy a Mlflow server backed with Minio and PostgreSQL.
 - [**mongodb**](./mongodb/). Deploy a simple MongoDB server.
 - [**mssql**](./mssql/). Deploy a simple Microsoft Server SQL.
 - [**mysql**](./mysql/). Deploy a simple MySQL instance.
