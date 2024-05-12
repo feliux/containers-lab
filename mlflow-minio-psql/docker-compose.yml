@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+  minio:
+    container_name: minio
+    image: minio/minio:RELEASE.2024-05-10T01-41-38Z
+    environment:
+      MINIO_ROOT_USER: miniouser
+      MINIO_ROOT_PASSWORD: changeme
+    command: server /data --console-address ":9001"
+    restart: always
+    ports:
+      - 9000:9000 # console
+      - 9001:9001 # webui
+    volumes:
+      - minio:/data
+    networks:
+      mlops:
+
+  createbuckets:
+    container_name: mc
+    image: minio/mc:RELEASE.2024-05-09T17-04-24Z
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minioServer http://minio:9000 user changeme;
+      /usr/bin/mc mb minioServer/models;
+      /usr/bin/mc policy set public minioServer/models;
+      exit 0;
+      "
+    networks:
+      - mlops
+
+  postgres:
+    container_name: mlflow_psql
+    image: postgres:13
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: mlflow
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mlflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - mlops
+  
+  mlflow:
+    container_name: mlflow
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mlflow:1.0.0
+    environment:
+      # Custom
+      MLFLOW_HOST: "0.0.0.0"
+      MLFLOW_PORT: 8080
+      MLFLOW_BACKEND_STORE_URI: postgresql://mlflow:changeme@postgres:5432/mlflow
+      MLFLOW_ARTIFACTS_DESTINATION: s3://bucket-models/test
+      MLFLOW_WORKERS: 5
+      MLFLOW_APP_NAME: basic-auth # admin /// password
+      PROMETHEUS_FOLDER: /app/metrics
+      # Mlflow
+      MLFLOW_ARTIFACT_UPLOAD_DOWNLOAD_TIMEOUT: 60 # None
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_S3_IGNORE_TLS: true
+      # Database
+      MLFLOW_SQLALCHEMYSTORE_POOL_SIZE: 10
+      MLFLOW_SQLALCHEMYSTORE_POOL_RECYCLE: 30
+      MLFLOW_SQLALCHEMYSTORE_MAX_OVERFLOW: 5
+      # AWS
+      AWS_ACCESS_KEY_ID: miniouser
+      AWS_SECRET_ACCESS_KEY: changeme
+    depends_on:
+      - minio
+      - postgres
+    ports:
+      - 8080:8080
+    volumes:
+      - mlflow:/app/metrics
+    networks:
+      mlops:
+
+volumes:
+  minio:
+  postgres:
+  mlflow:
+
+networks:
+  mlops:

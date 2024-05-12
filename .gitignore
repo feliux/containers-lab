@@ -1,3 +1,8 @@
+# Folders
 data-science-lab/airflow/logs/**
+.env/
+
+# Files
 *.pyc
 *.ipynb_checkpoints
+*.pkl
