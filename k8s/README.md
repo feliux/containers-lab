@@ -4,15 +4,15 @@ Go to [infra-lab](https://github.com/feliux/infra-lab) repository to checkout fo
 
 ## Services
 
-- **airflow**. Ready production Airflow deployment.
-- **argocd**. Install ArgoCD in your cluster.
-- **aws**. Deploy an EKS cluster and some extra features.
-- **gcp**. Deploy a GKE cluster and some extra features.
-- **golang-js-api**. Minimal webpage using Golang API backend server and a JavaScript frontend.
-- **k8s-cron-rollout**. Custom distroless images for rollout a k8s deployments. View on [DockerHub](https://hub.docker.com/r/feliux/k8s-cron)
-- **kubeflow**. Deploy Kubeflow on AWS.
-- **pinponfel**. Personal app.
-- **wordpress**.
+- [**airflow**](./airflow/). Ready production Airflow deployment.
+- [**argocd**](./argocd/). Install ArgoCD in your cluster.
+- [**aws**](./aws/). Deploy an EKS cluster and some extra features.
+- [**gcp**](./gcp/). Deploy a GKE cluster and some extra features.
+- [**golang-js-api**](./golang-js-api/). Minimal webpage using Golang API backend server and a JavaScript frontend.
+- [**k8s-cron-rollout**](./k8s-cron-rollout/). Custom distroless images for rollout a k8s deployments. View on [DockerHub](https://hub.docker.com/r/feliux/k8s-cron)
+- [**kubeflow-aws**](./kubeflow-aws/). Deploy Kubeflow on AWS.
+- [**pinponfel**](./pinponfel/). Personal app.
+- [**wordpress**](./wordpress/). A simple Wordpress server.
 
 ## References
 
