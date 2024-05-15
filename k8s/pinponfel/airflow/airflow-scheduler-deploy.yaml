@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  namespace: airflow
+  labels:
+    app: airflow-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-scheduler
+  template:
+    metadata:
+      labels:
+        app: airflow-scheduler
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 50000
+        runAsGroup: 50000
+        fsGroup: 50000
+      containers:
+        - name: airflow-scheduler
+          image: gcr.io/learning-310712/airflow-pinponfel:0.1.0
+          imagePullPolicy: IfNotPresent
+          # resources:
+          # # 181.6MiB / 2.931GiB
+            # requests:
+            #   cpu: 100m
+            #   memory: 512Mi
+            # limits:
+            #   cpu: 400m
+            #   memory: 700Mi
+          args: ["scheduler"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            # readOnlyRootFilesystem: true
+            privileged: false
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #     - sh
+          #     - -c
+          #     - airflow jobs check --job-type SchedulerJob --hostname "${HOSTNAME}"
+          #   initialDelaySeconds: 160
+          #   periodSeconds: 20
+          envFrom:
+            - configMapRef:
+                name: airflow-envs
+          env:
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+            - name: _AIRFLOW_WWW_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_USERNAME
+            - name: _AIRFLOW_WWW_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_PASSWORD
+            - name: AIRFLOW_PSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_USER
+            - name: AIRFLOW_PSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_PASSWORD
+            - name: AIRFLOW_PSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_DB
+            - name: CUSTOM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_USER
+            - name: CUSTOM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_PASSWORD
+            - name: CUSTOM_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_DB
+            - name: TOKEN_BOT
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: TOKEN_BOT
+            - name: CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CHAT_ID
+            - name: GROUP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: GROUP_ID
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: MINIO_SECRET_KEY
+          volumeMounts:
+            - name: dags
+              mountPath: /opt/airflow/dags
+            - name: scripts
+              mountPath: /opt/airflow/scripts
+      volumes:
+        - name: dags
+          configMap:
+            # pinpon
+            name: airflow-dags
+            items:
+            - key: etl_previous.py
+              path: etl_previous.py
+            - key: etl_following.py
+              path: etl_following.py
+        - name: scripts
+          configMap:
+            # pinpon
+            name: airflow-scripts
+            items:
+            - key: scraper_previous.py
+              path: scraper_previous.py
+            - key: scraper_following.py
+              path: scraper_following.py
+            - key: stats_to_telegram.py
+              path: stats_to_telegram.py
+            # utils pinpon
+            - key: pinpon_database.py
+              path: pinpon_database.py
+            - key: pinpon_helper.py
+              path: pinpon_helper.py
+            - key: telegram_helper.py
+              path: telegram_helper.py

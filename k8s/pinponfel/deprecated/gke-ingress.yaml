@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: my-namespace
+  annotations:
+  # This a native GKE ingress
+    kubernetes.io/ingress.global-static-ip-name: "global-ingress"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /airflow/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: airflow-pinpon-svc
+            port:
+              number: 8080
+      - path: /minio/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: minio-svc
+            port:
+              number: 9000
+      - path: /grafana/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: grafana-svc
+            port:
+              number: 3000

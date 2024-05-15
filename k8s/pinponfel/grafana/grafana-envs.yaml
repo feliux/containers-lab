@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-envs
+  namespace: grafana
+  labels:
+    app: grafana
+data:
+  GF_SERVER_DOMAIN: "grafana.felagonell.com"
+  GF_SERVER_ROOT_URL: "https://grafana.felagonell.com"
+  GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+  GF_AUTH_GENERIC_OAUTH_NAME: "Keycloak" # display on login button
+  GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+  GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "grafana" # keycloak client_id
+  GF_AUTH_GENERIC_OAUTH_SCOPES: profile
+  GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://keycloak.felagonell.com/auth/realms/pinpon/protocol/openid-connect/auth"
+  GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://keycloak.felagonell.com/auth/realms/pinpon/protocol/openid-connect/token"
+  GF_AUTH_GENERIC_OAUTH_API_URL: "https://keycloak.felagonell.com/auth/realms/pinpon/protocol/openid-connect/userinfo"
+  GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(roles[*], 'admin') && 'Admin' || contains(roles[*], 'editor') && 'Editor' || contains(roles[*], 'viewer') && 'Viewer'"
+  # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: # as secret

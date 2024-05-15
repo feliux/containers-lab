@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pinpon
+  namespace: argocd
+#  finalizers:
+#  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/feliux/k8s_projects.git
+    targetRevision: gcp
+    path: pinpon
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pinpon

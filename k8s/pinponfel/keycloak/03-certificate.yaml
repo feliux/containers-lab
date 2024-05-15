@@ -1,0 +1,14 @@
+# kubectl get certificate -n keycloak
+# kubectl describe certificate keycloak-cert -n keycloak
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: keycloak-cert
+  namespace: keycloak
+spec:
+  dnsNames:
+    - keycloak.felagonell.com
+  secretName: keycloak-tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

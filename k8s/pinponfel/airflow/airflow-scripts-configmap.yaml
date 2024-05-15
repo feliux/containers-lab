@@ -1,0 +1,895 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-scripts
+  namespace: airflow
+data:
+  # pinpon
+  scraper_previous.py: |
+    import os
+    import pandas as pd
+    import logging
+
+    from requests_html import AsyncHTMLSession
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+
+    from minio import Minio
+    from io import BytesIO
+
+    from pinpon_database import PinPonDatabase
+    from pinpon_helper import ExtendedDataFrame
+    from telegram_helper import TelegramBot
+
+    # Scrape previous matches and load data in PostgreSQL and Minio store
+
+    ##########
+    # DEV docker-compose
+    # from dotenv import load_dotenv
+    # _SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/minio.env")
+    # load_dotenv(dotenv_path=env_path)
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/custom.env")
+    # load_dotenv(dotenv_path=env_path)
+
+    # _HOST = {
+    #     "PSQL": "localhost:5432",
+    #     "MINIO": "localhost:9000"
+    # }
+    ##########
+
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+
+    # Set date to extract results
+    _NOW = datetime.now()
+    _DAY_TO_EXTRACT = _NOW.strftime("%d.%m.%Y") # for example "14.03.2021"
+    _now = _NOW.strftime("%Y_%m_%d_%H:%M:%S") # for the csv name
+    _GENDER = [
+        "others-men",
+    #    "others-women"
+    ]
+    _LEAGUE = [
+        "liga-pro",
+        "setka-cup"
+    ]
+
+    for league in _LEAGUE:
+        for gender in _GENDER:
+            logging.info(f"Scraping data for {league}_{gender}")
+            # if (gender == "others-women" and league == "liga-pro"):
+            #     logging.info("break loop")
+            #     continue
+            url = f"https://www.flashscore.com/table-tennis/{gender}/{league}/results/"
+            league = league.replace("-", "_")
+            gender = gender.replace("-", "_")
+            _NAME = f"{_now}_previous_{league}_{gender}.csv"
+
+            asession = AsyncHTMLSession()
+            async def get_scores():
+                r = await asession.get(url)
+                await r.html.arender()
+                return r
+
+            results = asession.run(get_scores)
+            results = results[0]
+
+            dummy = results.html.find("div.event__match.event__match--static.event__match--twoLine")
+            times = results.html.find("div.event__time")
+            home_participant = results.html.find("div.event__participant.event__participant--home") 
+            home_score = results.html.find("div.event__score.event__score--home")
+            away_participant = results.html.find("div.event__participant.event__participant--away")
+            away_score = results.html.find("div.event__score.event__score--away")
+            #home_event_part1 = results.html.find("div.event__part.event__part--home.event__part--1")
+
+            dict_res = defaultdict(list)
+
+            for i in range(len(dummy)):
+                # Example dummy_list
+                # ['18.02. 01:55', 'Matvieiev D. (Ukr)', 'Malynka R. (Ukr)', '3', '2', '7', '11', '11', '8', '15', '13', '8', '11', '15', '13']
+                dummy_list = dummy[i].text.split("\n")
+                # Prevent lines with 'WO'=suspended
+                if len(dummy_list[1]) < 5:
+                    continue
+                if dummy_list[0].startswith(_DAY_TO_EXTRACT[0:5]):
+                    dict_res["date"].append(dummy_list[0])
+                    dict_res["home_participant"].append(dummy_list[1])
+                    dict_res["away_participant"].append(dummy_list[2])
+                    dict_res["home_score"].append(dummy_list[3])
+                    dict_res["away_score"].append(dummy_list[4])
+                    dict_res["home_event_part1"].append(dummy_list[5])
+                    dict_res["away_event_part1"].append(dummy_list[6])
+                    dict_res["home_event_part2"].append(dummy_list[7])
+                    dict_res["away_event_part2"].append(dummy_list[8])
+                    dict_res["home_event_part3"].append(dummy_list[9])
+                    dict_res["away_event_part3"].append(dummy_list[10])
+                    if int(dummy_list[3]) + int(dummy_list[4]) >= 4:
+                        dict_res["home_event_part4"].append(dummy_list[11])
+                        dict_res["away_event_part4"].append(dummy_list[12])
+                    else:
+                        dict_res["home_event_part4"].append("0")
+                        dict_res["away_event_part4"].append("0")
+                    if int(dummy_list[3]) + int(dummy_list[4]) == 5:
+                        dict_res["home_event_part5"].append(dummy_list[13])
+                        dict_res["away_event_part5"].append(dummy_list[14])
+                    else:
+                        dict_res["home_event_part5"].append("0")
+                        dict_res["away_event_part5"].append("0")
+
+            # Break if we not have matches in the day
+            tb = TelegramBot(token_bot=os.getenv("TOKEN_BOT"))
+            if len(dict_res) == 0:
+                message = f"ERROR downloading data for previous_{league}_{gender} at date {_now}"
+                logging.info(message)
+                # Send to telegram
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message
+                )
+                continue
+
+            # Create dataframe
+            df_res = pd.DataFrame.from_dict(dict_res).astype(
+                {
+                    "date": str,
+                    "home_participant": str,
+                    "away_participant": str,
+                    "home_score": int,
+                    "away_score": int,
+                    "home_event_part1": int,
+                    "home_event_part2": int,
+                    "home_event_part3": int,
+                    "home_event_part4": int,
+                    "home_event_part5": int,
+                    "away_event_part1": int,
+                    "away_event_part2": int,
+                    "away_event_part3": int,
+                    "away_event_part4": int,
+                    "away_event_part5": int
+                }
+            )
+
+            # Convert date column "02.04. 07:15" to "02.04.2021 07:15" as datetime format
+            df_res["date"] = df_res["date"].apply(lambda x: _DAY_TO_EXTRACT + " " + x.split(". ")[1])
+            df_res["date"] = pd.to_datetime(df_res["date"], format="%d.%m.%Y %H:%M")
+
+            # Add diff columns but not split name, this after save on minio
+            df_res = ExtendedDataFrame(df_res).get_diffs()
+
+            # Split column names and get lower
+            df_res = ExtendedDataFrame(df_res).split_names()
+            df_res["home_participant"] = df_res["home_participant"].apply(lambda x: x.lower())
+            df_res["away_participant"] = df_res["away_participant"].apply(lambda x: x.lower())
+            logging.info(f"previous_{league}_{gender} dataset length: {len(df_res)} at date {_DAY_TO_EXTRACT}")
+
+            # Save raw data on minio as csv file
+            try:
+                csv_bytes = df_res.to_csv(index=False, header=True).encode("utf-8")
+                minioClient = Minio(
+                    os.getenv("MINIO_HOST"),
+                    access_key=os.getenv("MINIO_ACCESS_KEY"), 
+                    secret_key=os.getenv("MINIO_SECRET_KEY"), 
+                    secure=os.getenv("MINIO_SECURE")
+                    )
+
+                if not minioClient.bucket_exists(os.getenv("PREVIOUS_MATCHES_BUCKET")):
+                    minioClient.make_bucket(os.getenv("PREVIOUS_MATCHES_BUCKET"))
+                    logging.info("Bucket created")
+
+                minioClient.put_object(
+                    bucket_name=os.getenv("PREVIOUS_MATCHES_BUCKET"), 
+                    object_name=_NOW.strftime("%Y_%m_%d") + "/" + _NAME,
+                    data=BytesIO(csv_bytes),
+                    length=len(csv_bytes),
+                    content_type="application/csv"
+                    )
+            except Exception as e:
+                message = f"ERROR inserting previous data on minio at {_now}"
+                logging.info(message)
+                logging.info(e)
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message + "\n" + str(e)
+                )
+
+            # Insert clean data into psql
+            try:
+                db = PinPonDatabase(
+                    host=os.getenv("PSQL_HOST"),
+                    port=os.getenv("PSQL_PORT"),
+                    user=os.getenv("CUSTOM_USER"),
+                    password=os.getenv("CUSTOM_PASSWORD"),
+                    database=os.getenv("CUSTOM_DB")
+                )
+                db.insert_data(
+                    dataframe=df_res,
+                    table_name=f"previous_{league}_{gender}",
+                    if_exists="append"
+                )
+                db.do_sql(
+                    sql="GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;"
+                )
+            except Exception as e:
+                message = f"ERROR inserting previous data on psql at {_now}"
+                logging.info(message)
+                logging.info(e)
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message + "\n" + str(e)
+                )
+  scraper_following.py: |
+    import os
+    import pandas as pd
+    import logging
+
+    from tempfile import NamedTemporaryFile
+    from requests_html import AsyncHTMLSession
+    from collections import defaultdict
+    from datetime import datetime
+
+    from pinpon_database import PinPonDatabase
+    from pinpon_helper import ExtendedDataFrame
+    from telegram_helper import TelegramBot
+
+    ##########
+    # DEV docker-compose
+    # from dotenv import load_dotenv
+    # _SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/minio.env")
+    # load_dotenv(dotenv_path=env_path)
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/custom.env")
+    # load_dotenv(dotenv_path=env_path)
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/telegram.env")
+    # load_dotenv(dotenv_path=env_path)
+
+    # _HOST = {
+    #     "PSQL": "localhost:5432",
+    #     "MINIO": "localhost:9000"
+    # }
+    ##########
+
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+
+    # Set date to extract following matches (just players) and save on data_following
+    _NOW = datetime.now()
+    _DAY_TO_EXTRACT = _NOW.strftime("%d.%m.%Y")
+    _now = _NOW.strftime("%Y_%m_%d_%H:%M:%S")
+    _GENDER = [
+        "others-men",
+    #    "others-women"
+    ]
+    _LEAGUE = [
+        "liga-pro",
+        "setka-cup"
+    ]
+
+    for league in _LEAGUE:
+        for gender in _GENDER:
+            logging.info(f"Scraping data for {league}_{gender}")
+            # if (gender == "others-women" and league == "liga-pro"):
+            #     logging.info("break loop")
+            #     continue
+            url = f"https://www.flashscore.com/table-tennis/{gender}/{league}/fixtures"
+            league = league.replace("-", "_")
+            gender = gender.replace("-", "_")
+            _NAME = f"{_now}_following_{league}_{gender}.csv"
+            asession = AsyncHTMLSession()
+
+            async def get_scores():
+                r = await asession.get(url)
+                await r.html.arender()
+                return r
+
+            results = asession.run(get_scores)
+            results = results[0]
+
+            dummy = results.html.find("div.event__match.event__match--static.event__match--twoLine")
+            times = results.html.find("div.event__time")
+            home_participant = results.html.find("div.event__participant.event__participant--home")
+            away_participant = results.html.find("div.event__participant.event__participant--away")
+
+            dict_res = defaultdict(list)
+
+            for i in range(len(dummy)):
+                # example dummy_list
+                #['18.02. 01:55', 'Matvieiev D. (Ukr)', 'Malynka R. (Ukr)', '3', '2', '7', '11', '11', '8', '15', '13', '8', '11', '15', '13']
+                dummy_list = dummy[i].text.split("\n")
+                if dummy_list[0].startswith(_DAY_TO_EXTRACT[0:5]):
+                    dict_res["date"].append(dummy_list[0])
+                    dict_res["home_participant"].append(dummy_list[1])
+                    dict_res["away_participant"].append(dummy_list[2])
+
+            # Break if we not have matches in the day
+            tb = TelegramBot(token_bot=os.getenv("TOKEN_BOT"))
+            logging.info(dict_res)
+            if len(dict_res) == 0:
+                message = f"NO DATA for scraper following_{league}_{gender} at date {_now}"
+                logging.info(message)
+                # Send to telegram
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message
+                )
+                continue
+
+            # Create dataframe
+            df_res = pd.DataFrame.from_dict(dict_res).astype(
+                {
+                    "date": str,
+                    "home_participant": str,
+                    "away_participant": str
+                }
+            )
+
+            # Convert date column "02.04. 07:15" to "02.04.2021 07:15" as datetime format
+            df_res["date"] = df_res["date"].apply(lambda x: _DAY_TO_EXTRACT + " " + x.split(". ")[1])
+            df_res["date"] = pd.to_datetime(df_res["date"], format="%d.%m.%Y %H:%M")
+
+            # Split column names and get lower
+            df_res = ExtendedDataFrame(df_res).split_names()
+            df_res["home_participant"] = df_res["home_participant"].apply(lambda x: x.lower())
+            df_res["away_participant"] = df_res["away_participant"].apply(lambda x: x.lower())
+            logging.info(f"following_{league}_{gender} dataset length: {len(df_res)} at date {_DAY_TO_EXTRACT}")
+
+            # Get players names and delete duplicates
+            players = ExtendedDataFrame(df_res).get_player_list()
+
+            # Connect to psql
+            try:
+                db = PinPonDatabase(
+                    host=os.getenv("PSQL_HOST"),
+                    port=os.getenv("PSQL_PORT"),
+                    user=os.getenv("CUSTOM_USER"),
+                    password=os.getenv("CUSTOM_PASSWORD"),
+                    database=os.getenv("CUSTOM_DB")
+                )
+
+                # Load following matches on psql
+                db.insert_data(
+                    dataframe=df_res,
+                    table_name=f"following_{league}_{gender}",
+                    if_exists="append"
+                )
+                db.do_sql(
+                    sql="GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;"
+                )
+            except Exception as e:
+                message = f"ERROR inserting following data on psql at {_now}"
+                logging.info(message)
+                logging.info(e)
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message + "\n" + str(e)
+                )
+  stats_to_telegram.py: |
+    import os
+    import pandas as pd
+    import logging
+
+    from datetime import datetime
+    from time import sleep
+
+    from pinpon_database import PinPonDatabase
+    from pinpon_helper import ExtendedDataFrame
+    from telegram_helper import TelegramBot
+
+
+    ##########
+    # DEV
+    # _HOST = {
+    #     "PSQL": "psql-airflow",
+    #     "PSQL_PORT": 5432
+    # }
+    ##########
+
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+    _now = datetime.now().strftime("%Y_%m_%d_%H:%M:%S")
+
+    _GENDER = [
+        "others-men",
+    #    "others-women"
+    ]
+    _LEAGUE = [
+        "liga-pro",
+        "setka-cup"
+    ]
+
+    _COLUMNS = [
+        "date",
+        "home_participant",
+        "away_participant"
+    ]
+
+    db = PinPonDatabase(
+        host=os.getenv("PSQL_HOST"),
+        port=os.getenv("PSQL_PORT"),
+        user=os.getenv("CUSTOM_USER"),
+        password=os.getenv("CUSTOM_PASSWORD"),
+        database=os.getenv("CUSTOM_DB")
+    )
+
+    for league in _LEAGUE:
+        for gender in _GENDER:
+            logging.info(f"Stats data for {league}_{gender}")
+            # if (gender == "others-women" and league == "liga-pro"):
+            #     logging.info("break loop")
+            #     continue
+            league = league.replace("-", "_")
+            gender = gender.replace("-", "_")
+            try:
+                # Get following matches and drop duplicates. Important for stats
+                df_following = db.get_following_matches(
+                    table_name=f"following_{league}_{gender}",
+                    time=6, 
+                    interval="hours"
+                )[_COLUMNS].drop_duplicates()
+
+                # Get players names in the following matches
+                players = ExtendedDataFrame(df_following).get_player_list()
+
+                # Extract historic data from psql for players
+                df_historic = db.get_historic_player_list(
+                    player_list=tuple(players),
+                    table_name=f"previous_{league}_{gender}"
+                )
+
+                # Drop duplicated rows. Important for stats
+                df_historic.drop_duplicates(keep="last", inplace=True)
+
+                # Get stats by player
+                df_stats = ExtendedDataFrame(df_following).get_stats(
+                    player_list=players,
+                    df_historic=df_historic
+                )
+
+                # Load stats on psql
+                db.insert_data(
+                    dataframe=df_stats,
+                    table_name=f"stats_{league}_{gender}",
+                    if_exists="replace"
+                )
+                db.do_sql(
+                    sql="GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;"
+                )
+                
+                # Send to telegram
+                tb = TelegramBot(token_bot=os.getenv("TOKEN_BOT"))
+                # Chat
+                # Limit length message = 4096
+                df_length = len(df_stats)
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=f"Stats following matches {league}_{gender} \nPlayer count {df_length}"
+                )
+                if os.getenv("SEND_TO_GROUP") == "true":
+                    tb.send_message(
+                        chat_id=os.getenv("GROUP_ID"), # message 1/20 limit 20 per minute on groups
+                        text=f"Stats following matches {league}_{gender}"
+                    )
+                # logging.info(f"Stats dataset length {len(df_stats.to_markdown())}")
+                # tb.send_message(
+                #     chat_id=os.getenv("CHAT_ID"),
+                #     text=df_stats.to_markdown()
+                # )
+
+                df_stats = df_stats.reset_index()
+                for i in range(0, df_length):
+                    if os.getenv("SEND_TO_CHAT") == "true":
+                        tb.send_message(
+                            chat_id=os.getenv("CHAT_ID"),
+                            text=df_stats.iloc[i].to_json(orient="index", indent=4)
+                        )
+                    if os.getenv("SEND_TO_GROUP") == "true":
+                        if (i%20) == 19: # message 20/20 limit 20 per minute on groups
+                            sleep(60)
+                        tb.send_message(
+                            chat_id=os.getenv("GROUP_ID"),
+                            text=df_stats.iloc[i].to_json(orient="index", indent=4)
+                        )
+                sleep(60) # sleep to prevent more than 20 message between leagues
+            except Exception as e:
+                message = f"ERROR getting stats at date {_now}"
+                logging.info(message)
+                logging.info(e)
+                tb.send_message(
+                    chat_id=os.getenv("CHAT_ID"),
+                    text=message + "\n" + str(e)
+                )
+  # utils pinpon
+  pinpon_database.py: |
+    import pandas as pd
+    from datetime import datetime
+    from sqlalchemy import create_engine
+
+    class PinPonDatabase():
+        """
+        Connect to PostgreSQL
+
+        Parameters
+        ----------
+        host: str
+            Host or Ip
+        port: str or int
+            Port. Most cases 5432
+        user: str
+            User
+        password: bool
+            User password
+        database: str
+            Databse to connect
+        """
+        def __init__(self, host: str, port: str, user: str, password: str, database: str):
+            __endpoint = f"postgresql://{user}:{password}@{host}/{database}"
+            self._connection = create_engine(__endpoint)
+
+        def do_sql(self, sql: str):
+            """
+            Do custom SQL query
+
+            Parameters
+            ----------
+            sql: str
+                Custom query
+            """
+            with self._connection.connect() as connection:
+                connection.execute(sql)
+
+        def read_sql(self, sql: str):
+            """
+            Do custom SQL query and result in a dataframe
+
+            Parameters
+            ----------
+            sql: str
+                Custom query
+
+            Returns
+            -------
+            dataframe: DataFrame
+                DataFrame result of your query
+            """
+            return pd.read_sql_query(sql, self._connection)
+
+        def insert_data(self, dataframe, table_name: str, if_exists="append"):
+            """
+            Insert data into PostgreSQL
+
+            Parameters
+            ----------
+            dataframe: DataFrame
+                Data to insert
+            table_name: str
+                Table where you want to insert
+            if_exists: str
+                Method to insert
+            """
+            dataframe.to_sql(
+                table_name,
+                con=self._connection,
+                if_exists=if_exists,
+                chunksize=1000
+            )
+
+        def get_historic_player_list(self, player_list: list, table_name: str):
+            """
+            Get historical data given a list of players
+
+            Parameters
+            ----------
+            player_list: list
+                Player names. One name per item
+            table_name: str
+                Table where to extract of
+
+            Returns
+            -------
+            dataframe: DataFrame
+                Result of your query
+            """
+            sql = f"SELECT * \
+                    FROM {table_name} \
+                    WHERE home_participant IN {player_list} \
+                    or away_participant IN {player_list};"
+            df = pd.read_sql_query(sql, self._connection)
+            return df
+
+        def get_following_matches(self, table_name: str, time: int, interval: str):
+            """
+            Get following matches on a period of time
+
+            Parameters
+            ----------
+            table_name: str
+                Table where to extract of
+            time: int
+                Time from now to query data
+            interval: str
+                Period to query. Could be hour/s, week/s, day/s
+
+            Returns
+            -------
+            dataframe: DataFrame
+                Result of your query
+            """
+            sql = f"SELECT * \
+                    FROM {table_name} \
+                    WHERE date between now() \
+                    and (now() + '{time} {interval}'::interval);"
+            df = pd.read_sql_query(sql, self._connection)
+            return df
+  pinpon_helper.py: |
+    import os
+    import logging
+    import pandas as pd
+    from datetime import datetime
+
+    class PinPonLoader():
+        """
+        Build a DataFrame from a list of csv files
+
+        Parameters
+        ----------
+        data_path: str
+            Path containing files
+        script_path: str
+            Path where the main scritp is located
+        previous_data: bool
+            True if data corresponds with historical data
+        following_data: bool
+            DEPRECATED. True if data corresponds with next matches. Actually not save this data in a psql
+        """
+        def __init__(self, data_path: str, script_path: str, previous_data=True, following_data=False):
+            import glob
+            self.columns = {
+                "date": str,
+                "home_participant": str,
+                "away_participant": str,
+                "home_score": int,
+                "away_score": int,
+                "home_event_part1": int,
+                "home_event_part2": int,
+                "home_event_part3": int,
+                "home_event_part4": int,
+                "home_event_part5": int,
+                "away_event_part1": int,
+                "away_event_part2": int,
+                "away_event_part3": int,
+                "away_event_part4": int,
+                "away_event_part5": int
+            }
+            self.participants_col = {
+                "date": "datetime64[ns]",
+                "home_participant": str,
+                "away_participant": str
+            }
+            #self._NOW = datetime.now().strftime("%d.%m.%Y_%H.%M")
+            _PATH = os.path.join(
+                script_path,
+                data_path
+            )
+            if previous_data:
+                self.df = pd.concat(
+                    [pd.read_csv(FILE, usecols=list(self.columns.keys()), dtype=self.columns) for FILE in glob.glob(_PATH)],
+                    ignore_index=True
+                ).fillna(0)
+            elif following_data:
+                self.df = pd.concat(
+                    [pd.read_csv(FILE, usecols=list(self.participants_col.keys()), dtype=self.participants_col) for FILE in glob.glob(_PATH)],
+                    ignore_index=True
+                ).fillna(0)
+
+        def get_df(self):
+            """
+            Helper to return a DataFrame built on __init__
+            """
+            return self.df
+
+    class ExtendedDataFrame(pd.DataFrame):
+        """
+        Build custom methods on a DataFrame
+
+        Parameters
+        ----------
+        dataframe: DataFrame
+            Pandas Dataframe
+        """
+        def __init__(self, dataframe):
+            # use the __init__ method from DataFrame to ensure
+            # that we're inheriting the correct behavior
+            super(ExtendedDataFrame, self).__init__(dataframe)
+            self.df = dataframe
+
+        # this method makes our methods return an instance
+        # of ExtendedDataFrame, instead of a regular DataFrame
+        @property
+        def _constructor(self):
+            return ExtendedDataFrame
+            
+        def split_names(self):
+            """
+            Transform column name from this "Chahur V. (Rus)" to "Chahur V"
+
+            Returns
+            -------
+            dataframe: DataFrame
+                The input DataFrame with column names cleaned
+            """
+            participants_col = [
+                "home_participant",
+                "away_participant"
+            ]
+            for col in participants_col:
+                self.df[col] = self.df[col].apply(lambda x: x.split(". ")[0])
+            return self.df
+
+        def get_diffs(self):
+            """
+            Add difference of sets and points to a new colums:
+
+            ["diff_sets"] = ["home_score"] - ["away_score"]
+            ["diff_points"] = ["home_total_points"] - ["away_total_points"]
+
+            Returns
+            -------
+            dataframe: DataFrame
+                The input DataFrame with two more columns
+            """
+            self.df["home_total_points"] = self.df[
+                [
+                    "home_event_part1",
+                    "home_event_part2",
+                    "home_event_part3",
+                    "home_event_part4",
+                    "home_event_part5"
+                ]
+            ].sum(axis=1)
+
+            self.df["away_total_points"] = self.df[
+                [
+                    "away_event_part1",
+                    "away_event_part2",
+                    "away_event_part3",
+                    "away_event_part4",
+                    "away_event_part5"
+                ]
+            ].sum(axis=1)
+
+            self.df["diff_sets"] = self.df["home_score"] - self.df["away_score"]
+            self.df["diff_points"] = self.df["home_total_points"] - self.df["away_total_points"]
+            return self.df
+
+        def get_player_list(self):
+            """
+            Get the player names of entire DataFrame.
+
+            Returns
+            -------
+            player_list: list
+                Player name list
+            """
+            player_list = []
+            for player in self.df["home_participant"].to_list():
+                player_list.append(player)
+            for player in self.df["away_participant"].to_list():
+                player_list.append(player)
+            # Delete duplicate players names
+            return list(set(player_list))
+
+        def get_stats(self, player_list: list, df_historic):
+            """
+            Function to calculate stats from the previous dataframe
+
+            Parameters
+            -------
+            player_list: list
+                Players name list
+            df_historic: DataFrame
+                Historic data matches
+
+            Returns
+            -------
+            dataframe: DataFrame
+                DataFrame with player statistics
+            """
+            stats_cols = [
+                "home_participant",
+                "away_participant",
+                "home_score",
+                "away_score",
+                "diff_sets",
+                "diff_points"
+            ]
+            # Variables to save data
+            diff_cols = []
+            diff_dict = {}
+            for name in player_list:
+                # Get a sub dataframe which only contains row for a particular participant
+                sub_df = df_historic[(df_historic["home_participant"] == name) | (df_historic["away_participant"] == name)][stats_cols]
+                #print(sub_df)
+                if len(sub_df) != 0:
+                    sub_df["player"] = name
+                    # Normalize diff scores. Consider the participant as home_participant so we have to turn diff columns when player is on away_participant column
+                    sub_df.loc[sub_df.away_participant == name, "diff_sets"] = -1*sub_df["diff_sets"]
+                    sub_df.loc[sub_df.away_participant == name, "diff_points"] = -1*sub_df["diff_points"]
+                    # Groupby to get statistics
+                    groupby_df = sub_df[["player", "diff_sets", "diff_points"]].groupby("player").describe().round(2)
+                    #print(groupby_df)
+                    # Transform to dict to get data
+                    dict_from_groupby = groupby_df.to_dict("split")
+                    # If we already have the new column names
+                    # It will be like diff.count, diff.mean...
+                    if len(diff_cols) == 0:
+                        for i in dict_from_groupby["columns"]: # [["diff_xxxx", "count"]]
+                            diff_cols.append(i[0].replace("diff_", "") + "." + i[1])
+                    # Data is a list of list
+                    diff_dict[name] = [i for j in dict_from_groupby["data"] for i in j]
+                    diff_cols = [c.replace("%", "") for c in diff_cols] # Due an error inserting on psql
+                    # https://stackoverflow.com/questions/60030570/psycopg2-programmingerror-incomplete-placeholder-without
+                    df = pd.DataFrame.from_dict(diff_dict, orient="index", columns=diff_cols)
+                    df.index = df.index.set_names("player")
+            return df
+  telegram_helper.py: |
+    import requests
+
+    class TelegramBot():
+        """
+        Build a DataFrame from a list of csv files
+
+        Parameters
+        ----------
+        token_bot: str
+            Telegram token of your bot
+        """
+        def __init__(self, token_bot: str):
+            self._TOKEN_BOT = token_bot
+            self._URL = f"https://api.telegram.org/bot{self._TOKEN_BOT}"
+
+        def send_message(self, chat_id: str, text: str, parse_mode=None):
+            """
+            Send text to telegram chat
+
+            Parameters
+            -------
+            chat_id: str
+                Chat ID, GROUP ID nor CHANNEL ID
+            text: str
+                Message to send
+            parse_mode: str
+                Parse style text message. See API documentation
+            """
+            try:
+                requests.post(
+                        url=self._URL + "/sendMessage",
+                        data={
+                            "chat_id": chat_id,
+                            "parse_mode": parse_mode,
+                            "text": text
+                        }
+                    )
+                return "ok"
+            except Exception as e:
+                return e
+
+        def send_document(self, chat_id: str, doc: str):
+            """
+            Send text to telegram chat
+
+            Parameters
+            -------
+            chat_id: str
+                Chat ID, GROUP ID nor CHANNEL ID
+            doc: str
+                Message/data to send
+            """
+            try:
+                requests.post(
+                        url=self._URL + "/sendDocument",
+                        data={
+                            "chat_id": chat_id
+                        },
+                        files={
+                            "document": doc
+                        }
+                    )
+                return "ok"
+            except Exception as e:
+                return e

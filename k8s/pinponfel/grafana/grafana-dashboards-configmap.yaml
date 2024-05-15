@@ -1,0 +1,5140 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: grafana
+data:
+  dashboard.yml: |
+    apiVersion: 1
+    providers:
+    - name: 'PinPon Previous'
+      orgId: 1
+      folder: 'PinPon'
+      folderUid: 'pinponfelderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/pinpon
+  
+    - name: 'PinPon Stats'
+      orgId: 1
+      folder: 'PinPon'
+      folderUid: 'pinponfelderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/pinpon
+
+    - name: 'Cloud Storage Monitoring'
+      orgId: 1
+      folder: 'GCP'
+      folderUid: 'gcpfolderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/gcp
+
+    - name: 'Network TCP Load Balancer Monitoring'
+      orgId: 1
+      folder: 'GCP'
+      folderUid: 'gcpfolderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/gcp
+
+    - name: 'Firewall Insights Monitoring'
+      orgId: 1
+      folder: 'GCP'
+      folderUid: 'gcpfolderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/gcp
+
+    - name: 'GCE Network Monitoring'
+      orgId: 1
+      folder: 'GCP'
+      folderUid: 'gcpfolderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/gcp
+
+    - name: 'GCE VM Instance Monitoring'
+      orgId: 1
+      folder: 'GCP'
+      folderUid: 'gcpfolderuid'
+      type: file
+      disableDeletion: false
+      allowUiUpdates: false
+      editable: false
+      updateIntervalSeconds: 10
+      options:
+        path: /etc/grafana/provisioning/dashboards/gcp
+  pinpon-previous.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 9,
+      "iteration": 1626006190919,
+      "links": [],
+      "panels": [
+        {
+          "datasource": "PostgreSQL PinPon",
+          "description": "Results of previous matches",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "color-text",
+                "filterable": false,
+                "width": 100
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "date"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 151
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_participant"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 139
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlBl"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_score"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 98
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_score"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 94
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "thresholds"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_participant"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 124
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlBl"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_total_points"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 139
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_total_points"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 130
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "diff_sets"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 77
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-RdYlGr"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "diff_points"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 83
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-RdYlGr"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_part1"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 90
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_part1"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 88
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_part2"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 96
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_part3"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 98
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_part3"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 90
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_part4"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 95
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_part4"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 94
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "home_part5"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 94
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_part5"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 93
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "away_part2"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 97
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "continuous-YlRd"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 16,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "date"
+              }
+            ]
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "select distinct(date), home_participant, home_score, away_score, away_participant,\ndiff_sets, diff_points,\nhome_total_points, away_total_points,\nhome_event_part1 as home_part1, away_event_part1 as away_part1,\nhome_event_part2 as home_part2, away_event_part2 as away_part2,\nhome_event_part3 as home_part3, away_event_part3 as away_part3,\nhome_event_part4 as home_part4, away_event_part4 as away_part4,\nhome_event_part5 as home_part5, away_event_part5 as away_part5\nfrom previous_setka_cup_others_men\nwhere $__timeFilter(date) and \n(home_participant in ($player) or away_participant in ($player))\norder by date desc",
+              "refId": "A",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Previous Matches",
+          "transparent": true,
+          "type": "table"
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "PinPon"
+      ],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "datasource": "PostgreSQL PinPon",
+            "definition": "select distinct(home_participant) from previous_setka_cup_others_men",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": true,
+            "name": "player",
+            "options": [],
+            "query": "select distinct(home_participant) from previous_setka_cup_others_men",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "PinPon Previous",
+      "uid": "KEh1gvi7z",
+      "version": 6
+    }
+  pinpon-stats.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "",
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 15,
+      "iteration": 1625415912156,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 8,
+          "options": {
+            "content": "# Instrucciones\n\n  1. Selecciona el jugador en la pestaña superior `setka_men`, `pro_men` para filtrar la búsqueda. Ten en cuenta que el formato de nombres es en primer lugar el apellido seguido de la primera letra del nombre. Las estadísticas para cada jugador se mostrarán en las tablas inferiores\n 2. Click en el dashboard que quieres visualizar (por ejemplo **Setka Cup Men**).\n 3. Scroll-down para ver todas las tablas.\n\n \n\n # Instructions\n\n  1. Select your player in the above tab `setka_men`, `pro_men` to filter by name. Format is surname and first letter name. This players will be shown on the following panels\n 2. Click on the dashboard you want to visualize (for example **Setka Cup Men**). You will see various statistics of the previously selected players.\n 3. Scroll-down to see all the tables.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "transparent": true,
+          "type": "text"
+        },
+        {
+          "collapsed": true,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 12,
+          "panels": [
+            {
+              "datasource": null,
+              "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 5
+              },
+              "id": 17,
+              "options": {
+                "content": "- **Stats for sets**: media de sets con valores positivos y negativos y su correspondiente desviación típica (std). Valores negativos indican que el jugador ha perdido más sets de los que ha ganado (y viceversa). Si `mean = 0` entonces el jugador ha ganado tantos partidos como los que ha perdido. El valor de **%** indica el número de sets ganados/perdidos según el percentil (25, 50, 75). Por ejemplo, si `25% = 2` entonces podemos decir que para el **25%** total de partidos, el jugador ha ganado **2** sets por encima de sus oponentes. Otro ejemplo: `75% = -1` entonces el **75%** de partidos, el jugador ha finalizado con **1** set por debajo de su oponente. En resumen, valores positivos indican buenos jugadores mientras que valores negativos son sinónimos de malos jugadores.\n - **Stats for points**: aplica la misma dinámica explicada que para *Stats for sets* pero esta vez para la diferencia entre puntos totales.\n\n ---- \n\n- **Stats for sets**: sets mean with values -/+ corresponding with typical desviation (std). Mean negative values ​​indicate that the player has lost more sets than he has won (and viceversa). If `mean = 0` then the player has won the same number of sets he lost. The interpretation of **%** is a bit different, it indicate in which percentile are the number of sets. For example, if `25% = 2` then we can say that for the **25%** total of matches, the player has won with **2** sets above of his opponent. Another example: if `75% = -1` then for the **75%** total of matches, the player has lost with **1** sets below his opponent. Consider that positive values indicate a good player and negative values are synonymous of bad players.\n - **Stats for points**: the same as *Stats for sets* but in this case for total points differences.",
+                "mode": "markdown"
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "queryType": "randomWalk",
+                  "refId": "A"
+                }
+              ],
+              "transparent": true,
+              "type": "text"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Next matches for the player who has at least 1 stats",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 150
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 23,
+                "w": 9,
+                "x": 0,
+                "y": 9
+              },
+              "id": 5,
+              "options": {
+                "showHeader": true,
+                "sortBy": []
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "SELECT\n  distinct date, home_participant, away_participant\nFROM\n  following_setka_cup_others_men\nWHERE \n  (home_participant in ($setka_men) or away_participant in ($setka_men)) and date>=now()\nORDER BY date asc\n",
+                  "refId": "A",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Next matches",
+              "transparent": true,
+              "type": "table"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Stats for player who plays in the next 8h",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 110
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      }
+                    ]
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "player"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.filterable",
+                        "value": true
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 120
+                      },
+                      {
+                        "id": "custom.align",
+                        "value": "left"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "gridPos": {
+                "h": 12,
+                "w": 15,
+                "x": 9,
+                "y": 9
+              },
+              "id": 2,
+              "options": {
+                "frameIndex": 1,
+                "showHeader": true,
+                "sortBy": []
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "select \n  player, \n  \"sets.count\" as matches,\n  \"sets.mean\" as \"mean\", \"sets.std\" as \"std\", \n  \"sets.25\" as  \"25%\", \"sets.50\" as \"50%\", \"sets.75\" as \"75%\"\nfrom stats_setka_cup_others_men\nwhere player in ($setka_men)\norder by player asc",
+                  "refId": "Sets",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Stats for sets",
+              "transparent": true,
+              "type": "table"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Stats for player who plays in the next 8h",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 80
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      }
+                    ]
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "player"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.filterable",
+                        "value": true
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 120
+                      },
+                      {
+                        "id": "custom.align",
+                        "value": "left"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "gridPos": {
+                "h": 11,
+                "w": 15,
+                "x": 9,
+                "y": 21
+              },
+              "id": 3,
+              "options": {
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": false,
+                    "displayName": "player"
+                  }
+                ]
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "select\n  player,\n  \"points.count\" as matches,\n  \"points.mean\" as \"mean\", \"points.std\" as \"std\", \"points.min\" as \"min\",\n  \"points.max\" as \"max\", \"points.25\" as \"25%\", \"points.50\" as \"50%\", \"points.75\" as \"75%\"\nfrom stats_setka_cup_others_men\nwhere player in ($setka_men)",
+                  "refId": "A",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Stats for points",
+              "transparent": true,
+              "type": "table"
+            }
+          ],
+          "title": "Setka Cup Men",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 10,
+          "panels": [
+            {
+              "datasource": null,
+              "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 32
+              },
+              "id": 18,
+              "options": {
+                "content": "- **Stats for sets**: media de sets con valores positivos y negativos y su correspondiente desviación típica (std). Valores negativos indican que el jugador ha perdido más sets de los que ha ganado (y viceversa). Si `mean = 0` entonces el jugador ha ganado tantos particos como los que ha perdido. El valor de **%** indica el número de sets ganados/perdidos según el percentil (25, 50, 75). Por ejemplo, si `25% = 2` entonces podemos decir que para el **25%** total de partidos, el jugador ha ganado **2** sets por encima de sus oponentes. Otro ejemplo: `75% = -1` entonces el **75%** de partidos, el jugador ha finalizado con **1** set por debajo de su oponente. En resumen, valores positivos indican buenos jugadores mientras que valores negativos son sinónimos de malos jugadores.\n - **Stats for points**: aplica la misma dinámica explicada que para *Stats for sets* pero esta vez para la diferencia entre puntos totales.\n\n ---- \n\n- **Stats for sets**: sets mean with values -/+ corresponding with typical desviation (std). Mean negative values ​​indicate that the player has lost more sets than he has won (and viceversa). If `mean = 0` then the player has won the same number of sets he lost. The interpretation of **%** is a bit different, it indicate in which percentile are the number of sets. For example, if `25% = 2` then we can say that for the **25%** total of matches, the player has won with **2** sets above of his opponent. Another example: if `75% = -1` then for the **75%** total of matches, the player has lost with **1** sets below his opponent. Consider that positive values indicate a good player and negative values are synonymous of bad players.\n - **Stats for points**: the same as *Stats for sets* but in this case for total points differences.",
+                "mode": "markdown"
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "queryType": "randomWalk",
+                  "refId": "A"
+                }
+              ],
+              "transparent": true,
+              "type": "text"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Next matches for the player who has at least 1 stats",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 150
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 24,
+                "w": 9,
+                "x": 0,
+                "y": 36
+              },
+              "id": 6,
+              "options": {
+                "showHeader": true,
+                "sortBy": []
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "SELECT\n  distinct date, home_participant, away_participant\nFROM\n  following_liga_pro_others_men\nWHERE \n  (home_participant in ($pro_men) or away_participant in ($pro_men)) and date>=now()\nORDER BY date asc\n",
+                  "refId": "A",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Next matches",
+              "transparent": true,
+              "type": "table"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Stats for player who plays in the next 8h",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 110
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      }
+                    ]
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "player"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.filterable",
+                        "value": true
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 120
+                      },
+                      {
+                        "id": "custom.align",
+                        "value": "left"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "gridPos": {
+                "h": 12,
+                "w": 15,
+                "x": 9,
+                "y": 36
+              },
+              "id": 13,
+              "options": {
+                "frameIndex": 1,
+                "showHeader": true,
+                "sortBy": []
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "select \n  player, \n  \"sets.count\" as matches,\n  \"sets.mean\" as \"mean\", \"sets.std\" as \"std\", \n  \"sets.25\" as  \"25%\", \"sets.50\" as \"50%\", \"sets.75\" as \"75%\"\nfrom stats_liga_pro_others_men\nwhere player in ($pro_men)\norder by player asc",
+                  "refId": "Sets",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Stats for sets",
+              "transparent": true,
+              "type": "table"
+            },
+            {
+              "datasource": "PostgreSQL PinPon",
+              "description": "Stats for player who plays in the next 8h",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "filterable": false,
+                    "width": 80
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      }
+                    ]
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "player"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.filterable",
+                        "value": true
+                      },
+                      {
+                        "id": "custom.width",
+                        "value": 120
+                      },
+                      {
+                        "id": "custom.align",
+                        "value": "left"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "gridPos": {
+                "h": 12,
+                "w": 15,
+                "x": 9,
+                "y": 48
+              },
+              "id": 15,
+              "options": {
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": false,
+                    "displayName": "player"
+                  }
+                ]
+              },
+              "pluginVersion": "8.0.4",
+              "targets": [
+                {
+                  "format": "table",
+                  "group": [],
+                  "metricColumn": "none",
+                  "queryType": "randomWalk",
+                  "rawQuery": true,
+                  "rawSql": "select\n  player,\n  \"points.count\" as matches,\n  \"points.mean\" as \"mean\", \"points.std\" as \"std\", \"points.min\" as \"min\",\n  \"points.max\" as \"max\", \"points.25\" as \"25%\", \"points.50\" as \"50%\", \"points.75\" as \"75%\"\nfrom stats_liga_pro_others_men\nwhere player in ($pro_men)",
+                  "refId": "A",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "column"
+                      }
+                    ]
+                  ],
+                  "timeColumn": "time",
+                  "where": [
+                    {
+                      "name": "$__timeFilter",
+                      "params": [],
+                      "type": "macro"
+                    }
+                  ]
+                }
+              ],
+              "title": "Stats for points",
+              "transparent": true,
+              "type": "table"
+            }
+          ],
+          "title": "Pro League Men",
+          "type": "row"
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "PinPon"
+      ],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "datasource": "PostgreSQL PinPon",
+            "definition": "select player from stats_setka_cup_others_men",
+            "description": "player setka cup men",
+            "error": null,
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": true,
+            "name": "setka_men",
+            "options": [],
+            "query": "select player from stats_setka_cup_others_men",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "datasource": "PostgreSQL PinPon",
+            "definition": "select player from stats_liga_pro_others_men",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": true,
+            "name": "pro_men",
+            "options": [],
+            "query": "select player from stats_liga_pro_others_men",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-7d",
+        "to": "now"
+      },
+      "timepicker": {
+        "hidden": true
+      },
+      "timezone": "",
+      "title": "PinPon Stats",
+      "uid": "pinponuid",
+      "version": 2
+    }
+  cloud-storage-monitoring.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 21,
+      "iteration": 1625428570417,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 0,
+          "options": {
+            "content": "This dashboard has 6 charts for the related [Cloud Storage metrics](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-storage), including `Total object count`, `Total bytes`, `Bucket object count`, `Bucket total bytes`, `Bucket - Received/Sent Bytes`, and `Bucket - Request count`.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Cloud Storage Monitoring",
+          "type": "text"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "GAUGE",
+                "metricType": "storage.googleapis.com/storage/object_count",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Total object count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "GAUGE",
+                "metricType": "storage.googleapis.com/storage/total_bytes",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "DOUBLE"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Total bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 3,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "GAUGE",
+                "metricType": "storage.googleapis.com/storage/object_count",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Bucket object count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 4,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "GAUGE",
+                "metricType": "storage.googleapis.com/storage/total_bytes",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "DOUBLE"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Bucket total bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "hiddenSeries": false,
+          "id": 5,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "storage.googleapis.com/network/received_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            },
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "storage.googleapis.com/network/sent_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Bucket - Received bytes, Sent bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "hiddenSeries": false,
+          "id": 6,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gcs_bucket"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "storage.googleapis.com/api/request_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Bucket - Request count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "Storage",
+        "Cloud Monitoring",
+        "GCP"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Google Cloud Monitoring",
+              "value": "Google Cloud Monitoring"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "stackdriver",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": "$datasource",
+            "definition": "Google Cloud Monitoring - Projects",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Project",
+            "multi": false,
+            "name": "project",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [],
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "projects",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "grafana auto",
+              "value": "grafana-auto"
+            },
+            "datasource": "${datasource}",
+            "definition": "",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Alignment Period",
+            "multi": false,
+            "name": "alignmentPeriod",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [
+                {
+                  "name": "project-1",
+                  "value": "project-1"
+                },
+                {
+                  "name": "project-2",
+                  "value": "project-2"
+                }
+              ],
+              "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "alignmentPeriods",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Cloud Storage Monitoring",
+      "uid": "zucJCuz7z",
+      "version": 2
+    }
+  network-tcp-load-balancer-monitoring.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 4,
+      "iteration": 1625431298791,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 0,
+          "options": {
+            "content": "This dashboard has 5 charts for the related [network TCP load balancer metrics](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-loadbalancing), including `RTT latencies`, `Ingress TCP packets`, `Ingress TCP bytes`, `Egress TCP packets`, and `Egress TCP bytes`.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Network TCP Load Balancer Monitoring",
+          "type": "text"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_95",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/rtt_latencies",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            },
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_05",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/rtt_latencies",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "B"
+            },
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_50",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/rtt_latencies",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "RTT latencies [95/50/5 PERCENTILE]",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "ms",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/ingress_packets_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Ingress TCP packets",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 3,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/ingress_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Ingress TCP bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 4,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/egress_packets_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Egress TCP packets",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "hiddenSeries": false,
+          "id": 5,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "tcp_lb_rule"
+                ],
+                "groupBys": [
+                  "resource.label.load_balancer_name"
+                ],
+                "metricKind": "DELTA",
+                "metricType": "loadbalancing.googleapis.com/l3/external/egress_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Egress TCP bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "Networking",
+        "Cloud Monitoring",
+        "GCP"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Google Cloud Monitoring",
+              "value": "Google Cloud Monitoring"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "stackdriver",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": "$datasource",
+            "definition": "Google Cloud Monitoring - Projects",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Project",
+            "multi": false,
+            "name": "project",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [],
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "projects",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "grafana auto",
+              "value": "grafana-auto"
+            },
+            "datasource": "${datasource}",
+            "definition": "",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Alignment Period",
+            "multi": false,
+            "name": "alignmentPeriod",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [
+                {
+                  "name": "project-1",
+                  "value": "project-1"
+                },
+                {
+                  "name": "project-2",
+                  "value": "project-2"
+                }
+              ],
+              "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "alignmentPeriods",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Network TCP Load Balancer Monitoring",
+      "uid": "mnGG59znz",
+      "version": 1
+    }
+  gce-network-monitoring.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 6,
+      "iteration": 1625431477315,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 0,
+          "options": {
+            "content": "This dashboard has 4 charts for the related [GCE VM networking metrics](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-networking), including `GCE VM Instance - Egress bytes`, `GCE VM Instance - Ingress bytes`, `Number of probes`, and `GCE VM Instance - RTT latencies`.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "GCE Network Monitoring",
+          "type": "text"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/vm_flow/egress_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Egress bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/vm_flow/ingress_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Ingress bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 3,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_COUNT",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_zone_network_health"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/cloud_netslo/active_probing/probe_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Number of probes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 4,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_95",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/vm_flow/rtt",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            },
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_50",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/vm_flow/rtt",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "B"
+            },
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_05",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "networking.googleapis.com/vm_flow/rtt",
+                "perSeriesAligner": "ALIGN_DELTA",
+                "projectName": "$project",
+                "unit": "ms",
+                "valueType": "DISTRIBUTION"
+              },
+              "queryType": "metrics",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - RTT latencies",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "ms",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "Networking",
+        "Cloud Monitoring",
+        "GCP"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Google Cloud Monitoring",
+              "value": "Google Cloud Monitoring"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "stackdriver",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": "$datasource",
+            "definition": "Google Cloud Monitoring - Projects",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Project",
+            "multi": false,
+            "name": "project",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [],
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "projects",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "grafana auto",
+              "value": "grafana-auto"
+            },
+            "datasource": "${datasource}",
+            "definition": "",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Alignment Period",
+            "multi": false,
+            "name": "alignmentPeriod",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [
+                {
+                  "name": "project-1",
+                  "value": "project-1"
+                },
+                {
+                  "name": "project-2",
+                  "value": "project-2"
+                }
+              ],
+              "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "alignmentPeriods",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "GCE Network Monitoring",
+      "uid": "M3JD5rznz",
+      "version": 1
+    }
+  firewall-insights-monitoring.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 7,
+      "iteration": 1625431594024,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 0,
+          "options": {
+            "content": "This dashboard has 2 charts for the [Firewall insights metrics](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-firewallinsights). Those two metrics are `Subnet Firewall Hit Counts` and `VM Firewall Hit Counts`.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Firewall Insights Monitoring",
+          "type": "text"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_subnetwork"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "firewallinsights.googleapis.com/subnet/firewall_hit_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Subnet Firewall Hit Counts",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "firewallinsights.googleapis.com/vm/firewall_hit_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "VM Firewall Hit Counts",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "Networking",
+        "Cloud Monitoring",
+        "GCP"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Google Cloud Monitoring",
+              "value": "Google Cloud Monitoring"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "stackdriver",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": "$datasource",
+            "definition": "Google Cloud Monitoring - Projects",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Project",
+            "multi": false,
+            "name": "project",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [],
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "projects",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "grafana auto",
+              "value": "grafana-auto"
+            },
+            "datasource": "${datasource}",
+            "definition": "",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Alignment Period",
+            "multi": false,
+            "name": "alignmentPeriod",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [
+                {
+                  "name": "project-1",
+                  "value": "project-1"
+                },
+                {
+                  "name": "project-2",
+                  "value": "project-2"
+                }
+              ],
+              "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "alignmentPeriods",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Firewall Insights Monitoring",
+      "uid": "2hZtcrk7z",
+      "version": 1
+    }
+  gce-vm-instance-monitoring.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 8,
+      "iteration": 1625431682053,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "description": "",
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 0,
+          "options": {
+            "content": "This dashboard has 10 charts for the related [GCE VM metrics](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-compute), including metrics for CPU, disk read/write, and network.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "GCE VM Instance Monitoring",
+          "type": "text"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "{{metric.label.instance_name}}",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "GAUGE",
+                "metricType": "compute.googleapis.com/instance/cpu/utilization",
+                "perSeriesAligner": "ALIGN_MEAN",
+                "projectName": "$project",
+                "unit": "10^2.%",
+                "valueType": "DOUBLE"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - CPU Utilization",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/uptime",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "s{uptime}",
+                "valueType": "DOUBLE"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Uptime",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 3,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/disk/read_ops_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Disk read operations",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "hiddenSeries": false,
+          "id": 4,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/disk/write_ops_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Disk write operations",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "hiddenSeries": false,
+          "id": 5,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/disk/read_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Disk read bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "hiddenSeries": false,
+          "id": 6,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/disk/write_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Disk write bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "Bps",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 27
+          },
+          "hiddenSeries": false,
+          "id": 7,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/network/received_packets_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "1",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Received packets",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 27
+          },
+          "hiddenSeries": false,
+          "id": 8,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/nat/sent_packets_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "{packet}",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Sent packets count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 35
+          },
+          "hiddenSeries": false,
+          "id": 9,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/network/received_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Received bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "$datasource",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 35
+          },
+          "hiddenSeries": false,
+          "id": 10,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "sideWidth": 220,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "8.0.4",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "metricQuery": {
+                "aliasBy": "",
+                "alignmentPeriod": "$alignmentPeriod",
+                "filters": [
+                  "resource.type",
+                  "=",
+                  "gce_instance"
+                ],
+                "groupBys": [],
+                "metricKind": "DELTA",
+                "metricType": "compute.googleapis.com/instance/network/sent_bytes_count",
+                "perSeriesAligner": "ALIGN_RATE",
+                "projectName": "$project",
+                "unit": "By",
+                "valueType": "INT64"
+              },
+              "queryType": "metrics",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GCE VM Instance - Sent bytes",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "schemaVersion": 30,
+      "style": "dark",
+      "tags": [
+        "Compute",
+        "Cloud Monitoring",
+        "GCP"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Google Cloud Monitoring",
+              "value": "Google Cloud Monitoring"
+            },
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "stackdriver",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": null,
+            "current": {
+              "isNone": true,
+              "selected": false,
+              "text": "None",
+              "value": ""
+            },
+            "datasource": "$datasource",
+            "definition": "Google Cloud Monitoring - Projects",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Project",
+            "multi": false,
+            "name": "project",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [],
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "projects",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "grafana auto",
+              "value": "grafana-auto"
+            },
+            "datasource": "${datasource}",
+            "definition": "",
+            "description": null,
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Alignment Period",
+            "multi": false,
+            "name": "alignmentPeriod",
+            "options": [],
+            "query": {
+              "labelKey": "",
+              "loading": false,
+              "projectName": "$project",
+              "projects": [
+                {
+                  "name": "project-1",
+                  "value": "project-1"
+                },
+                {
+                  "name": "project-2",
+                  "value": "project-2"
+                }
+              ],
+              "refId": "CloudMonitoringVariableQueryEditor-VariableQuery",
+              "selectedMetricType": "actions.googleapis.com/smarthome_action/num_active_users",
+              "selectedQueryType": "alignmentPeriods",
+              "selectedSLOService": "",
+              "selectedService": "actions.googleapis.com",
+              "sloServices": []
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "GCE VM Instance Monitoring",
+      "uid": "MR-T59k7k",
+      "version": 1
+    }

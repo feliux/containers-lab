@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: wordpress
+  labels:
+    app: natura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: natura
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: natura
+        tier: frontend
+    spec:
+      containers:
+      - image: wordpress:php7.4
+        imagePullPolicy: IfNotPresent
+        name: wordpress
+        ports:
+        - containerPort: 80
+          name: wordpress
+          protocol: TCP
+        env:
+          - name: WORDPRESS_DB_HOST
+            value: mysql-svc
+          - name: WORDPRESS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secrets
+                key: MYSQL_USER
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secrets
+                key: MYSQL_PASSWORD
+          - name: WORDPRESS_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secrets
+                key: MYSQL_DATABASE

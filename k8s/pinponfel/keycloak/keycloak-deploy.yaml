@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:14.0.0
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        # resources:
+        #   requests:
+        #     cpu: 50m
+        #     memory: 100Mi
+          # limits:
+          #   cpu: 50m
+          #   memory: 800Mi
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/master
+            port: 8080
+        env:
+          # - name: KEYCLOAK_IMPORT
+          #   value: "/tmp/pinpon-realm-with-users.json"
+          - name: PROXY_ADDRESS_FORWARDING
+            value: "true"
+          - name: DB_ADDR
+            value: "psql-keycloak-svc"
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_VENDOR
+            value: "postgres"
+          - name: DB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-secrets
+                key: DB_DATABASE
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-secrets
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-secrets
+                key: DB_PASSWORD
+          - name: KEYCLOAK_USER
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-secrets
+                key: KEYCLOAK_USER
+          - name: KEYCLOAK_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-secrets
+                key: KEYCLOAK_PASSWORD
+      #   volumeMounts:
+      #     - mountPath: /tmp
+      #       name: realms
+      # volumes:
+      #   - name: realms
+      #     configMap:
+      #         name: keycloak-realm
+      #         items:
+      #         - key: pinpon-realm-with-users.json
+      #           path: pinpon-realm-with-users.json

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-k8s-golang
+  labels:
+    app: backend-golang
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend-golang
+  template:
+    metadata:
+      labels:
+        app: backend-golang
+    spec:
+      containers:
+      - name: backend
+        image: k8s-golang:v1
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-k8s-golang
+  labels:
+    app: backend-golang
+spec:
+  selector:
+    app: backend-golang
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9090

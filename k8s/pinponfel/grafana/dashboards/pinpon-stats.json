@@ -1,0 +1,736 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 15,
+  "iteration": 1625415912156,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "description": "",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "content": "# Instrucciones\n\n  1. Selecciona el jugador en la pestaña superior `setka_men`, `pro_men` para filtrar la búsqueda. Ten en cuenta que el formato de nombres es en primer lugar el apellido seguido de la primera letra del nombre. Las estadísticas para cada jugador se mostrarán en las tablas inferiores\n 2. Click en el dashboard que quieres visualizar (por ejemplo **Setka Cup Men**).\n 3. Scroll-down para ver todas las tablas.\n\n \n\n # Instructions\n\n  1. Select your player in the above tab `setka_men`, `pro_men` to filter by name. Format is surname and first letter name. This players will be shown on the following panels\n 2. Click on the dashboard you want to visualize (for example **Setka Cup Men**). You will see various statistics of the previously selected players.\n 3. Scroll-down to see all the tables.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "8.0.4",
+      "targets": [
+        {
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": true,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 12,
+      "panels": [
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 17,
+          "options": {
+            "content": "- **Stats for sets**: media de sets con valores positivos y negativos y su correspondiente desviación típica (std). Valores negativos indican que el jugador ha perdido más sets de los que ha ganado (y viceversa). Si `mean = 0` entonces el jugador ha ganado tantos particos como los que ha perdido. El valor de **%** indica el número de sets ganados/perdidos según el percentil (25, 50, 75). Por ejemplo, si `25% = 2` entonces podemos decir que para el **25%** total de partidos, el jugador ha ganado **2** sets por encima de sus oponentes. Otro ejemplo: `75% = -1` entonces el **75%** de partidos, el jugador ha finalizado con **1** set por debajo de su oponente. En resumen, valores positivos indican buenos jugadores mientras que valores negativos son sinónimos de malos jugadores.\n - **Stats for points**: aplica la misma dinámica explicada que para *Stats for sets* pero esta vez para la diferencia entre puntos totales.\n\n ---- \n\n- **Stats for sets**: sets mean with values -/+ corresponding with typical desviation (std). Mean negative values ​​indicate that the player has lost more sets than he has won (and viceversa). If `mean = 0` then the player has won the same number of sets he lost. The interpretation of **%** is a bit different, it indicate in which percentile are the number of sets. For example, if `25% = 2` then we can say that for the **25%** total of matches, the player has won with **2** sets above of his opponent. Another example: if `75% = -1` then for the **75%** total of matches, the player has lost with **1** sets below his opponent. Consider that positive values indicate a good player and negative values are synonymous of bad players.\n - **Stats for points**: the same as *Stats for sets* but in this case for total points differences.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "transparent": true,
+          "type": "text"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Next matches for the player who has at least 1 stats",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 150
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 23,
+            "w": 9,
+            "x": 0,
+            "y": 9
+          },
+          "id": 5,
+          "options": {
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "SELECT\n  distinct date, home_participant, away_participant\nFROM\n  following_setka_cup_others_men\nWHERE \n  (home_participant in ($setka_men) or away_participant in ($setka_men)) and date>=now()\nORDER BY date asc\n",
+              "refId": "A",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Next matches",
+          "transparent": true,
+          "type": "table"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Stats for player who plays in the next 8h",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 110
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "player"
+                },
+                "properties": [
+                  {
+                    "id": "custom.filterable",
+                    "value": true
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 15,
+            "x": 9,
+            "y": 9
+          },
+          "id": 2,
+          "options": {
+            "frameIndex": 1,
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "select \n  player, \n  \"sets.count\" as matches,\n  \"sets.mean\" as \"mean\", \"sets.std\" as \"std\", \n  \"sets.25\" as  \"25%\", \"sets.50\" as \"50%\", \"sets.75\" as \"75%\"\nfrom stats_setka_cup_others_men\nwhere player in ($setka_men)\norder by player asc",
+              "refId": "Sets",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Stats for sets",
+          "transparent": true,
+          "type": "table"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Stats for player who plays in the next 8h",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 80
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "player"
+                },
+                "properties": [
+                  {
+                    "id": "custom.filterable",
+                    "value": true
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 11,
+            "w": 15,
+            "x": 9,
+            "y": 21
+          },
+          "id": 3,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "player"
+              }
+            ]
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "select\n  player,\n  \"points.count\" as matches,\n  \"points.mean\" as \"mean\", \"points.std\" as \"std\", \"points.min\" as \"min\",\n  \"points.max\" as \"max\", \"points.25\" as \"25%\", \"points.50\" as \"50%\", \"points.75\" as \"75%\"\nfrom stats_setka_cup_others_men\nwhere player in ($setka_men)",
+              "refId": "A",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Stats for points",
+          "transparent": true,
+          "type": "table"
+        }
+      ],
+      "title": "Setka Cup Men",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 10,
+      "panels": [
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 32
+          },
+          "id": 18,
+          "options": {
+            "content": "- **Stats for sets**: media de sets con valores positivos y negativos y su correspondiente desviación típica (std). Valores negativos indican que el jugador ha perdido más sets de los que ha ganado (y viceversa). Si `mean = 0` entonces el jugador ha ganado tantos particos como los que ha perdido. El valor de **%** indica el número de sets ganados/perdidos según el percentil (25, 50, 75). Por ejemplo, si `25% = 2` entonces podemos decir que para el **25%** total de partidos, el jugador ha ganado **2** sets por encima de sus oponentes. Otro ejemplo: `75% = -1` entonces el **75%** de partidos, el jugador ha finalizado con **1** set por debajo de su oponente. En resumen, valores positivos indican buenos jugadores mientras que valores negativos son sinónimos de malos jugadores.\n - **Stats for points**: aplica la misma dinámica explicada que para *Stats for sets* pero esta vez para la diferencia entre puntos totales.\n\n ---- \n\n- **Stats for sets**: sets mean with values -/+ corresponding with typical desviation (std). Mean negative values ​​indicate that the player has lost more sets than he has won (and viceversa). If `mean = 0` then the player has won the same number of sets he lost. The interpretation of **%** is a bit different, it indicate in which percentile are the number of sets. For example, if `25% = 2` then we can say that for the **25%** total of matches, the player has won with **2** sets above of his opponent. Another example: if `75% = -1` then for the **75%** total of matches, the player has lost with **1** sets below his opponent. Consider that positive values indicate a good player and negative values are synonymous of bad players.\n - **Stats for points**: the same as *Stats for sets* but in this case for total points differences.",
+            "mode": "markdown"
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "queryType": "randomWalk",
+              "refId": "A"
+            }
+          ],
+          "transparent": true,
+          "type": "text"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Next matches for the player who has at least 1 stats",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 150
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 24,
+            "w": 9,
+            "x": 0,
+            "y": 36
+          },
+          "id": 6,
+          "options": {
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "SELECT\n  distinct date, home_participant, away_participant\nFROM\n  following_liga_pro_others_men\nWHERE \n  (home_participant in ($pro_men) or away_participant in ($pro_men)) and date>=now()\nORDER BY date asc\n",
+              "refId": "A",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Next matches",
+          "transparent": true,
+          "type": "table"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Stats for player who plays in the next 8h",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 110
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "player"
+                },
+                "properties": [
+                  {
+                    "id": "custom.filterable",
+                    "value": true
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 15,
+            "x": 9,
+            "y": 36
+          },
+          "id": 13,
+          "options": {
+            "frameIndex": 1,
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "select \n  player, \n  \"sets.count\" as matches,\n  \"sets.mean\" as \"mean\", \"sets.std\" as \"std\", \n  \"sets.25\" as  \"25%\", \"sets.50\" as \"50%\", \"sets.75\" as \"75%\"\nfrom stats_liga_pro_others_men\nwhere player in ($pro_men)\norder by player asc",
+              "refId": "Sets",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Stats for sets",
+          "transparent": true,
+          "type": "table"
+        },
+        {
+          "datasource": "PostgreSQL PinPonFel",
+          "description": "Stats for player who plays in the next 8h",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "displayMode": "auto",
+                "filterable": false,
+                "width": 80
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "player"
+                },
+                "properties": [
+                  {
+                    "id": "custom.filterable",
+                    "value": true
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "left"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 15,
+            "x": 9,
+            "y": 48
+          },
+          "id": 15,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "player"
+              }
+            ]
+          },
+          "pluginVersion": "8.0.4",
+          "targets": [
+            {
+              "format": "table",
+              "group": [],
+              "metricColumn": "none",
+              "queryType": "randomWalk",
+              "rawQuery": true,
+              "rawSql": "select\n  player,\n  \"points.count\" as matches,\n  \"points.mean\" as \"mean\", \"points.std\" as \"std\", \"points.min\" as \"min\",\n  \"points.max\" as \"max\", \"points.25\" as \"25%\", \"points.50\" as \"50%\", \"points.75\" as \"75%\"\nfrom stats_liga_pro_others_men\nwhere player in ($pro_men)",
+              "refId": "A",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "column"
+                  }
+                ]
+              ],
+              "timeColumn": "time",
+              "where": [
+                {
+                  "name": "$__timeFilter",
+                  "params": [],
+                  "type": "macro"
+                }
+              ]
+            }
+          ],
+          "title": "Stats for points",
+          "transparent": true,
+          "type": "table"
+        }
+      ],
+      "title": "Pro League Men",
+      "type": "row"
+    }
+  ],
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [
+    "PinPon"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "PostgreSQL PinPonFel",
+        "definition": "select player from stats_setka_cup_others_men",
+        "description": "player setka cup men",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "setka_men",
+        "options": [],
+        "query": "select player from stats_setka_cup_others_men",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "PostgreSQL PinPonFel",
+        "definition": "select player from stats_liga_pro_others_men",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "pro_men",
+        "options": [],
+        "query": "select player from stats_liga_pro_others_men",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "timezone": "",
+  "title": "PinPon Stats",
+  "uid": "pinponuid",
+  "version": 2
+}

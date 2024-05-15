@@ -1,0 +1,84 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: bot-pinpon
+  namespace: pinpon
+  labels:
+    app: bot-pinpon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bot-pinpon
+  template:
+    metadata:
+      labels:
+        app: bot-pinpon
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: bot-pinpon
+          image: gcr.io/learning-310712/pinponfel-bot:0.1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
+            limits:
+              cpu: 50m
+              memory: 100Mi
+          env:
+            - name: PSQL_HOST
+              value: "psql-pinpon-svc.pinpon.svc.cluster.local"
+            - name: PSQL_PORT
+              value: "5432"
+            - name: CUSTOM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_USER
+            - name: CUSTOM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_PASSWORD
+            - name: CUSTOM_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_DB
+            - name: TOKEN_BOT
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: TOKEN_BOT
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: main-py
+              mountPath: /home/bot/main.py
+              subPath: main.py
+              readOnly: true
+            - name: utils
+              mountPath: /home/bot/pinpon_database.py
+              subPath: pinpon_database.py
+              readOnly: true
+      volumes:
+        - name: main-py
+          configMap:
+            name: bot-pinpon-scripts
+            items:
+            - key: main.py
+              path: main.py
+        - name: utils
+          configMap:
+            name: bot-pinpon-scripts
+            items:
+            - key: pinpon_database.py
+              path: pinpon_database.py

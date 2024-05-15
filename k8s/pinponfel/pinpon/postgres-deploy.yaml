@@ -1,0 +1,116 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: psql-pinpon
+  namespace: pinpon
+  labels:
+    app: psql-pinpon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psql-pinpon
+  template:
+    metadata:
+      labels:
+        app: psql-pinpon
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: psql-pinpon
+          image: postgres:13
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
+            limits:
+              cpu: 50m
+              memory: 100Mi
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: POSTGRES_DB
+            - name: AIRFLOW_PSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: AIRFLOW_PSQL_USER
+            - name: AIRFLOW_PSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: AIRFLOW_PSQL_PASSWORD
+            - name: AIRFLOW_PSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: AIRFLOW_PSQL_DB
+            - name: CUSTOM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_USER
+            - name: CUSTOM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_PASSWORD
+            - name: CUSTOM_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: CUSTOM_DB
+            - name: GRAFANA_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: GRAFANA_USER
+            - name: GRAFANA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pinpon-secrets
+                  key: GRAFANA_PASSWORD
+          volumeMounts:
+            - name: psql-data
+              mountPath: /var/lib/postgresql/data
+              subPath: psql-pinpon-data
+            - name: scripts
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: psql-data
+          persistentVolumeClaim:
+            claimName: pinpon-pvc
+        - name: scripts
+          configMap:
+            name: psql-pinpon-scripts
+            items:
+            - key: 00-create-custom-user.sh
+              path: 00-create-custom-user.sh
+            - key: 01-create-custom-db.sh
+              path: 01-create-custom-db.sh
+            - key: 02-create-airflow-user.sh
+              path: 02-create-airflow-user.sh
+            - key: 03-create-airflow-db.sh
+              path: 03-create-airflow-db.sh
+            - key: 04-create-grafana-user.sh
+              path: 04-create-grafana-user.sh

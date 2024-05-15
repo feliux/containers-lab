@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: airflow-ingress
+  namespace: airflow
+  # annotations:
+  #   nginx.ingress.kubernetes.io/rewrite-target: /
+  #   kubernetes.io/ingress.class: "nginx"
+  #   certmanager.k8s.io/cluster-issuer: "letsencrypt-staging"
+spec:
+  # tls:
+  # - hosts:
+  #   - airflow.feliux.test
+  #   secretName: airflow.feliux.test-cert
+  rules:
+  - host: airflow.feliux.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: airflow-svc
+            port:
+              number: 8080
