@@ -2,6 +2,8 @@
 
 Go to [infra-lab](https://github.com/feliux/infra-lab) repository to checkout for IaC deployments. In this repo you will found some cluster deployment using the CLI.
 
+Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my project about securing your Kubernetes cluster with the most good practices from CIS benchmarks.
+
 ## Services
 
 - [**airflow**](./airflow/). Ready production Airflow deployment.
