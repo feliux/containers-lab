@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  namespace: airflow
+  labels:
+    app: airflow-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-scheduler
+  template:
+    metadata:
+      labels:
+        app: airflow-scheduler
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 50000
+        runAsGroup: 50000
+      containers:
+        - name: airflow-scheduler
+          image: apache/airflow:2.1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+          # lot cpu 245.84% from 2CPU
+          # 181.6MiB / 2.931GiB
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          args: ["scheduler"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            # readOnlyRootFilesystem: true
+            privileged: false
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #     - sh
+          #     - -c
+          #     - airflow jobs check --job-type SchedulerJob --hostname "${HOSTNAME}"
+          #   initialDelaySeconds: 160
+          #   periodSeconds: 20
+          envFrom:
+            - configMapRef:
+                name: airflow-envs
+          env:
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+            - name: AIRFLOW__CELERY__RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW__CELERY__RESULT_BACKEND
+            - name: AIRFLOW__CELERY__BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW__CELERY__BROKER_URL
+            - name: _AIRFLOW_WWW_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_USERNAME
+            - name: _AIRFLOW_WWW_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_PASSWORD
+            - name: AIRFLOW_PSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_USER
+            - name: AIRFLOW_PSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_PASSWORD
+            - name: AIRFLOW_PSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW_PSQL_DB
+            - name: CUSTOM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_USER
+            - name: CUSTOM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_PASSWORD
+            - name: CUSTOM_DB
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: CUSTOM_DB

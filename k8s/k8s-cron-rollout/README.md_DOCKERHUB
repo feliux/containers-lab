@@ -1,0 +1,183 @@
+# Custom distroless images for rollout k8s deployments.
+
+## How to use this image
+
+1. Create the following `example.yaml` and customize it based on your needs:
+
+```yaml
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: cron-sa
+  namespace: <YOUR NAMESPACE>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-restart
+  namespace: <YOUR NAMESPACE>
+rules:
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    verbs: ["get", "patch", "list", "watch"] # "list" and "watch" are only needed if you want to use `rollout status`
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-restart
+  namespace: <YOUR NAMESPACE>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-restart
+subjects:
+  - kind: ServiceAccount
+    name: cron-sa
+    namespace: <YOUR NAMESPACE>
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cron-restart-pod
+  namespace: <YOUR NAMESPACE>
+spec:
+  concurrencyPolicy: Forbid
+  schedule: '*/2 * * * *' # every 2 min
+  jobTemplate:
+    spec:
+      backoffLimit: 2 # this has very low chance of failing, as all this does is prompt kubernetes to schedule new replica set for the deployment
+      activeDeadlineSeconds: 600 # timeout, makes most sense with "waiting for rollout" variant specified below
+      template:
+        spec:
+          serviceAccountName: cron-sa
+          restartPolicy: Never
+          containers:
+            - name: k8s-cron
+              image: feliux/k8s-cron:<version>-golang
+              command: ["/app"] # golang
+              args: ["-auth=inside", "-namespace=foo", "-deployment-name=bar", "-change-cause=baz"] # golang
+              #image: feliux/k8s-cron:<version>-python
+              #command: ["python"] # python
+              #args: ["main.py", "-a", "inside", "-ns", "foo", "-deploy", "bar", "-cc", "baz"] # python
+```
+
+2. Apply the resources and check the results
+
+```bash
+# create the service account
+$ kubectl apply -f example.yaml
+
+# check the rollout
+$ kubectl -n <YOUR NAMESPACE> rollout history deployment/<YOUR DEPLOYMENT NAME>
+```
+
+**go help**
+
+~~~
+Usage:
+  -auth string
+    	Specify auth method based on RBAC (inside a pod) or kubeconfig (outside the cluster). Possible values are inside or outside.
+  -change-cause string
+    	Change cause for annotation kubernetes.io/change-cause. (default "cronjob execution")
+  -deployment-name string
+    	Deployment name to rollout.
+  -kubeconfig string
+    	(optional) Absolute path to the kubeconfig file. (default "/home/<user>/.kube/config")
+  -namespace string
+    	K8s namespace.
+~~~
+
+**python help**
+
+~~~
+usage: main.py [-h] -a {inside,outside} [-ns NAMESPACE] [-deploy DEPLOYMENT_NAME] [-cc CHANGE_CAUSE]
+
+Rollout a k8s deployment
+
+options:
+  -h, --help            show this help message and exit
+  -a {inside,outside}, --auth {inside,outside}
+                        Specify auth method based on RBAC (inside a pod) or kubeconfig (outside the cluster).
+  -ns NAMESPACE, --namespace NAMESPACE
+                        K8s namespace.
+  -deploy DEPLOYMENT_NAME, --deployment-name DEPLOYMENT_NAME
+                        Deployment name to rollout.
+  -cc CHANGE_CAUSE, --change-cause CHANGE_CAUSE
+                        Change cause for annotation kubernetes.io/change-cause
+~~~
+
+## Others similar images
+
+- Rollout deployments
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: restart-deployment
+  namespace: <YOUR NAMESPACE>
+rules:
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    resourceNames: ["<YOUR DEPLOYMENT NAME>"]
+    verbs: ["get", "patch", "list", "watch"]
+---
+...
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl 
+              command:
+                - 'kubectl'
+                - 'rollout'
+                - 'restart'
+                - 'deployment/<YOUR NAMESPACE>'
+```
+
+- Rollout deployments waiting for the deployment to roll out, we must change change the command of cronjob
+
+```yaml
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl
+              command:
+                - bash
+                - -c
+                - >-
+                  kubectl rollout restart deployment/<YOUR DEPLOYMENT NAME> &&
+                  kubectl rollout status deployment/<YOUR DEPLOYMENT NAME>
+```
+
+- Deleting pods
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deleting-pods
+  namespace: <YOUR NAMESPACE>
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "patch", "list", "watch", "delete"]
+---
+...
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl
+              command: [ "/bin/sh", "-c" ]
+              args: 
+                - 'kubectl delete pod $(kubectl get pod -l app=<your_label> -o jsonpath="{.items[0].metadata.name}")'
+```
+
+## References
+
+[K8s client-go](https://github.com/kubernetes/kubernetes)
+
+[K8s client-python](https://github.com/kubernetes-client/python)
+
+[Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+
+[Google distroless images](https://github.com/GoogleContainerTools/distroless)
+
+[K8s Labels/Annotations/Taints](https://kubernetes.io/docs/reference/labels-annotations-taints/)

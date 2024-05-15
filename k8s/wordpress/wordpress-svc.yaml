@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+  namespace: wordpress
+  labels:
+    app: natura
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: natura
+    tier: frontend
+  type: NodePort

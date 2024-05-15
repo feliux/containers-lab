@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-envs
+  namespace: airflow
+  labels:
+    app: airflow-scheduler
+data:
+  AIRFLOW__CORE__EXECUTOR: "LocalExecutor"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+  CONNECTION_CHECK_MAX_COUNT: "5"
+  CONNECTION_CHECK_SLEEP_TIME: "5"
+  _AIRFLOW_WWW_USER_CREATE: "true"
+  ### Postgres
+  POSTGRES_HOST: "psql-pinpon-svc.pinpon.svc.cluster.local" # airflow
+  PSQL_HOST: "psql-pinpon-svc.pinpon.svc.cluster.local" # pinpon
+  PSQL_PORT: "5432" # pinpon
+  ### Minio
+  MINIO_HOST: "minio.felagonell.com" # see minio-ingress
+  PREVIOUS_MATCHES_BUCKET: "previous-matches" # pinpon
+  NEXT_MATCHES_BUCKET: "next-matches" # pinpon
+  MINIO_SECURE: "True" # pinpon
+  ### Telegram
+  SEND_TO_CHAT: "false"
+  SEND_TO_GROUP: "true"

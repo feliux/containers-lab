@@ -1,0 +1,13 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: kubeflow
+  version: "1.18"
+  region: us-west-2
+
+managedNodeGroups:
+- name: kubeflow-mng
+  desiredCapacity: 3
+  instanceType: m5.large

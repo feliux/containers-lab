@@ -1,8 +1,19 @@
 # Folders
 data-science-lab/airflow/logs/**
-.env/
+.*env/
 
 # Files
 *.pyc
 *.ipynb_checkpoints
 *.pkl
+
+# Secrets
+*secrets*
+!secrets.yaml
+!01-secrets.yaml
+
+*keys*
+!keycloack
+
+*creds*
+*credentials*

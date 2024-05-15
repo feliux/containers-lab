@@ -1,0 +1,14 @@
+# kubectl get certificate -n grafana
+# kubectl describe certificate grafana-cert -n grafana
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-cert
+  namespace: grafana
+spec:
+  dnsNames:
+    - grafana.felagonell.com
+  secretName: grafana-tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: psql-pinpon-scripts
+  namespace: pinpon
+  labels:
+    app: psql-pinpon
+data:
+  00-create-custom-user.sh: |
+    #!/bin/bash
+    set -e # Exit if a command exits with a non-zero exit-code
+
+    # Create a custom role to read & write general datasets into postgres
+    echo "Creating database role: custom user"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE USER ${CUSTOM_USER} WITH LOGIN NOSUPERUSER CREATEDB NOCREATEROLE NOINHERIT NOREPLICATION PASSWORD '${CUSTOM_PASSWORD}';
+    EOSQL
+  01-create-custom-db.sh: |
+    #!/bin/bash
+    set -e # Exit if a command exits with a non-zero exit-code
+
+    # Create database to write general datasets into postgres
+    echo "Creating database"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<EOSQL
+        CREATE DATABASE ${CUSTOM_DB} OWNER ${CUSTOM_USER};
+        GRANT ALL PRIVILEGES ON DATABASE ${CUSTOM_DB} TO ${CUSTOM_USER};
+    EOSQL
+  02-create-airflow-user.sh: |
+    #!/bin/bash
+    set -e # Exit if a command exits with a non-zero exit code
+
+    # Create a role for airflow
+    echo "Creating database role: airflow"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE USER ${AIRFLOW_PSQL_USER} WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION PASSWORD '${AIRFLOW_PSQL_PASSWORD}';
+    EOSQL
+  03-create-airflow-db.sh: |
+    #!/bin/bash
+    set -e # Exit if a command exits with a non-zero exit-code
+
+    # Create database for airflow
+    echo "Creating database: airflow"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<EOSQL
+        CREATE DATABASE ${AIRFLOW_PSQL_DB} OWNER ${AIRFLOW_PSQL_USER};
+        GRANT ALL PRIVILEGES ON DATABASE ${AIRFLOW_PSQL_DB} TO ${AIRFLOW_PSQL_USER};
+    EOSQL
+  04-create-grafana-user.sh: |
+    #!/bin/bash
+    set -e # Exit if a command exits with a non-zero exit-code
+
+    # Create a custom role to read general datasets into postgres
+    echo "Creating database role: grafana user"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE ROLE read_only;
+        CREATE USER ${GRAFANA_USER} WITH LOGIN IN ROLE read_only NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT NOREPLICATION PASSWORD '${GRAFANA_PASSWORD}';
+        GRANT CONNECT ON DATABASE ${CUSTOM_DB} TO read_only;
+        GRANT USAGE ON SCHEMA public TO ${GRAFANA_USER};
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${GRAFANA_USER};
+    EOSQL
+    #GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana;

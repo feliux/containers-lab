@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-envs
+  namespace: airflow
+  labels:
+    app: airflow
+data:
+  AIRFLOW__CORE__EXECUTOR: "CeleryExecutor" # "LocalExecutor"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  AIRFLOW__CORE__LOAD_EXAMPLES: "true"
+  AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+  CONNECTION_CHECK_MAX_COUNT: "5"
+  CONNECTION_CHECK_SLEEP_TIME: "5"
+  _AIRFLOW_WWW_USER_CREATE: "true"
+  POSTGRES_HOST: "psql-svc.airflow.svc.cluster.local"

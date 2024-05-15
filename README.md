@@ -1,6 +1,12 @@
 # Containers Lab
 
-This repository contains some services running on containers.
+This repository contains some deployments, apps and services running on containers.
+
+## Kubernetes
+
+Go to [./k8s/README.md)](./k8s/README.md) for futher information.
+
+## Docker
 
 - [**airflow**](./airflow/). Deploy Airflow infrastructure.
 - [**cartodb**](./cartodb/).

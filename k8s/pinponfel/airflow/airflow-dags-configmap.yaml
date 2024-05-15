@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-dags
+  namespace: airflow
+data:
+  # pinpon
+  etl_previous.py: |
+    from datetime import datetime, timedelta
+    from airflow import DAG
+    from airflow.operators.bash_operator import BashOperator
+
+    # These args will get passed on to each operator
+    # You can override them on a per-task basis during operator initialization
+    default_args = {
+        "owner": "airflow",
+        "depends_on_past": False,
+        "email": ["airflow@example.com"],
+        "email_on_failure": False,
+        "email_on_retry": False,
+        "email_on_success": False,
+        "retries": 3,
+        "retry_delay": timedelta(minutes=1),
+        # "queue": "bash_queue",
+        # "pool": "backfill",
+        # "priority_weight": 10,
+        # "end_date": datetime(2016, 1, 1),
+        # "wait_for_downstream": False,
+        # "dag": dag,
+        # "sla": timedelta(hours=2),
+        # "execution_timeout": timedelta(seconds=300),
+        # "on_failure_callback": some_function,
+        # "on_success_callback": some_other_function,
+        # "on_retry_callback": another_function,
+        # "trigger_rule": "all_success"
+    }
+
+    dag = DAG(
+        "scraper_previous_matches",
+        default_args=default_args,
+        description="Scrape historical PinPon data",
+        schedule_interval="50 2,10,18 * * *",
+        start_date=datetime(2021, 7, 4, 16, 30), # year, month, day, hour,min
+        is_paused_upon_creation=False,
+        tags=["scraper"],
+    )
+
+    # t1, t2 are tasks created by instantiating operators
+    t1 = BashOperator(
+        task_id="scraper_previous",
+        depends_on_past=False,
+        bash_command="python3 /opt/airflow/scripts/scraper_previous.py",
+        retries=2,
+        dag=dag,
+    )
+
+    # Pipeline
+    t1
+  etl_following.py: |
+    from datetime import datetime, timedelta
+    from airflow import DAG
+    from airflow.operators.bash_operator import BashOperator
+
+    # These args will get passed on to each operator
+    # You can override them on a per-task basis during operator initialization
+    default_args = {
+        "owner": "airflow",
+        "depends_on_past": False,
+        "email": ["airflow@example.com"],
+        "email_on_failure": False,
+        "email_on_retry": False,
+        "email_on_success": False,
+        "retries": 3,
+        "retry_delay": timedelta(minutes=1),
+        # "queue": "bash_queue",
+        # "pool": "backfill",
+        # "priority_weight": 10,
+        # "end_date": datetime(2016, 1, 1),
+        # "wait_for_downstream": False,
+        # "dag": dag,
+        # "sla": timedelta(hours=2),
+        # "execution_timeout": timedelta(seconds=300),
+        # "on_failure_callback": some_function,
+        # "on_success_callback": some_other_function,
+        # "on_retry_callback": another_function,
+        # "trigger_rule": "all_success"
+    }
+
+    dag = DAG(
+        "scraper_following_matches",
+        default_args=default_args,
+        description="Scrape historical PinPon data",
+        # 6hours for get_following_matches on stats_to_telegram.py
+        # airflow_task --> 2h --> psql_time --> 6h
+        schedule_interval="30 2,8,14,20 * * *",
+        start_date=datetime(2021, 7, 4, 16, 30), # year, month, day, hour,min
+        is_paused_upon_creation=False,
+        tags=["scraper"],
+    )
+
+    # t1, t2 are tasks created by instantiating operators
+    t1 = BashOperator(
+        task_id="scraper_following",
+        depends_on_past=False,
+        bash_command="python3 /opt/airflow/scripts/scraper_following.py",
+        retries=2,
+        dag=dag,
+    )
+
+    t2 = BashOperator(
+        task_id="stats",
+        depends_on_past=False,
+        bash_command="python3 /opt/airflow/scripts/stats_to_telegram.py",
+        retries=2,
+        dag=dag,
+    )
+
+    # Pipeline
+    t1 >> t2

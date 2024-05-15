@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  namespace: airflow
+  labels:
+    app: airflow-webserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-webserver
+  template:
+    metadata:
+      labels:
+        app: airflow-webserver
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 50000
+        runAsGroup: 50000
+        fsGroup: 50000
+      containers:
+        - name: airflow-webserver
+          image: gcr.io/learning-310712/airflow-pinponfel:0.1.0
+          imagePullPolicy: IfNotPresent
+          # resources:
+          #   requests:
+          #     cpu: 100m
+          #     memory: 1Gi # 923.8MiB
+          #   limits:
+          #     cpu: 300m
+          #     memory: 2Gi
+          command: ["/bin/bash", "-c"]
+          args: ["airflow db init && airflow webserver"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            # readOnlyRootFilesystem: true
+            privileged: false
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #     - sh
+          #     - -c
+          #     - curl --fail http://localhost:8080/health
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: "/health"
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          envFrom:
+            - configMapRef:
+                name: airflow-envs
+          env:
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+            - name: _AIRFLOW_WWW_USER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_USERNAME
+            - name: _AIRFLOW_WWW_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: airflow-secrets
+                  key: _AIRFLOW_WWW_USER_PASSWORD
+          volumeMounts:
+            - name: dags
+              mountPath: /opt/airflow/dags
+            - name: scripts
+              mountPath: /opt/airflow/scripts
+      volumes:
+        - name: dags
+          configMap:
+            name: airflow-dags
+            items:
+            # pinpon
+            - key: etl_previous.py
+              path: etl_previous.py
+            - key: etl_following.py
+              path: etl_following.py
+        - name: scripts
+          configMap:
+            # pinpon
+            name: airflow-scripts
+            items:
+            - key: scraper_previous.py
+              path: scraper_previous.py
+            - key: scraper_following.py
+              path: scraper_following.py
+            - key: stats_to_telegram.py
+              path: stats_to_telegram.py
+            # utils pinpon
+            - key: pinpon_database.py
+              path: pinpon_database.py
+            - key: pinpon_helper.py
+              path: pinpon_helper.py
+            - key: telegram_helper.py
+              path: telegram_helper.py

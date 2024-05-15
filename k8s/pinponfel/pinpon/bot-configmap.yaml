@@ -1,0 +1,410 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bot-pinpon-scripts
+  namespace: pinpon
+  labels:
+    app: bot-pinpon
+data:
+  main.py: |
+    import os
+    import logging
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+    from pandas.plotting import table
+
+    from telegram.ext import Updater, CommandHandler, ConversationHandler, MessageHandler, Filters
+    from telegram import ChatAction, ReplyKeyboardMarkup
+
+    from pinpon_database import PinPonDatabase
+
+    ####################
+    # DEV
+    # Env variables to insert in psql
+    # from dotenv import load_dotenv
+    # _SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/custom.env")
+    # load_dotenv(dotenv_path=env_path)
+    # env_path = os.path.join(_SCRIPT_PATH, "../environment/telegram.env")
+    # load_dotenv(dotenv_path=env_path)
+    ###################
+
+    # Enable logging
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    )
+    logger = logging.getLogger(__name__)
+
+    RETURNS = {
+        "INPUT_LEAGUE_GETPLAYERS": 0,
+        "INPUT_LEAGUE_GETSTATS": 1,
+        "INPUT_PLAYER_GETSTATS": 2
+    }
+
+    def start(update, context):
+        logger.info(f"Bot inizialization. Data information \n{update}")
+        update.message.reply_text(
+        """
+        WELCOME TO PinPonFel !! =)
+        You can type the following options:
+        
+        Options
+        ------------
+        /get_players
+            Get players name of the next matches. You need this names for "get_stats".
+        /get_stats
+            Get statistics for each player.
+        """
+        )
+
+
+    def get_players(update, context):
+        # User will select league
+        user = update.message.from_user
+        text = update.message.text
+        logger.info(f"User {user.first_name} with username {user.username} select option {text}")
+
+        reply_keyboard = [["setka_cup_others_men", "liga_pro_others_men"]]
+        update.message.reply_text(
+            "First you should select a league. Pick one from the buttons",
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, 
+                one_time_keyboard=True, 
+                input_field_placeholder="Select league"
+            ),
+        )
+        return RETURNS["INPUT_LEAGUE_GETPLAYERS"]
+
+    def get_players_follow(update, context):
+        # We have the league
+        _LEAGUE = update.message.text
+        chat = update.message.chat
+        chat.send_action(
+            action=ChatAction.TYPING,
+            timeout=None
+        )
+        user = update.message.from_user
+        logger.info(f"User {user.first_name} with username {user.username} select league {_LEAGUE}")
+
+        try:
+            # Extract player names
+            db = PinPonDatabase(
+                host=os.getenv("PSQL_HOST"),
+                port=os.getenv("PSQL_PORT"),
+                user=os.getenv("CUSTOM_USER"),
+                password=os.getenv("CUSTOM_PASSWORD"),
+                database=os.getenv("CUSTOM_DB")
+            )
+            _SQL = f"SELECT player FROM stats_{_LEAGUE};"
+        
+            df = db.read_sql(_SQL)
+            md = df.to_markdown(tablefmt="grid")
+            if len(df) == 0:
+                update.message.reply_text("No stats for players")
+                return ConversationHandler.END
+            update.message.reply_text(md)
+            return ConversationHandler.END
+        except Exception as e:
+            update.message.reply_text(e)
+        return ConversationHandler.END
+
+
+    def get_stats(update, context):
+        # User will select league
+        user = update.message.from_user
+        text = update.message.text
+        logger.info(f"User {user.first_name} with username {user.username} select option {text}")
+        reply_keyboard = [["setka_cup_others_men", "liga_pro_others_men"]]
+        update.message.reply_text(
+            "First you should select a league. Pick one from the buttons",
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, 
+                one_time_keyboard=True, 
+                input_field_placeholder="Select league"
+            ),
+        )
+        return RETURNS["INPUT_LEAGUE_GETSTATS"]
+
+
+    def get_stats_follow(update, context):
+        # We have the league
+        _LEAGUE = update.message.text
+        context.user_data["league"] = _LEAGUE # save league on context variable
+        update.message.reply_text(
+        """
+        Write a player name in the following format:
+
+        Apellido1 N,Apellido2 N,Apellido3 N
+
+        For example, "Mares E., Boiko V." will be:
+
+        mares e,boiko v
+
+        Be sure to:
+        - Surname first, then the first name letter.
+        - Comma between players.
+        - Only spaces between surname and first name letter.
+        """
+        )
+        user = update.message.from_user
+        logger.info(f"User {user.first_name} with username {user.username} select league {_LEAGUE}")
+        return RETURNS["INPUT_PLAYER_GETSTATS"]
+
+
+    def input_player_names(update, context):
+        _LEAGUE = context.user_data["league"] # Load league from previous function
+        chat = update.message.chat
+        chat.send_action(
+            action=ChatAction.TYPING,
+            timeout=None
+        )
+        # Get the players name from input text
+        text = update.message.text
+        player_list = text.lower().split(",")
+        if len(player_list) == 1:
+            # We need a tuple but not with 1 element (1,)
+            player_list.append(player_list[0])
+
+        try:
+            # Extract stats from database
+            db = PinPonDatabase(
+                host=os.getenv("PSQL_HOST"),
+                port=os.getenv("PSQL_PORT"),
+                user=os.getenv("CUSTOM_USER"),
+                password=os.getenv("CUSTOM_PASSWORD"),
+                database=os.getenv("CUSTOM_DB")
+            )
+            _SQL = f"SELECT * FROM stats_{_LEAGUE} \
+                    WHERE player IN {tuple(player_list)};"
+        
+            df = db.read_sql(_SQL)
+            if len(df) == 0:
+                update.message.reply_text("No stats for players")
+                return ConversationHandler.END
+            df = df.set_index("player")
+            md = df.to_markdown(tablefmt="grid")
+            update.message.reply_text(md)
+            # Save dataframe as markdown
+            text_file = open(text + ".txt", "w")
+            text_file.write(md)
+            text_file.close()
+            # Send markdown
+            send_md(
+                dataframe=df,
+                filename=text + ".txt",
+                chat=chat
+            )
+            # Send photo
+            filename_png = generate_photo(
+                dataframe=df,
+                filename=text + ".png"
+            )
+            send_photo(
+                filename=filename_png,
+                chat=chat
+            )
+            return ConversationHandler.END
+        except Exception as e:
+            update.message.reply_text(e)
+            return ConversationHandler.END
+
+
+    def generate_photo(dataframe, filename):
+        # Save dataframe as png
+        fig = plt.figure(figsize=(15, 7))
+        ax = plt.subplot(111, frame_on=False) # no visible frame
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
+        table(ax, dataframe, loc="center")
+        plt.savefig(filename)
+        return filename
+
+
+    def send_photo(filename, chat):
+        chat.send_action(
+            action=ChatAction.UPLOAD_PHOTO,
+            timeout=None
+        )
+        chat.send_photo(
+            photo=open(filename, "rb")
+        )
+        # Delete photo
+        os.unlink(filename)
+
+
+    def send_md(dataframe, filename, chat):
+        chat.send_document(
+            document=open(filename, "rb")
+        )
+        os.unlink(filename)
+
+
+    if __name__ == "__main__":
+
+        # db = PinPonDatabase
+
+        # Bot
+        updater = Updater(token=os.getenv("TOKEN_BOT"), use_context=True)
+        dp = updater.dispatcher
+
+        dp.add_handler(CommandHandler("start", start))
+        #dp.add_handler(CommandHandler("get_players", get_players))
+        dp.add_handler(
+            ConversationHandler(
+                entry_points=[
+                    CommandHandler("get_players", get_players)
+                ],
+                states={
+                    RETURNS["INPUT_LEAGUE_GETPLAYERS"]: [
+                        MessageHandler(
+                            Filters.regex("^(setka_cup_others_men|liga_pro_others_men)$"),
+                            get_players_follow
+                            )
+                        ]
+                },
+                fallbacks=[]
+            )
+        )
+        dp.add_handler(
+            ConversationHandler(
+                entry_points=[
+                    CommandHandler("get_stats", get_stats)
+                ],
+                states={
+                    RETURNS["INPUT_LEAGUE_GETSTATS"]: [
+                        MessageHandler(
+                            Filters.regex("^(setka_cup_others_men|liga_pro_others_men)$"),
+                            get_stats_follow
+                        )
+                    ],
+                    RETURNS["INPUT_PLAYER_GETSTATS"]: [MessageHandler(Filters.text, input_player_names)]
+                },
+                fallbacks=[]
+            )
+        )
+        # Keep listening
+        updater.start_polling()
+        updater.idle()
+  # utils pinpon
+  pinpon_database.py: |
+    import pandas as pd
+    from datetime import datetime
+    from sqlalchemy import create_engine
+
+    class PinPonDatabase():
+        """
+        Connect to PostgreSQL
+
+        Parameters
+        ----------
+        host: str
+            Host or Ip
+        port: str or int
+            Port. Most cases 5432
+        user: str
+            User
+        password: bool
+            User password
+        database: str
+            Databse to connect
+        """
+        def __init__(self, host: str, port: str, user: str, password: str, database: str):
+            __endpoint = f"postgresql://{user}:{password}@{host}/{database}"
+            self._connection = create_engine(__endpoint)
+
+        def do_sql(self, sql: str):
+            """
+            Do custom SQL query
+
+            Parameters
+            ----------
+            sql: str
+                Custom query
+            """
+            with self._connection.connect() as connection:
+                connection.execute(sql)
+
+        def read_sql(self, sql: str):
+            """
+            Do custom SQL query and result in a dataframe
+
+            Parameters
+            ----------
+            sql: str
+                Custom query
+
+            Returns
+            -------
+            dataframe: DataFrame
+                DataFrame result of your query
+            """
+            return pd.read_sql_query(sql, self._connection)
+
+        def insert_data(self, dataframe, table_name: str, if_exists="append"):
+            """
+            Insert data into PostgreSQL
+
+            Parameters
+            ----------
+            dataframe: DataFrame
+                Data to insert
+            table_name: str
+                Table where you want to insert
+            if_exists: str
+                Method to insert
+            """
+            dataframe.to_sql(
+                table_name,
+                con=self._connection,
+                if_exists=if_exists,
+                chunksize=1000
+            )
+
+        def get_historic_player_list(self, player_list: list, table_name: str):
+            """
+            Get historical data given a list of players
+
+            Parameters
+            ----------
+            player_list: list
+                Player names. One name per item
+            table_name: str
+                Table where to extract of
+
+            Returns
+            -------
+            dataframe: DataFrame
+                Result of your query
+            """
+            sql = f"SELECT * \
+                    FROM {table_name} \
+                    WHERE home_participant IN {player_list} \
+                    or away_participant IN {player_list};"
+            df = pd.read_sql_query(sql, self._connection)
+            return df
+
+        def get_following_matches(self, table_name: str, time: int, interval: str):
+            """
+            Get following matches on a period of time
+
+            Parameters
+            ----------
+            table_name: str
+                Table where to extract of
+            time: int
+                Time from now to query data
+            interval: str
+                Period to query. Could be hour/s, week/s, day/s
+
+            Returns
+            -------
+            dataframe: DataFrame
+                Result of your query
+            """
+            sql = f"SELECT * \
+                    FROM {table_name} \
+                    WHERE date between now() \
+                    and (now() + '{time} {interval}'::interval);"
+            df = pd.read_sql_query(sql, self._connection)
+            return df
