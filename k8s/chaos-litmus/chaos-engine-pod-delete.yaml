@@ -1,0 +1,26 @@
+# defines delay between each successive iteration of the chaos
+# https://litmuschaos.github.io/litmus/experiments/categories/pods/pod-delete/
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: engine-nginx
+spec:
+  engineState: "active"
+  annotationCheck: "false"
+  appinfo:
+    appns: "default"
+    applabel: "app=nginx"
+    appkind: "deployment"
+  chaosServiceAccount: pod-delete-sa
+  experiments:
+  - name: pod-delete
+    spec:
+      components:
+        env:
+        # delay between each iteration of chaos
+        - name: CHAOS_INTERVAL
+          value: '5'
+        # time duration for the chaos execution
+        - name: TOTAL_CHAOS_DURATION
+          value: '15'
+        # nginx pod will be deleted every 5 seconds for 15 seconds, 3 times

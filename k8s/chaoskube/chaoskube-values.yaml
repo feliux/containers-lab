@@ -1,0 +1,33 @@
+image:
+  # https://github.com/linki/chaoskube/pkgs/container/chaoskube
+  tag: v0.32
+
+chaoskube:
+
+  # chaoskube flag documented here: https://github.com/linki/chaoskube#flags
+  # The helm chart unfortunately defines some of these which are brittle to override
+  # many issues with the helm chart and the flag dry-run=true/false with the no-dry-run is silly.
+
+  # The interval parameter instructs Chaoskube to kill Pods every 20 seconds.
+  # The targeted Pods are any with the label environment=test,
+  # and the kube-system namespace has to be explicitly excluded (!) from the list of namespaces to look for Pods to kill
+  args:
+    interval: "20s"
+    labels: "environment=test"
+    annotations: "chaos.alpha.kubernetes.io/enabled=true"
+    kinds: "!DaemonSet"
+    namespaces: "!kube-system"
+    # namespace-labels: ""
+    # included-pod-names: ""
+    # excluded-pod-names: ""
+    excluded-weekdays: " "
+    excluded-times-of-day: "22:00-22:00"
+    excluded-days-of-year: "Feb 29"
+    timezone: "UTC"
+    # max-runtime:
+    # max-kill:
+    minimum-age: "30s"
+    no-dry-run: ""
+    # log-format:
+    # log-caller:
+    # slack-webhook: ""

@@ -17,11 +17,11 @@ $ aws sts get-caller-identity
 
 ```sh
 $ eksctl create cluster \
---name test-cluster \
---without-nodegroup \
---region us-east-1 \
---zones us-east-1a,us-east-1b \
---managed
+    --name test-cluster \
+    --without-nodegroup \
+    --region us-east-1 \
+    --zones us-east-1a,us-east-1b \
+    --managed
 
 $ kubectl get nodes
 
@@ -36,28 +36,136 @@ $ kubectl cluster-info
 $ kubectl get svc
 ```
 
+You can set the kubeconfig as...
+
+```sh
+export region_code=eu-west-1
+export cluster_name=<clusterName>
+export account_id=<accountId>
+export role=>awsRole>
+
+$ cluster_endpoint=$(aws eks describe-cluster \
+    --region $region_code \
+    --name $cluster_name \
+    --query "cluster.endpoint" \
+    --output text)
+
+$ certificate_data=$(aws eks describe-cluster \
+    --region $region_code \
+    --name $cluster_name \
+    --query "cluster.certificateAuthority.data" \
+    --output text)
+
+$ aws --region $region_code eks get-token --cluster-name $cluster_name --role arn:aws:iam::$account_id:role/$role
+
+# extras
+# To see the certificate data
+$ aws eks describe-cluster --name $cluster_name --query "cluster.certificateAuthority.data" --output text | base64 --decode > eks.crt
+$ cat eks.crt
+$ openssl x509 -in eks.cert -text -noout
+```
+
+- CLI
+
+```sh
+#!/bin/bash
+read -r -d '' KUBECONFIG <<EOF
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: $certificate_data
+    server: $cluster_endpoint
+  name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+contexts:
+- context:
+    cluster: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+    user: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+  name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+current-context: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+kind: Config
+preferences: {}
+users:
+- name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
+      args:
+        - --region
+        - $region_code
+        - eks
+        - get-token
+        - --cluster-name
+        - $cluster_name
+        # - --role
+        # - "arn:aws:iam::$account_id:role/my-role"
+      # env:
+        # - name: "AWS_PROFILE"
+        #   value: "aws-profile"
+EOF
+echo "${KUBECONFIG}" > ~/.kube/config
+```
+
+- aws-iam-authenticator
+
+```sh
+#!/bin/bash
+read -r -d '' KUBECONFIG <<EOF
+apiVersion: v1
+clusters:
+- cluster:
+    server: $cluster_endpoint
+    certificate-authority-data: $certificate_data
+  name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+contexts:
+- context:
+    cluster: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+    user: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+  name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+current-context: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+kind: Config
+preferences: {}
+users:
+- name: arn:aws:eks:$region_code:$account_id:cluster/$cluster_name
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws-iam-authenticator
+      args:
+        - "token"
+        - "-i"
+        - "$cluster_name"
+        # - "--role"
+        # - "arn:aws:iam::$account_id:role/my-role"
+      # env:
+        # - name: "AWS_PROFILE"
+        #   value: "aws-profile"
+EOF
+echo "${KUBECONFIG}" > ~/.kube/config
+```
+
 Visit **CloudFormation** to see cluster information.
 
 > Add nodes to cluster
 
 ```sh
 $ eksctl create nodegroup \
-  --cluster test-cluster \
-  --region us-east-1 \
-  --name test-workers \
-  --node-type t3.medium \
-  --node-ami auto \
-  --nodes 1 \
-  --nodes-min 1 \
-  --nodes-max 3 \
-  --asg-access # Add autoscaler policy
+    --cluster test-cluster \
+    --region us-east-1 \
+    --name test-workers \
+    --node-type t3.medium \
+    --node-ami auto \
+    --nodes 1 \
+    --nodes-min 1 \
+    --nodes-max 3 \
+    --asg-access # Add autoscaler policy
 
 $ eksctl delete nodegroup \
-  --cluster test-cluster \
-  --name test-workers \
-  --region us-east-1
+    --cluster test-cluster \
+    --name test-workers \
+    --region us-east-1
 
-  eksctl scale nodegroup --cluster=test-cluster --nodes=2 --name=test-workers --nodes-min=1 --nodes-max=3
+$ eksctl scale nodegroup --cluster=test-cluster --nodes=2 --name=test-workers --nodes-min=1 --nodes-max=3
 ```
 
 ### AutoScaler
@@ -70,12 +178,12 @@ $ aws iam create-policy \
     --policy-document file://cluster-autoscaler/cluster-autoscaler-policy.json
 
 $ eksctl create iamserviceaccount \
-  --cluster=test-cluster \
-  --namespace=kube-system \
-  --name=cluster-autoscaler \
-  --attach-policy-arn=arn:aws:iam::197372856450:policy/AmazonEKSClusterAutoscalerPolicy \
-  --override-existing-serviceaccounts \
-  --approve
+    --cluster=test-cluster \
+    --namespace=kube-system \
+    --name=cluster-autoscaler \
+    --attach-policy-arn=arn:aws:iam::197372856450:policy/AmazonEKSClusterAutoscalerPolicy \
+    --override-existing-serviceaccounts \
+    --approve
 
 # If fails then run
 # eksctl utils associate-iam-oidc-provider --region=us-east-1 --cluster=test-cluster --approve
@@ -83,12 +191,12 @@ $ eksctl create iamserviceaccount \
 $ kubectl apply -f cluster-autoscaler/cluster-autoscaler-autodiscover.yaml # Look for luster name: test-cluster
 
 $ kubectl annotate serviceaccount cluster-autoscaler \
-  -n kube-system \
-  eks.amazonaws.com/role-arn=arn:aws:iam::197372856450:role/AWSServiceRoleForAutoScaling
+    -n kube-system \
+    eks.amazonaws.com/role-arn=arn:aws:iam::197372856450:role/AWSServiceRoleForAutoScaling
 
 $ kubectl patch deployment cluster-autoscaler \
-  -n kube-system \
-  -p '{"spec":{"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}}}}}'
+    -n kube-system \
+    -p '{"spec":{"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"}}}}}'
 
 $ kubectl -n kube-system edit deployment.apps/cluster-autoscaler
 ```
@@ -109,9 +217,9 @@ Add your cluster name and add the following tow lanes
 
 ```sh
 $ aws eks describe-cluster \
---name test-cluster \
---query "cluster.identity.oidc.issuer" \
---output text
+    --name test-cluster \
+    --query "cluster.identity.oidc.issuer" \
+    --output text
 
 $ aws iam list-open-id-connect-providers
 
@@ -129,13 +237,13 @@ $ aws iam create-policy \
     --policy-document file://alb/iam_policy.json
 
 $ eksctl create iamserviceaccount \
-  --region=us-east-1 \
-  --cluster=test-cluster \
-  --namespace=kube-system \
-  --name=aws-load-balancer-controller \
-  --attach-policy-arn=arn:aws:iam::197372856450:policy/AWSLoadBalancerControllerIAMPolicy \
-  --override-existing-serviceaccounts \
-  --approve
+    --region=us-east-1 \
+    --cluster=test-cluster \
+    --namespace=kube-system \
+    --name=aws-load-balancer-controller \
+    --attach-policy-arn=arn:aws:iam::197372856450:policy/AWSLoadBalancerControllerIAMPolicy \
+    --override-existing-serviceaccounts \
+    --approve
 ```
 
 > Install cert-manager to inject certificate configuration into the webhooks
@@ -208,41 +316,3 @@ $ kubectl apply -f k8s/test/mysql.yaml
 $ kubectl exec -it mysql-pod -- mysql -h mysql -pdbpassword11
 mysql> show schemas;
 ```
-
-## References
-
-> EKS
-
-[EKS](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
-
-[Provisioning Kubernetes clusters on AWS with Terraform and EKS](https://learnk8s.io/terraform-eks)
-
-[Secure Access to Kubernetes Deployment Endpoints on Amazon EKS](https://betterprogramming.pub/secure-access-to-kubernetes-deployment-endpoints-on-amazon-eks-4826a8e87c6f)
-
-> AWS CLI
-
-[AWS Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
-
-[AWS CLI Github](https://hub.docker.com/r/amazon/aws-cli)
-
-[AWS CLI PyPi](https://pypi.org/project/awscli/)
-
-[eksctl Documentation](https://eksctl.io/introduction/)
-
-[eksctl install](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html)
-
-[eksctl Github](https://github.com/weaveworks/eksctl)
-
-> SECURITY
-
-[AWS ALB Ingress Controller - Implement HTTP to HTTPS Redirect](https://www.stacksimplify.com/aws-eks/aws-alb-ingress/learn-to-enable-ssl-redirect-in-alb-ingress-service-on-aws-eks/)
-
-[How do I terminate HTTPS traffic on Amazon EKS workloads with ACM?](https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/)
-
-[Securing EKS Ingress With Contour And Let’s Encrypt The GitOps Way](https://aws.amazon.com/blogs/containers/securing-eks-ingress-contour-lets-encrypt-gitops/)
-
-> EC2
-
-[Amazon EC2 Instance Types](https://aws.amazon.com/ec2/instance-types/)
-
-[Instance Type Explorer](https://aws.amazon.com/ec2/instance-explorer/?ec2-instances-cards.sort-by=item.additionalFields.category-order&ec2-instances-cards.sort-order=asc&awsf.ec2-instances-filter-category=*all&awsf.ec2-instances-filter-processors=*all&awsf.ec2-instances-filter-accelerators=*all&awsf.ec2-instances-filter-capabilities=*all)

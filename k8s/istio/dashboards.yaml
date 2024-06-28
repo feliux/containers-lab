@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kiali
+  name: kiali
+  namespace: istio-system
+spec:
+  ports:
+  - name: http
+    nodePort: 30001
+    protocol: TCP
+    port: 20001
+    targetPort: 20001
+  selector:
+    app: kiali
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+  namespace: istio-system
+spec:
+  ports:
+  - name: http
+    nodePort: 32000
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+  selector:
+    app: grafana
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jaeger
+    jaeger-infra: jaeger-service
+  name: jaeger
+  namespace: istio-system
+spec:
+  ports:
+  - name: query-http
+    protocol: TCP
+    port: 16686
+    targetPort: 16686
+    nodePort: 32686
+  selector:
+    app: jaeger
+  type: NodePort

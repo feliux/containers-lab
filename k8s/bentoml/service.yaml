@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: bento-summarize
+    name: bento-summarize
+spec:
+    ports:
+    - name: predict
+      targetPort: summarize-port
+      port: 3000
+      nodePort: 30500
+    selector:
+      app: bento-summarize
+    type: NodePort
