@@ -45,9 +45,9 @@ In the next step we are going to verify that Grafana can retrieve a valid access
 
 **Verify JWT token**
 
-Open your shell, enter the command below ([test_jwt_token.sh](./test_jwt_token.sh)) and populate the <>-fields. Copy the client secret from the note.
+Open your shell, enter the command below ([test-jwt-token.sh](./test-jwt-token.sh)) and populate the <>-fields. Copy the client secret from the note.
 
-~~~
+```sh
 KEYCLOAK_USERNAME=<Keycloak username>
 KEYCLOAK_PASSWORD=<Keycloak password>
 KEYCLOAK_REALM=<Keycloak realm name>
@@ -60,7 +60,7 @@ curl -s \
 -d "password=$KEYCLOAK_PASSWORD" \
 -d "grant_type=password" \
 "https://login.example.com/auth/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" | jq -r '.access_token'
-~~~
+```
 
 Then copy the encoded output, open https://jwt.io#debugger-io and paste it into the left box. On the rights side you should find the decoded JSON output with this property:
 
@@ -88,7 +88,7 @@ Make the following configurations for the Grafana container:
 
 ~~~
 GF_SERVER_DOMAIN: "monitor.example.com"
-GF_SERVER_ROOT_URL: "https://monitor.exmpale.com"
+GF_SERVER_ROOT_URL: "https://monitor.example.com"
 GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
 GF_AUTH_GENERIC_OAUTH_NAME: "Login Keycloak"
 GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
@@ -108,13 +108,13 @@ Once everything is deployed logout of Grafana and click on the Login Keycloak bu
 **Generate realm json**
 
 ```sh
-/opt/jboss/keycloak/bin/standalone.sh \
--Djboss.socket.binding.port-offset=100 \
--Dkeycloak.migration.action=export \
--Dkeycloak.migration.provider=singleFile \
--Dkeycloak.migration.realmName=myRealm \
--Dkeycloak.migration.usersExportStrategy=REALM_FILE \
--Dkeycloak.migration.file=/tmp/myRealm.json
+$ ./opt/jboss/keycloak/bin/standalone.sh \
+    -Djboss.socket.binding.port-offset=100 \
+    -Dkeycloak.migration.action=export \
+    -Dkeycloak.migration.provider=singleFile \
+    -Dkeycloak.migration.realmName=myRealm \
+    -Dkeycloak.migration.usersExportStrategy=REALM_FILE \
+    -Dkeycloak.migration.file=/tmp/myRealm.json
 ```
 
 ## References
