@@ -32,6 +32,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**kubeflow-aws**](./kubeflow-aws/). Deploy Kubeflow on AWS.
 - [**manifests**](./manifests/). Bunch of k8s manifest samples.
 - [**metrics-server**](./metrics-server/). Install the metrics server into your k8s.
+- [**minikube**](./minikube/). Run a minikube cluster.
 - [**nfs-provisioner**](./nfs-provisioner/). Configure a NFS server storage class provisioner.
 - [**nginx**](./nginx/). Deploy Nginx Helm Chart ingress controller.
 - [**nuclio**](./nuclio/). Deploy serverless workloads with Nuclio.
