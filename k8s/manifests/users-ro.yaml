@@ -1,0 +1,107 @@
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: users-ro
+  namespace: default
+---
+# kubectl get secret users-ro-token -o jsonpath='{.data.token}' | base64 --decode && echo
+apiVersion: v1
+kind: Secret
+metadata:
+  name: users-ro-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: users-ro
+type: kubernetes.io/service-account-token
+---
+# kubectl api-resources -o wide
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-role-ro-ns
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+---
+# kubectl api-resources -o wide
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-role-ro
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get", "watch", "list", "delete"]
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "watch", "list", "delete"]
+#---
+# PRO env
+# kind: ClusterRole
+# apiVersion: rbac.authorization.k8s.io/v1
+# metadata:
+#   name: cluster-role-ro
+# rules:
+# - apiGroups: [""]
+#   resources: ["services"]
+#   verbs: ["get", "list"]
+# - apiGroups: ["apps"]
+#   resources: ["deployments"]
+#   verbs: ["get", "watch", "list"]
+# - apiGroups: ["apps"]
+#   resources: ["replicasets"]
+#   verbs: ["get", "watch", "list"]
+# - apiGroups: [""]
+#   resources: ["pods", "pods/log"]
+#   verbs: ["get", "watch", "list"]
+---
+# This for all namespaces. Not use with RoleBinding blocks
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: clusterrolebinding-ro-ns
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-role-ro-ns
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: users-ro
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rolebinding-ro
+  namespace: namespace1
+roleRef:
+  kind: ClusterRole
+  name: cluster-role-ro
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: users-ro
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rolebinding-ro
+  namespace: namespace2
+roleRef:
+  kind: ClusterRole
+  name: cluster-role-ro
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: users-ro
+    namespace: default

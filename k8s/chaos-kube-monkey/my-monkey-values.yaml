@@ -1,0 +1,8 @@
+config:
+  dryRun: false
+  whitelistedNamespaces:
+    - "default"
+    - "more-apps"
+  debug:
+    enabled: true
+    schedule_immediate_kill: true
