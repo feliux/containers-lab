@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: bento-summarize
+    name: bento-summarize
+spec:
+    replicas: 3
+    selector:
+        matchLabels:
+            app: bento-summarize
+    template:
+        metadata:
+            labels:
+                app: bento-summarize
+        spec:
+            containers:
+            - image: $SUMMARIZE_MODEL_IMAGE
+              imagePullPolicy: IfNotPresent
+              name: bento-summarize
+              ports:
+              - containerPort: 3000
+                name: summarize-port

@@ -5,6 +5,7 @@
 - [**airflow**](./airflow/). Deploy Airflow infrastructure.
 - [**cartodb**](./cartodb/).
 - [**cloudera**](./cloudera/). Deploy Cloudera ecosystem on Docker.
+- [**container-decomposition**](./container-decomposition/). Dig into docker inside.
 - [**data-science-lab**](./data-science-lab/). Launch an awesome data science toolstack.
 - [**distroless-python**](./distroless-python/). Build a distroless image for serving Uvicorn/FastAPI service.
 - [**elastic-cluster**](./elastic-cluster/). Basic Elastic cluster configuration.

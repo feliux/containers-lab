@@ -1,0 +1,6 @@
+# The wrong way to package a Python application in a container
+# https://pythonspeed.com/articles/dockerizing-python-is-hard/
+FROM python:3
+COPY fibonacci.py /
+RUN pip install flask
+CMD ["python", "./fibonacci.py", "10"]
