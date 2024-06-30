@@ -36,8 +36,11 @@ $ sudo ls -l /etc/rancher
 **Installing with docker-compose**
 
 ```sh
+# Create cluster
 $ K3S_TOKEN=${RANDOM}${RANDOM}${RANDOM} K3S_VERSION=v1.30.2-k3s1 docker-compose up
 $ kubectl --kubeconfig kubeconfig.yaml get po -A
+# Delete cluster
+$ K3S_TOKEN=${RANDOM}${RANDOM}${RANDOM} K3S_VERSION=v1.30.2-k3s1 docker-compose down -v
 ```
 
 **Commands**

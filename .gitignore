@@ -7,8 +7,11 @@ data-science-lab/airflow/logs/**
 *.ipynb_checkpoints
 *.pkl
 
+kubeconfig.yaml
+
 # Binary
 k8s/k3s/k3s
+k8s/k3d/k3d
 
 # Secrets
 *secrets*
