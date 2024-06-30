@@ -20,7 +20,8 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**gcp**](./gcp/). Deploy a GKE cluster and some extra features.
 - [**golang-js-api**](./golang-js-api/). Minimal webpage using Golang API backend server and a JavaScript frontend.
 - [**istio**](./istio/). Deploy Istio Service Mesh on your cluster.
-- [**k3s**](./k3s/). Run your k3s cluster.
+- [**k3d**](./k3d/). Run your k3s cluster usiing k3d.
+- [**k3s**](./k3s/). Run your k3s cluster (docker compose included).
 - [**k8s-cron-rollout**](./k8s-cron-rollout/). Custom distroless images for rollout a k8s deployments. View on [DockerHub](https://hub.docker.com/r/feliux/k8s-cron).
 - [**k8s-dashboard**](./k8s-dashboard/). Deploy the official Kubernetes dashboard.
 - [**k9s**](./k9s/). Administer your cluster with k9s.
