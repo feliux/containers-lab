@@ -27,6 +27,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**k9s**](./k9s/). Administer your cluster with k9s.
 - [**kafka**](./kafka/). Deploy Kafka Helm Chart.
 - [**kafka-kraft**](./kafka-kraft/). Deploy Kafka over Kraft (without ZooKeper).
+- [**kind**](./kind/). Run a cluster using kind.
 - [**knative**](./knative/). Deploy serverless workloads with Knative.
 - [**kubeflow-aws**](./kubeflow-aws/). Deploy Kubeflow on AWS.
 - [**manifests**](./manifests/). Bunch of k8s manifest samples.
