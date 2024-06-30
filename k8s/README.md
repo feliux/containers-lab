@@ -16,7 +16,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**chaos-mesh**](./chaos-mesh/). Orchestate chaos en k8s.
 - [**chaoskube**](./chaoskube/). Sabotage yourself whit Chaoskube.
 - [**cheatsheet**](./cheatsheet/). Usefull info about k8s.
-- [**cli**](./clis/). Learn how to manage your cluster using the cli.
+- [**cli-tools**](./cli-tools/). Learn how to manage your cluster using the cli.
 - [**gcp**](./gcp/). Deploy a GKE cluster and some extra features.
 - [**golang-js-api**](./golang-js-api/). Minimal webpage using Golang API backend server and a JavaScript frontend.
 - [**istio**](./istio/). Deploy Istio Service Mesh on your cluster.

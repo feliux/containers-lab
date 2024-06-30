@@ -1,0 +1,7 @@
+write-kubeconfig-mode: "0644"
+tls-san:
+  - "cluster.k3s.local"
+node-label:
+  - "cluster=master"
+  - "server=true"
+cluster-init: true

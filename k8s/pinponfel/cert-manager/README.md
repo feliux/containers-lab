@@ -1,6 +1,6 @@
 # Cert-Manager
 
-~~~
+```sh
 $ wget https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
 $ kubectl apply -f cert-manager.yaml
 $ kubectl get pods --namespace cert-manager
@@ -8,7 +8,7 @@ $ kubectl get pods --namespace cert-manager
 $ kubectl apply -f acme-clusterissuer.yaml
 $ kubectl get clusterissuer
 $ kubectl describe clusterissuer letsencrypt-staging
-~~~
+```
 
 ## References
 
