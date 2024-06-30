@@ -1,0 +1,49 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-cluster-1
+# featureGates:
+#   # any feature gate can be enabled here with "Name": true
+#   # or disabled here with "Name": false
+#   # not all feature gates are tested, however
+#   "CSIMigration": true
+# runtimeConfig:
+#   "api/alpha": "false"
+networking:
+  # ipFamily: ipv6 # dual
+  apiServerAddress: "127.0.0.1" # mandatory for security reasons. Not expose to internet
+  apiServerPort: 6443
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+  disableDefaultCNI: false # true for installing other network plugin, e.g. Calico
+  kubeProxyMode: "iptables" # ipvs, nftables or ipvs
+# One control plane node and three "workers".
+#
+# While these will not add more real compute capacity and
+# have limited isolation, this can be useful for testing
+# rolling updates etc.
+#
+# The API-server and other control plane components will be
+# on the control-plane node.
+#
+# You probably don't need this unless you are testing Kubernetes itself.
+nodes:
+- role: control-plane
+  # kubeadmConfigPatches:
+  # - |
+  #   kind: InitConfiguration
+  #   nodeRegistration:
+  #     kubeletExtraArgs:
+  #       node-labels: "my-label=true"
+- role: control-plane
+- role: worker
+  labels: # useful for working with nodeSelectors
+    tier: frontend
+- role: worker
+- role: worker
+  labels: # useful for working with nodeSelectors
+    tier: backend
+# Kubernetes Verison
+# - role: control-plane
+#   image: kindest/node:v1.16.4@sha256:b91a2c2317a000f3a783489dfb755064177dbc3a0b2f4147d50f04825d016f55
+# - role: worker
+#   image: kindest/node:v1.16.4@sha256:b91a2c2317a000f3a783489dfb755064177dbc3a0b2f4147d50f04825d016f55

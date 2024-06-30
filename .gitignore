@@ -12,6 +12,7 @@ kubeconfig.yaml
 # Binary
 k8s/k3s/k3s
 k8s/k3d/k3d
+k8s/kind/kind
 
 # Secrets
 *secrets*
