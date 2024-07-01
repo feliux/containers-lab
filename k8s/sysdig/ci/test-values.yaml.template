@@ -1,0 +1,10 @@
+global:
+  clusterConfig:
+    namespace: ""
+  sysdig:
+    accessKey: ${SECURE_AGENT_TOKEN}
+    secureAPIToken: ${SECURE_API_TOKEN}
+nodeAnalyzer:
+  nodeAnalyzer:
+    benchmarkRunner:
+      deploy: false

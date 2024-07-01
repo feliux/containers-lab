@@ -1,0 +1,14 @@
+suite: Test conditional flags and its dependent changes
+templates:
+  - serviceaccount.yaml
+tests:
+  - it: check global kspm deploy
+    set:
+      global:
+        kspm:
+          deploy: true
+      clusterName: test-cluster
+    asserts:
+      - containsDocument:
+          kind: ServiceAccount
+          apiVersion: v1

@@ -1,0 +1,43 @@
+{{ if and .Values.nodeAnalyzer.deploy (not .Values.secure.vulnerabilityManagement.newEngineOnly) (not (include "nodeAnalyzer.gke.autopilot" .)) (include "nodeAnalyzer.deployImageAnalyzer" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-analyzer
+  namespace: {{ include "nodeAnalyzer.namespace" . }}
+  labels:
+{{ include "nodeAnalyzer.labels" . | indent 4 }}
+data:
+  collector_endpoint: "https://{{ include "nodeAnalyzer.apiEndpoint" . }}/internal/scanning/scanning-analysis-collector"
+  ssl_verify_certificate: {{ include "imageAnalyzer.sslVerifyCertificate" . }}
+  debug: "{{ .Values.nodeAnalyzer.debug | default false }}"
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.dockerSocketPath }}
+  docker_socket_path: {{ .Values.nodeAnalyzer.imageAnalyzer.dockerSocketPath }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.criSocketPath }}
+  cri_socket_path: {{ .Values.nodeAnalyzer.imageAnalyzer.criSocketPath }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.containerdSocketPath }}
+  containerd_socket_path: {{ .Values.nodeAnalyzer.imageAnalyzer.containerdSocketPath }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.imagePeriod }}
+  image_period: {{ .Values.nodeAnalyzer.imageAnalyzer.imagePeriod }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.imageCacheTTL }}
+  image_cache_ttl: {{ .Values.nodeAnalyzer.imageAnalyzer.imageCacheTTL }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.reportPeriod }}
+  report_period: {{ .Values.nodeAnalyzer.imageAnalyzer.reportPeriod }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.imageAnalyzer.collectorTimeout }}
+  collector_timeout: {{ .Values.nodeAnalyzer.imageAnalyzer.collectorTimeout }}
+  {{- end }}
+  {{- if (.Values.nodeAnalyzer.imageAnalyzer.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy) }}
+  http_proxy: {{ .Values.nodeAnalyzer.imageAnalyzer.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.imageAnalyzer.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+  https_proxy: {{ .Values.nodeAnalyzer.imageAnalyzer.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.imageAnalyzer.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy) }}
+  no_proxy: {{ .Values.nodeAnalyzer.imageAnalyzer.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy }}
+  {{- end -}}
+{{- end }}

@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cluster-scanner.fullname" . }}
+rules:
+- apiGroups: ["", "apps", "batch", "extensions"]
+  resources:
+    - "deployments"
+    - "replicasets"
+    - "daemonsets"
+    - "statefulsets"
+    - "pods"
+    - "cronjobs"
+    - "jobs"
+    - "nodes"
+    - "namespaces"
+    - "secrets"
+  verbs: ["get", "list", "watch"]

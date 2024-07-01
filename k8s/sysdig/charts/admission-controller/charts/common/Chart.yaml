@@ -1,0 +1,16 @@
+apiVersion: v2
+description: Library Chart for Sysdig components to share common data
+maintainers:
+- email: alberto.barba@sysdig.com
+  name: AlbertoBarba
+- email: adam.roberts@sysdig.com
+  name: aroberts87
+- email: francesco.furlan@sysdig.com
+  name: francesco-furlan
+- email: gerlando.falauto@sysdig.com
+  name: iurly
+- email: marcovito.moscaritolo@sysdig.com
+  name: mavimo
+name: common
+type: library
+version: 1.3.0

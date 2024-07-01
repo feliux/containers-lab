@@ -1,0 +1,225 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "kspmCollector.fullname" . }}
+  namespace: {{ include "kspmCollector.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "kspmCollector.name" . }}
+{{ include "kspmCollector.labels" . | indent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "kspmCollector.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "kspmCollector.name" . }}
+        {{- include "kspmCollector.labels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ template "kspmCollector.serviceAccountName" .}}
+      securityContext:
+        runAsNonRoot: true
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ include "kspmCollector.nodeSelector" . | trim | indent 8 }}
+      {{- end }}
+      affinity:
+      {{- if .Values.affinity }}
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- else }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              {{- if (include "kspmCollector.kubeVersionLessThan" (dict "root" . "major" 1 "minor" 14)) }}
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values: {{- toYaml .Values.arch | nindent 18 }}
+              - key: beta.kubernetes.io/os
+                operator: In
+                values: {{- toYaml .Values.os | nindent 18 }}
+              {{- else }}
+              - key: kubernetes.io/arch
+                operator: In
+                values: {{- toYaml .Values.arch | nindent 18 }}
+              - key: kubernetes.io/os
+                operator: In
+                values: {{- toYaml .Values.os | nindent 18 }}
+              {{- end }}
+      {{- end }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- else if .Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      containers:
+      - name: {{ include "kspmCollector.name" . }}
+        image: {{ template "kspmCollector.image.kspmCollector" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        securityContext:
+{{- toYaml .Values.securityContext | nindent 10 }}
+        {{- if .Values.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.port }}
+          initialDelaySeconds: {{ .Values.readinessProbe.probe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.probe.periodSeconds }}
+        {{- end }}
+        {{- if .Values.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.port }}
+          initialDelaySeconds: {{ .Values.livenessProbe.probe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.probe.periodSeconds }}
+        {{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        env:
+          - name: ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                {{- if not ( include "kspmCollector.accessKeySecret" .) }}
+                name: {{ template "kspmCollector.fullname" . }}
+                {{- else }}
+                name: {{ ( include "kspmCollector.accessKeySecret" .) }}
+                {{- end }}
+                key: access-key
+          - name: CLUSTER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: cluster_name
+          - name: INCLUDED_NAMESPACES
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: included_namespaces
+          - name: EXCLUDED_NAMESPACES
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: excluded_namespaces
+          - name: INCLUDED_WORKLOADS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: included_workloads
+          - name: EXCLUDED_WORKLOADS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: excluded_workloads
+          - name: HEALTH_INTERVAL_MINUTES
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: health_interval_minutes
+          - name: ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: environment
+          - name: EXTERNAL_NATS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "kspmCollector.fullname" . }}
+                key: external_nats_url
+          - name: HTTP_PROXY
+            valueFrom:
+              configMapKeyRef:
+                key: http_proxy
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: HTTPS_PROXY
+            valueFrom:
+              configMapKeyRef:
+                key: https_proxy
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: NO_PROXY
+            valueFrom:
+              configMapKeyRef:
+                key: no_proxy
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: TLS_SKIP_VERIFY
+            valueFrom:
+              configMapKeyRef:
+                key: nats_insecure
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: NATS_INSECURE
+            valueFrom:
+              configMapKeyRef:
+                key: nats_insecure
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: NATS_MAX_RECONNECT
+            valueFrom:
+              configMapKeyRef:
+                key: nats_max_reconnect
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: NATS_MAX_RECONNECT_FAILURES
+            valueFrom:
+              configMapKeyRef:
+                key: nats_max_reconnect_failures
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          - name: AGENT_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: agent_port
+                name: {{ template "kspmCollector.fullname" . }}
+                optional: true
+          {{- if .Values.global.sysdig.tags }}
+          - name: TAGS
+            value: {{ include "agent.tags" . }}
+          {{- end }}
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+          - name: SSL_CERT_FILE
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.ssl) -}}
+          {{- end }}
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+          - name: TLS_CA_PATHS
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.ssl) -}}
+          {{- end }}
+        volumeMounts:
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+          - mountPath: /ca-certs
+            name: ca-cert
+            readOnly: true
+          {{- end }}
+      volumes:
+        {{- if eq (include "sysdig.custom_ca.useValues"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "kspmCollector.fullname" . }}-ca
+        {{- else if eq (include "sysdig.custom_ca.useExistingSecret"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "sysdig.custom_ca.existingSecret" (dict "global" .Values.global.ssl "component" .Values.ssl) }}
+        {{- else if eq (include "sysdig.custom_ca.useExistingConfigMap" (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          configMap:
+            name: {{ include "sysdig.custom_ca.existingConfigMap" (dict "global" .Values.global.ssl "component" .Values.ssl) }}
+        {{- end }}

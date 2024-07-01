@@ -1,0 +1,26 @@
+apiVersion: v2
+appVersion: 0.4.0
+dependencies:
+- name: common
+  repository: file://../common
+  version: ~1.3.0
+description: Sysdig Rapid Response
+home: https://www.sysdig.com/
+icon: https://avatars.githubusercontent.com/u/5068817?s=200&v=4
+keywords:
+- monitoring
+- security
+- alerting
+- metric
+- troubleshooting
+- run-time
+maintainers:
+- email: matteo.rolla@sysdig.com
+  name: mrolla
+- email: daniele.delorenzi@sysdig.com
+  name: dark-vex
+name: rapid-response
+sources:
+- https://github.com/sysdiglabs/charts/
+type: application
+version: 0.9.0

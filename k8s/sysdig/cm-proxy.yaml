@@ -1,0 +1,13 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: proxy-ca
+  namespace: sysdig-$ENV
+data:
+  umbrella_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDJjCCAg6gAwIBAgIIUW6l3kYeVMEwDQYJKoZIhvcNAQELBQAwMTEOMAwGA1UE
+    ...
+    ...
+    Vuyw2+P2HuWazjBPawGrbfyw+uO3KO4WnNGjMutJJ920o8B5M8gW1+Ye
+    -----END CERTIFICATE-----

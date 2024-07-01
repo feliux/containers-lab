@@ -1,0 +1,25 @@
+sysdig:
+  secureAPIToken: ${SECURE_API_TOKEN}
+clusterName: CI-Cluster
+webhook:
+  ssl:
+    ca:
+      cert: |
+        -----BEGIN CERTIFICATE-----
+        MIIC5zCCAc+gAwIBAgIJAPzgoOe8gf7eMA0GCSqGSIb3DQEBBQUAMCAxHjAcBgNV
+        BAMTFXN5c2RpZy1leGFtcGxlLWNoYXJ0czAeFw0yMjAxMjEwOTQxMzVaFw0zMjAx
+        MTkwOTQxMzVaMCAxHjAcBgNVBAMTFXN5c2RpZy1leGFtcGxlLWNoYXJ0czCCASIw
+        DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMhqr9oTv+AD7wP1RoBu3RPdthYK
+        4BEizy4+Eh2lSCNnbSWTy172V181I7mEcDvnddTWz895BkVTRrSwyjCh25/pNxJJ
+        7mKAT4Xo11X5d8gbKXJoR8kutFVoAsY0bHi5TQ1uCIC6w67GQVsphmaSanfrD06z
+        dYbyuRmGuHaffECp7RvOrAuaxyG4jOgDRk7e9SV38Rs4knv7cDT9C91kpVlZEEDv
+        7wCOgLPEdxddClLB1OCRNQERXaAHfz18yWtUQW5ZWS8PuCTlNhC8g5PghqHDobhf
+        Fc9zD6BoK+YO8TSVWNOIll+1RlOEBtEsCGHZ3RcvXNDu+wBaYP1MqtG2vFUCAwEA
+        AaMkMCIwIAYDVR0RBBkwF4IVc3lzZGlnLWV4YW1wbGUtY2hhcnRzMA0GCSqGSIb3
+        DQEBBQUAA4IBAQC3DHjxyWKwtqzU2KfJc+wVqsTPdyzc/fQUpvkkD84avNycmiZP
+        mJALph/IMlZ8leYi+kbH4egMHmRutmpLV2cOjozYKEBeqBhPesKbFSxRHW2iNJSr
+        l4lFyg1Y8TTMdr9wjxu8TkIzP9p4NQgajPLD8VsxSKSe5azRA5i3oUzk5Edn13Yj
+        WirNI49DZYXaxrx5xGkKLZ6++IFwQFXOit7yvE1eQQIsZrDAEyU/KXp9kbyxlQwZ
+        gfE2elzgom9LZuSB33qIPASwtunelTHnKJPadBbYL3V7W33+DtGl2NhK1pGn07w2
+        HKqPVSj3/vnCWV/miAs8BgJz+RrphtegNnAd
+        -----END CERTIFICATE-----

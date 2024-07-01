@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: 0.1.0
+dependencies:
+- name: common
+  repository: file://../common
+  version: ~1.3.0
+description: Sysdig Cluster Scanner
+home: https://www.sysdig.com/
+maintainers:
+- name: sysdiglabs
+name: cluster-scanner
+type: application
+version: 0.13.2

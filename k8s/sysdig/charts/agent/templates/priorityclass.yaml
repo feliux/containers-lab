@@ -1,0 +1,13 @@
+{{- if or .Values.createPriorityClass .Values.gke.createPriorityClass }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+{{- if and (or .Values.gke.createPriorityClass .Values.createPriorityClass) (not .Values.priorityClassName) }}
+  {{ $_ := set .Values "priorityClassName" "sysdig-daemonset-priority" }}
+{{- end }}
+  name: {{ .Values.priorityClassName }}
+value: {{ .Values.priorityClassValue }}
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "Sysdig DaemonSet priority"
+{{- end }}

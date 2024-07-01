@@ -1,0 +1,40 @@
+{{/*
+We need to put all resources that need certificate or CA Bundle together,
+so the template is executed just once
+ */}}
+{{- $certString := include "admissionController.webhook.gen-certs" . -}}
+{{- $certList := split "$" $certString -}}
+
+---
+{{- $existingVac := (lookup "admissionregistration.k8s.io/v1" "ValidatingWebhookConfiguration" (include "admissionController.namespace" .) (include "admissionController.webhook.fullname" .))}}
+{{- $existingVacMetadataAnnotations := (default dict (default dict $existingVac.metadata).annotations) }}
+{{- $existingVacMetadataAnnotationsReleaseName := (default "" (index $existingVacMetadataAnnotations "meta.helm.sh/release-name")) }}
+{{- $existingVacMetadataAnnotationsReleaseNamespace := (default "" (index $existingVacMetadataAnnotations "meta.helm.sh/release-namespace")) }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "admissionController.webhook.fullname" . }}
+  namespace: {{ include "admissionController.namespace" . }}
+{{- if (or (not $existingVac) (and $existingVac (eq $existingVacMetadataAnnotationsReleaseName .Release.Name ) (eq $existingVacMetadataAnnotationsReleaseNamespace .Release.Namespace ))) }}
+{{- include "admissionController.webhookTemplate"  (merge (dict "Cert" $certList._2) . ) }}
+{{- else }}
+  annotations:
+    "helm.sh/hook": "post-install, post-upgrade"
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: Helm
+{{- include "admissionController.webhookTemplate"  (merge (dict "Cert" $certList._2) . ) }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "admissionController.webhook.fullname" . }}-tls
+  namespace: {{ include "admissionController.namespace" . }}
+  labels:
+    {{ include "admissionController.webhook.labels" . | nindent 4 }}
+data:
+  tls.crt: {{ $certList._0 }}
+  tls.key: {{ $certList._1 }}
+  ca.crt: {{ $certList._2 }}

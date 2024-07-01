@@ -1,0 +1,226 @@
+# Default values for Sysdig Rapid Response
+global:
+  sysdig:
+    region: "us1"
+  proxy: {}
+  image:
+    pullSecrets: []
+    pullPolicy: IfNotPresent
+  ssl:
+    ca:
+      # For outbound connections (secure backend, proxy,...)
+      # A PEM-encoded x509 certificate.  This can also be a bundle with multiple certificates.
+      # See below in the rapidResponse.ssl.ca.cert key for an example
+      certs: []
+      # Example of certificate
+      # certs:
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYR5SR13E=
+      #       -----END CERTIFICATE-----
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYRTTS34D=
+      #       -----END CERTIFICATE-----
+
+      # Filename that is used when creating the secret.  Required if cert is provided.
+      keyName: root_ca_file.crt
+
+      # Provide the name of an existing Secret that contains the CA required
+      existingCaSecret:
+      # Provide the filename that is defined inside the existing Secret.  Required if existingCaSecret is set.
+      existingCaSecretKeyName:
+
+      # Provide the name of an existing ConfigMap that contains the CA required
+      existingCaConfigMap:
+      # Provide the filename that is defined inside the existing ConfigMap.  Required if existingCaConfigMap is set.
+      existingCaConfigMapKeyName:
+
+sysdig:
+  # Required: You need your Sysdig access key before running agents, either specifying 'accessKey' here, or using 'existingAccessKeySecret'
+  accessKey: ""
+
+  # Alternatively, specify the name of a Kubernetes secret containing an 'access-key' entry
+  existingAccessKeySecret: ""
+
+rapidResponse:
+  # Required: A passphrase used to encrypt all traffic between the user and host, either specifying 'passphrase' here, or using 'existingPassphraseSecret'
+  passphrase: ""
+
+  # Alternatively, specify the name of a Kubernetes secret containing an 'passphrase' entry
+  existingPassphraseSecret: ""
+
+  # Rapid Response doesn't require to access to any specific Kubernetes resources by default.
+  # Users can specify a Service Account name in order to give some capabilities to Rapid Response pod
+  existingServiceAccount: ""
+
+  image:
+    registry: quay.io
+    pullPolicy:
+    repository: sysdig/rapid-response-host-component
+    # If unset, .Chart.AppVersion is used to create tag
+    # Note: Image tag must be a string specified in double-quotes
+    # tag: "0.3.3"
+
+  imagePullSecrets: []
+
+  # The API endpoint for Sysdig Secure, specified with no protocol:
+  # * SaaS default region (US East): secure.sysdig.com
+  # * SaaS US Web: us2.app.sysdig.com
+  # * SaaS European Union: eu1.app.sysdig.com
+  # * On-Prem: sysdig.my.company.com
+  apiEndpoint: ""
+
+  # DEPRECATED - this flag has been deprecated, please use `sslVerifyCertificate`
+  # Can be set to true to allow insecure connections to the Sysdig backend,
+  # such as for on-premise installs that use self-signed certificates.
+  # By default, certificates are always verified.
+  # skipTlsVerifyCertificate: true
+
+  # Can be set to false to allow insecure connections to the Sysdig backend,
+  # such as for on-premise installs that use self-signed certificates.
+  # By default, certificates are always verified.
+  # sslVerifyCertificate: false
+
+  # If is behind a proxy you can set a proxy server
+  # Configure it when Rapid Response needs to connect to Sysdig backend through an HTTP/HTTPS proxy:
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: ""
+
+  scc:
+    # true here enables creation of Security Context Constraints in Openshift
+    create: true
+
+  serviceAccount:
+    # true here enables creation of service account
+    create: true
+    # Use this value as rapidResponseServiceAccountName
+    name: "rapid-response"
+
+  ### Not working when is empty
+  # Import custom CA certificates
+  ssl:
+    ca:
+      # For outbound connections (secure backend, proxy,...)
+      # A PEM-encoded x509 certificate.  This can also be a bundle with multiple certificates.
+      certs: []
+      # Example of certificate
+      # certs:
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYR5SR13E=
+      #       -----END CERTIFICATE-----
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYRTTS34D=
+      #       -----END CERTIFICATE-----
+
+      # Filename that is used when creating the secret.  Required if cert is provided.
+      keyName:
+
+      # Provide the name of an existing Secret that contains the CA required
+      existingCaSecret:
+      # Provide the filename that is defined inside the existing Secret.  Required if existingCaSecret is set.
+      existingCaSecretKeyName:
+
+      # Provide the name of an existing ConfigMap that contains the CA required
+      existingCaConfigMap:
+      # Provide the filename that is defined inside the existing ConfigMap.  Required if existingCaConfigMap is set.
+      existingCaConfigMapKeyName:
+
+  # The privileged flag is necessary for OCP 4.x and other Kubernetes setups that deny host filesystem access to
+  # running containers by default regardless of volume mounts. In those cases, access to the CRI socket would fail.
+  # securityContext:
+  #   privileged: true
+  securityContext: {}
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 500Mi
+    requests:
+      cpu: 250m
+      memory: 250Mi
+
+  extraVolumes:
+    volumes: []
+    mounts: []
+    # Allow passing extra volumes
+    # Any kind of volume can be passed. Example:
+    #
+    # Uncomment these lines if you'd like to map /root/ from the
+    # host into the container.
+    # extraVolumes:
+    #   volumes:
+    #     - name: host-root-vol
+    #       hostPath:
+    #         path: /
+    #
+    #   mounts:
+    #     - mountPath: /host
+    #       name: host-root-vol
+
+  # Perform rolling updates by default in the DaemonSet agent
+  # ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/
+  updateStrategy:
+    # You can also customize maxUnavailable, maxSurge or minReadySeconds if you
+    # need it
+    type: RollingUpdate
+    rollingUpdate: {}
+
+  # ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  nodeSelector: {}
+
+  # arch and os will be used to template out a node affinity block matching everything in each list. If affinity is
+  # defined, these fields will be ignored
+  arch:
+    - amd64
+  #  - arm64
+  #  - s390x
+  os:
+    - linux
+  # Allow the DaemonSet to schedule using affinity rules
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+  # Allow the DaemonSet to set annotations
+  daemonSetAnnotations: {}
+  # Allow the DaemonSet to set labels
+  daemonSetLabels: {}
+
+  # Allow sysdig to run on Kubernetes 1.6 masters.
+  tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/controlplane
+      operator: Equal
+      value: "true"
+    - effect: NoExecute
+      key: node-role.kubernetes.io/etcd
+      operator: Equal
+      value: "true"
+
+tests:
+  rbac:
+    # true here enables creation of rbac resources
+    create: true
+  timeout: 300s
+  image:
+    repo: bitnami/kubectl
+    tag: 1.24.4

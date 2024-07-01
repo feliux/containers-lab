@@ -40,6 +40,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**pinponfel**](./pinponfel/). Personal app.
 - [**rabbitmq**](./rabbitmq/). Deploy RabbitMQ Helm Chart.
 - [**sonarqube**](./sonarqube/). Deploy SonarQube Helm Chart.
+- [**sysdig**](./sysdig/). Harden and check security concerns using sysdig installed on your cluster.
 - [**tekton**](./tekton/). Run your pipelines in k8s.
 - [**tools**](./tools/). Bunch of scripts to manage your cluester easier.
 - [**wordpress**](./wordpress/). A simple Wordpress server.
