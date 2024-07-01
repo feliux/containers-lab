@@ -1,0 +1,1014 @@
+{{- if not (include "nodeAnalyzer.gke.autopilot" .) }}
+{{- if (include "deploy-na" .) }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-node-analyzer
+  namespace: {{ include "nodeAnalyzer.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "nodeAnalyzer.name" . }}
+{{ include "daemonset.labels" . | indent 4 }}
+{{ include "nodeAnalyzer.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "nodeAnalyzer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  updateStrategy:
+    type: {{ .Values.daemonset.updateStrategy.type | default "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.daemonset.updateStrategy.rollingUpdate.maxUnavailable | default 1 }}
+      {{- if .Values.daemonset.updateStrategy.rollingUpdate.maxSurge }}
+      maxSurge: {{ .Values.daemonset.updateStrategy.rollingUpdate.maxSurge }}
+      {{- end }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-node-analyzer
+      labels:
+        app.kubernetes.io/name: {{ include "nodeAnalyzer.name" . }}
+{{ include "daemonset.labels" . | indent 8 }}
+{{ include "nodeAnalyzer.labels" . | indent 8 }}
+      annotations:
+        checksum/config-benchmark: {{ include (print $.Template.BasePath "/configmap-benchmark-runner.yaml") . | sha256sum | quote  }}
+        checksum/config-host-analyzer: {{ include (print $.Template.BasePath "/configmap-host-analyzer.yaml") . | sha256sum | quote  }}
+        checksum/config-image-analyzer: {{ include (print $.Template.BasePath "/configmap-image-analyzer.yaml") . | sha256sum | quote  }}
+        {{- if and .Values.nodeAnalyzer.deploy (not .Values.gke.autopilot) (include "nodeAnalyzer.deployHostScanner" .) }}
+        checksum/config-host-scanner: {{ include (print $.Template.BasePath "/configmap-host-scanner.yaml") . | sha256sum | quote  }}
+        {{- end }}
+        {{- if .Values.global.kspm.deploy }}
+        checksum/config-kspm-analyzer: {{ include (print $.Template.BasePath "/configmap-kspm-analyzer.yaml") . | sha256sum | quote  }}
+        {{- end }}
+        {{- if include "nodeAnalyzer.deployRuntimeScanner" . }}
+        checksum/config-runtime-scanner: {{ include (print $.Template.BasePath "/runtimeScanner/runtime-scanner-configmap.yaml") . | sha256sum | quote  }}
+        {{- end }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | quote  }}
+        checksum/clusterrole: {{ include (print $.Template.BasePath "/clusterrole-node-analyzer.yaml") . | sha256sum | quote  }}
+        checksum/clusterrolebinding: {{ include (print $.Template.BasePath "/clusterrolebinding-node-analyzer.yaml") . | sha256sum | quote  }}
+        checksum/serviceaccount: {{ include (print $.Template.BasePath "/serviceaccount-node-analyzer.yaml") . | sha256sum | quote  }}
+{{- if .Values.daemonset.annotations }}
+        {{ toYaml .Values.daemonset.annotations | nindent 8 }}
+{{- end }}
+    spec:
+      volumes:
+        {{- if include "nodeAnalyzer.deployBenchmarkRunner" . }}
+        - name: sysdig-agent-config
+          configMap:
+            name: {{ include "nodeAnalyzer.configmapName" . }}
+            optional: true
+        {{- end }}
+        {{- if or (include "nodeAnalyzer.deployRuntimeScanner" .) (include "nodeAnalyzer.deployImageAnalyzer" .)}}
+        # Needed for cri-o image inspection.
+        # cri-o and especially OCP 4.x by default use containers/storage to handle images, and this makes sure that the
+        # analyzer has access to the configuration. This file is mounted read-only.
+        - name: etc-containers-storage-vol
+          hostPath:
+            path: /etc/containers/storage.conf
+        # Needed for cri-o image inspection.
+        # This is the directory where image data is stored by default when using cri-o and OCP 4.x and the analyzer
+        # uses it to get the data to scan. This directory must be mounted r/w because proper access to its files through
+        # the containers/storage library is always regulated with a lockfile.
+        - name: var-lib-containers-vol
+          hostPath:
+            path: /var/lib/containers
+        # Needed for some IBM OpenShift clusters which symlink /var/run/containers/storage to contents of /var/data by default
+        - name: vardata-vol
+          hostPath:
+            path: /var/data
+        # Needed for socket access
+        - name: varrun-vol
+          hostPath:
+            path: /var/run
+        # Add custom volume here
+        - name: sysdig-image-analyzer-config
+          configMap:
+            name: {{ .Release.Name }}-image-analyzer
+            optional: true
+        {{- end }}
+        {{- if or (include "nodeAnalyzer.deployHostScanner" .) (include "nodeAnalyzer.deployBenchmarkRunner" .) (include "nodeAnalyzer.deployHostAnalyzer" .) .Values.global.kspm.deploy }}
+        # Needed to run Benchmarks and Host Analyzer/Scanner. This mount is read-only.
+        # Benchmarks include numerous checks that run tests against config files in the host filesystem. There are also
+        # checks that test various host configurations such as loaded modules and enabled security features.
+        - name: root-vol
+          hostPath:
+            path: /
+        {{- end }}
+        {{- if .Values.nodeAnalyzer.bottlerocket.enabled }}
+        - name: apiclient
+          hostPath:
+            path: {{ .Values.nodeAnalyzer.bottlerocket.apiClientPath }}
+            type: File
+        - name: apiserver-socket
+          hostPath:
+            path: {{ .Values.nodeAnalyzer.bottlerocket.apiServerSocketPath }}
+            type: Socket
+        {{- end }}
+        - name: tmp-vol
+          {{- if .Values.nodeAnalyzer.runtimeScanner.storageClassName }}
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  type: {{ .Values.nodeAnalyzer.runtimeScanner.storageClassName }}
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                storageClassName: {{ .Values.nodeAnalyzer.runtimeScanner.storageClassName }}
+                resources:
+                  requests:
+                    storage: {{ index .Values.nodeAnalyzer.runtimeScanner.resources.requests "ephemeral-storage" }}
+                  limits:
+                    storage: {{ index .Values.nodeAnalyzer.runtimeScanner.resources.limits "ephemeral-storage" }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if eq (include "sysdig.custom_ca.useValues"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "nodeAnalyzer.fullname" . }}-ca
+        {{- else if eq (include "sysdig.custom_ca.useExistingSecret"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "sysdig.custom_ca.existingSecret" (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) }}
+        {{- else if eq (include "sysdig.custom_ca.useExistingConfigMap" (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: ca-cert
+          configMap:
+            name: {{ include "sysdig.custom_ca.existingConfigMap" (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) }}
+        {{- end }}
+        {{- with .Values.nodeAnalyzer.imageAnalyzer.extraVolumes.volumes }}
+{{ toYaml . | indent 8 }}
+        {{- end }}
+        {{- with .Values.nodeAnalyzer.extraVolumes.volumes }}
+{{ toYaml . | indent 8 }}
+        {{- end }}
+      {{- if .Values.nodeAnalyzer.priorityClassName }}
+      priorityClassName: "{{ .Values.nodeAnalyzer.priorityClassName }}"
+      {{- end }}
+      tolerations:
+{{ toYaml .Values.nodeAnalyzer.tolerations | indent 8 }}
+      # The following line is necessary for RBAC
+      serviceAccountName: {{ template "nodeAnalyzer.serviceAccountName" .}}
+      {{- if .Values.nodeAnalyzer.pullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.nodeAnalyzer.pullSecrets | indent 8 }}
+      {{- else if .Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 5
+      {{- if or (include "nodeAnalyzer.deployBenchmarkRunner" .) (include "nodeAnalyzer.deployHostScanner" .) }}
+      # Use the Host Network Namespace.
+      # This is required by the Benchmark and the HostScanner containers to determine the hostname and host mac address
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      {{- if include "nodeAnalyzer.useHostPID" . }}
+      # Use the Host PID namespace.
+      # This is required for Kubernetes benchmarks, as they contain tests that check Kubernetes processes running on
+      # the host
+      hostPID: true
+      {{- end }}
+      containers:
+      {{- if .Values.global.kspm.deploy }}
+      # kspm-analyzer
+      - name: sysdig-kspm-analyzer
+        image: {{ template "nodeAnalyzer.image.kspmAnalyzer" . }}
+        {{- if .Values.nodeAnalyzer.kspmAnalyzer.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port:  {{ .Values.nodeAnalyzer.kspmAnalyzer.port }}
+          initialDelaySeconds: {{ .Values.nodeAnalyzer.kspmAnalyzer.readinessProbe.probe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.nodeAnalyzer.kspmAnalyzer.readinessProbe.probe.periodSeconds }}
+        {{- end }}
+        {{- if .Values.nodeAnalyzer.kspmAnalyzer.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.nodeAnalyzer.kspmAnalyzer.port }}
+          initialDelaySeconds: {{ .Values.nodeAnalyzer.kspmAnalyzer.livenessProbe.probe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.nodeAnalyzer.kspmAnalyzer.livenessProbe.probe.periodSeconds }}
+        {{- end }}
+        imagePullPolicy: {{ .Values.nodeAnalyzer.kspmAnalyzer.image.pullPolicy | default .Values.global.image.pullPolicy}}
+        resources:
+{{ toYaml .Values.nodeAnalyzer.kspmAnalyzer.resources | indent 10 }}
+        securityContext:
+          runAsUser: 0
+          privileged: true
+          capabilities:
+            drop:
+              - all
+        env:
+          - name: ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+                name: {{ template "nodeAnalyzer.fullname" . }}
+                {{- else }}
+                name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+                {{- end }}
+                key: access-key
+          - name: ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: environment
+          - name: EXTERNAL_NATS_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: external_nats_url
+          - name: CLUSTER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: cluster_name
+          - name: AGENT_APP_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: agent_app_name
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: NATS_INSECURE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: nats_insecure
+                optional: true
+          - name: TLS_SKIP_VERIFY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: nats_insecure
+                optional: true
+          - name: HTTP_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: http_proxy
+                optional: true
+          - name: HTTPS_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: https_proxy
+                optional: true
+          - name: NO_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: no_proxy
+                optional: true
+          - name: AGENT_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: agent_port
+                optional: true
+          - name: NATS_MAX_RECONNECT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: nats_max_reconnect
+                optional: true
+          - name: NATS_MAX_RECONNECT_FAILURES
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-kspm-analyzer
+                key: nats_max_reconnect_failures
+                optional: true
+          {{- if .Values.global.sysdig.tags }}
+          - name: TAGS
+            value: {{ include "agent.tags" . }}
+          {{- end }}
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: SSL_CERT_FILE
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+          {{- end }}
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: TLS_CA_PATHS
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+          {{- end }}
+          {{- range $key, $value := .Values.nodeAnalyzer.kspmAnalyzer.env }}
+          - name: "{{ $key }}"
+            value: "{{ $value }}"
+          {{- end }}
+        volumeMounts:
+          - name: root-vol
+            mountPath: /host
+            readOnly: true
+          - name: tmp-vol
+            mountPath: /host/tmp
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+          {{- if .Values.nodeAnalyzer.bottlerocket.enabled }}
+          - name: apiclient
+            mountPath: /usr/bin/apiclient
+            readOnly: true
+          - name: apiserver-socket
+            mountPath: /run/api.sock
+          {{- end }}
+      # kspm-analyzer
+      {{- end }}
+      {{- if include "nodeAnalyzer.deployImageAnalyzer" . }}
+      # image-analyzer
+      - name: sysdig-image-analyzer
+        image: {{ template "nodeAnalyzer.image.imageAnalyzer" . }}
+        securityContext:
+          # The privileged flag is necessary for OCP 4.x and other Kubernetes setups that deny host filesystem access to
+          # running containers by default regardless of volume mounts. In those cases, access to the CRI socket would fail.
+          privileged: true
+        imagePullPolicy: {{ .Values.nodeAnalyzer.imageAnalyzer.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.nodeAnalyzer.imageAnalyzer.resources | indent 10 }}
+        volumeMounts:
+          # Needed for some IBM OpenShift clusters which symlink /var/run/containers/storage to contents of /var/data by default
+          - mountPath: /var/data
+            name: vardata-vol
+          - mountPath: /var/run
+            name: varrun-vol
+          - mountPath: /etc/containers/storage.conf
+            name: etc-containers-storage-vol
+            readOnly: true
+          - mountPath: /var/lib/containers
+            name: var-lib-containers-vol
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+          # Custom volume mount here
+          {{- if .Values.nodeAnalyzer.imageAnalyzer.extraVolumes.mounts }}
+{{ toYaml .Values.nodeAnalyzer.imageAnalyzer.extraVolumes.mounts | indent 10 }}
+          {{- end }}
+        env:
+        - name: ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+              name: {{ template "nodeAnalyzer.fullname" . }}
+              {{- else }}
+              name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+              {{- end }}
+              key: access-key
+        - name: IMAGE_PERIOD
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: image_period
+              optional: true
+        - name: IMAGE_CACHE_TTL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: image_cache_ttl
+              optional: true
+        - name: REPORT_PERIOD
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: report_period
+              optional: true
+        - name: DOCKER_SOCKET_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: docker_socket_path
+              optional: true
+        - name: CRI_SOCKET_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: cri_socket_path
+              optional: true
+        - name: CONTAINERD_SOCKET_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: containerd_socket_path
+              optional: true
+        - name: AM_COLLECTOR_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: collector_endpoint
+              optional: true
+        - name: AM_COLLECTOR_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: collector_timeout
+              optional: true
+        - name: VERIFY_CERTIFICATE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: ssl_verify_certificate
+              optional: true
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: K8S_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: K8S_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: debug
+              optional: true
+        - name: HTTP_PROXY
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: http_proxy
+              optional: true
+        - name: HTTPS_PROXY
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: https_proxy
+              optional: true
+        - name: NO_PROXY
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-image-analyzer
+              key: no_proxy
+              optional: true
+        {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: SSL_CERT_FILE
+          value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+        {{- end }}
+        {{- range $key, $value := .Values.nodeAnalyzer.imageAnalyzer.env }}
+        - name: "{{ $key }}"
+          value: "{{ $value }}"
+        {{- end }}
+      # image-analyzer
+      {{- end }}
+      {{- if include "nodeAnalyzer.deployHostAnalyzer" . }}
+      # host-analyzer
+      - name: sysdig-host-analyzer
+        image: {{ template "nodeAnalyzer.image.hostAnalyzer" . }}
+        securityContext:
+          # The privileged flag is necessary for OCP 4.x and other Kubernetes setups that deny host filesystem access to
+          # running containers by default regardless of volume mounts. In those cases, access to any host related components
+          # would fail
+          privileged: true
+        imagePullPolicy: {{ .Values.nodeAnalyzer.hostAnalyzer.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.nodeAnalyzer.hostAnalyzer.resources | indent 10 }}
+        volumeMounts:
+          - mountPath: /host
+            name: root-vol
+            readOnly: true
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+        env:
+        - name: ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+              name: {{ template "nodeAnalyzer.fullname" . }}
+              {{- else }}
+              name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+              {{- end }}
+              key: access-key
+        - name: AM_COLLECTOR_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: collector_endpoint
+        - name: AM_COLLECTOR_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: collector_timeout
+              optional: true
+        - name: SCHEDULE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: schedule
+              optional: true
+        - name: ANALYZE_AT_STARTUP
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: analyze_at_startup
+              optional: true
+        - name: HOST_BASE
+          value: /host
+        - name: DIRS_TO_SCAN
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: dirs_to_scan
+              optional: true
+        - name: MAX_SEND_ATTEMPTS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: max_send_attempts
+              optional: true
+        - name: VERIFY_CERTIFICATE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: ssl_verify_certificate
+              optional: true
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-host-analyzer
+              key: debug
+              optional: true
+        - name: HTTP_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: http_proxy
+              name: {{ .Release.Name }}-host-analyzer
+              optional: true
+        - name: HTTPS_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: https_proxy
+              name: {{ .Release.Name }}-host-analyzer
+              optional: true
+        - name: NO_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: no_proxy
+              name: {{ .Release.Name }}-host-analyzer
+              optional: true
+        {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: SSL_CERT_FILE
+          value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+        {{- end }}
+        {{- range $key, $value := .Values.nodeAnalyzer.hostAnalyzer.env }}
+        - name: "{{ $key }}"
+          value: "{{ $value }}"
+        {{- end }}
+      # host-analyzer
+      {{- end }}
+      {{- if include "nodeAnalyzer.deployBenchmarkRunner" . }}
+      # benchmark-runner
+      - name: sysdig-benchmark-runner
+        image: {{ template "nodeAnalyzer.image.benchmarkRunner" . }}
+        imagePullPolicy: {{ .Values.nodeAnalyzer.benchmarkRunner.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        securityContext:
+          # The privileged flag is necessary for OCP 4.x and other Kubernetes setups that deny host filesystem access to
+          # running containers by default regardless of volume mounts. In those cases, the benchmark process would fail.
+          privileged: true
+        resources:
+{{ toYaml .Values.nodeAnalyzer.benchmarkRunner.resources | indent 10 }}
+        volumeMounts:
+          - mountPath: /opt/draios/etc/kubernetes/config
+            name: sysdig-agent-config
+          - mountPath: /host
+            name: root-vol
+            readOnly: true
+          - mountPath: /host/tmp
+            name: tmp-vol
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+        env:
+        - name: ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+              name: {{ template "nodeAnalyzer.fullname" . }}
+              {{- else }}
+              name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+              {{- end }}
+              key: access-key
+        - name: BACKEND_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-benchmark-runner
+              key: collector_endpoint
+        - name: BACKEND_VERIFY_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-benchmark-runner
+              key: ssl_verify_certificate
+              optional: true
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Release.Name }}-benchmark-runner
+              key: debug
+              optional: true
+        - name: HTTP_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: http_proxy
+              name: {{ .Release.Name }}-benchmark-runner
+              optional: true
+        - name: HTTPS_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: https_proxy
+              name: {{ .Release.Name }}-benchmark-runner
+              optional: true
+        - name: NO_PROXY
+          valueFrom:
+            configMapKeyRef:
+              key: no_proxy
+              name: {{ .Release.Name }}-benchmark-runner
+              optional: true
+        {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+        - name: SSL_CERT_FILE
+          value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+        {{- end }}
+        {{- range $key, $value := .Values.nodeAnalyzer.benchmarkRunner.env }}
+        - name: "{{ $key }}"
+          value: "{{ $value }}"
+        {{- end }}
+      # benchmark-runner
+      {{- end }}
+      {{- if include "nodeAnalyzer.deployRuntimeScanner" . }}
+      # runtime-scanner
+      - name: sysdig-runtime-scanner
+        image: {{ template "nodeAnalyzer.image.runtimeScanner" . }}
+        imagePullPolicy: {{ .Values.nodeAnalyzer.runtimeScanner.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.nodeAnalyzer.runtimeScanner.probesPort }}
+            path: /probes/liveness
+          initialDelaySeconds: 90
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.nodeAnalyzer.runtimeScanner.probesPort }}
+            path: /probes/readiness
+          initialDelaySeconds: 90
+          periodSeconds: 3
+        securityContext:
+            privileged: true
+        resources:
+{{ toYaml .Values.nodeAnalyzer.runtimeScanner.resources | indent 10 }}
+        # Custom volume mount here
+        env:
+          - name: TMPDIR
+            value: "/tmp"
+          - name: PROM_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: prom_port
+                optional: true
+          - name: MAX_FILE_SIZE_ALLOWED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: analyzer.maxFileSizeAllowed
+                optional: true
+          - name: MAX_IMAGE_SIZE_ALLOWED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: max_image_size_allowed
+                optional: true
+          - name: VULNERABILITY_DB_VERSION
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: vuln_db_version
+                optional: true
+          - name: SYSDIG_API_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: api_endpoint
+          - name: SYSDIG_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+                name: {{ template "nodeAnalyzer.fullname" . }}
+                {{- else }}
+                name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+                {{- end }}
+                key: access-key
+          - name: SYSDIG_API_VERIFY_CERTIFICATE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: ssl_verify_certificate
+                optional: true
+          - name: CLUSTER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: cluster_name
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: DEBUG
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: debug
+                optional: true
+          - name: HTTP_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: http_proxy
+                optional: true
+          - name: HTTPS_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: https_proxy
+                optional: true
+          - name: PROBES_PORT
+            value: {{ .Values.nodeAnalyzer.runtimeScanner.probesPort | quote }}
+          - name: NO_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: no_proxy
+                optional: true
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: SSL_CERT_FILE
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+          {{- end }}
+          {{- range $key, $value := .Values.nodeAnalyzer.runtimeScanner.env }}
+          - name: "{{ $key }}"
+            value: "{{ $value }}"
+          {{- end }}
+          - name: EVE_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: eve_enabled
+                optional: true
+          - name: EVE_INTEGRATION_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-runtime-scanner
+                key: eve_integration_enabled
+                optional: true
+        volumeMounts:
+          # Needed for some IBM OpenShift clusters which symlink /var/run/containers/storage to contents of /var/data by default
+          - mountPath: /var/data
+            name: vardata-vol
+          - mountPath: /var/run
+            name: varrun-vol
+          - mountPath: /etc/containers/storage.conf
+            name: etc-containers-storage-vol
+            readOnly: true
+          - mountPath: /var/lib/containers
+            name: var-lib-containers-vol
+          - mountPath: /tmp
+            name: tmp-vol
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+          {{- if .Values.nodeAnalyzer.runtimeScanner.extraMounts }}
+{{ toYaml .Values.nodeAnalyzer.runtimeScanner.extraMounts | indent 10 }}
+          {{- end }}
+      # runtime-scanner
+      {{- end }}
+      {{- if include "nodeAnalyzer.deployHostScanner" . }}
+      # host-scanner
+      - name: sysdig-host-scanner
+        image: {{ template "nodeAnalyzer.image.hostScanner" . }}
+        imagePullPolicy: {{ .Values.nodeAnalyzer.hostScanner.image.pullPolicy | default .Values.global.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.nodeAnalyzer.hostScanner.probesPort }}
+            path: /probes/liveness
+          initialDelaySeconds: 90
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.nodeAnalyzer.hostScanner.probesPort }}
+            path: /probes/readiness
+          initialDelaySeconds: 90
+          periodSeconds: 3
+        securityContext:
+          # The privileged flag is necessary for OCP 4.x and other Kubernetes setups that deny host filesystem access to
+          # running containers by default regardless of volume mounts.
+          privileged: true
+        resources:
+{{ toYaml .Values.nodeAnalyzer.hostScanner.resources | indent 10 }}
+        env:
+          - name: HOST_FS_MOUNT_PATH
+            value: /host
+          - name: HOST_DIRS_TO_SCAN
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: dirs_to_scan
+                optional: true
+          - name: ADDITIONAL_HOST_DIRS_TO_SCAN
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: additional_dirs_to_scan
+                optional: true
+          - name: SCAN_ON_START
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: scan_on_start
+                optional: true
+          - name: CUSTOM_TAGS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: custom_tags
+                optional: true
+          - name: SYSDIG_API_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: api_endpoint
+          - name: SYSDIG_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                {{- if not ( include "nodeAnalyzer.accessKeySecret" .) }}
+                name: {{ template "nodeAnalyzer.fullname" . }}
+                {{- else }}
+                name: {{ ( include "nodeAnalyzer.accessKeySecret" .) }}
+                {{- end }}
+                key: access-key
+          - name: SYSDIG_API_VERIFY_CERTIFICATE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: ssl_verify_certificate
+                optional: true
+          - name: K8S_CLUSTER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: cluster_name
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: DEBUG
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: debug
+                optional: true
+          - name: HTTP_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: http_proxy
+                optional: true
+          - name: HTTPS_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: https_proxy
+                optional: true
+          - name: NO_PROXY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: no_proxy
+                optional: true
+          - name: MAX_FILE_SIZE_ALLOWED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: analyzer.maxFileSizeAllowed
+                optional: true
+          - name: VULNERABILITY_DB_VERSION
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: vuln_db_version
+                optional: true
+          - name: TMPDIR
+            value: "/tmp"
+          - name: PROBES_ENABLED
+            value: "true"
+          - name: PROBES_PORT
+            value: {{ .Values.nodeAnalyzer.hostScanner.probesPort | quote }}
+          - name: PROM_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: prom_enabled
+          - name: PROM_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: prom_port
+                optional: true
+          - name: PROM_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: prom_endpoint
+                optional: true
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: SSL_CERT_FILE
+            value: /ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl) -}}
+          {{- end }}
+          {{- range $key, $value := .Values.nodeAnalyzer.hostScanner.env }}
+          - name: "{{ $key }}"
+            value: "{{ $value }}"
+          {{- end }}
+
+          {{- if .Values.nodeAnalyzer.hostScanner.scanContainers.enabled }}
+          # Container scanner
+          - name: SCAN_CONTAINERS_ENABLED
+            value: "true"
+          - name: DOCKER_SOCKET_PATHS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: docker_socket_path
+                optional: true
+          - name: PODMAN_SOCKET_PATHS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Release.Name }}-host-scanner
+                key: podman_socket_path
+                optional: true
+          {{- end }}
+        volumeMounts:
+          - mountPath: /tmp
+            name: tmp-vol
+          - mountPath: /host
+            name: root-vol
+            readOnly: true
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.nodeAnalyzer.ssl)) "true" }}
+          - name: ca-cert
+            mountPath: /ca-certs
+            readOnly: true
+          {{- end }}
+          {{- if .Values.nodeAnalyzer.hostScanner.extraMounts }}
+{{ toYaml .Values.nodeAnalyzer.hostScanner.extraMounts | indent 10 }}
+          {{- end }}
+      # host-scanner
+      {{- end }}
+      {{- with .Values.nodeAnalyzer.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+      {{- if .Values.nodeAnalyzer.affinity }}
+{{ toYaml .Values.nodeAnalyzer.affinity | indent 8 }}
+      {{- else }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+              {{- if (include "nodeAnalyzer.kubeVersionLessThan" (dict "root" . "major" 1 "minor" 14)) }}
+                - key: beta.kubernetes.io/arch
+                  operator: In
+                  values:
+                    - amd64
+                    - arm64
+                - key: beta.kubernetes.io/os
+                  operator: In
+                  values:
+                    - linux
+              {{- else }}
+                - key: kubernetes.io/arch
+                  operator: In
+                  values:
+                    - amd64
+                    - arm64
+                - key: kubernetes.io/os
+                  operator: In
+                  values:
+                    - linux
+              {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }}

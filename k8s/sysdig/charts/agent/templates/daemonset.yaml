@@ -1,0 +1,523 @@
+{{- if or .Values.daemonset.deploy .Values.delegatedAgentDeployment }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "agent.fullname" . }}
+  namespace: {{ include "agent.namespace" . }}
+  labels:
+    {{- include "agent.labels" . | nindent 4 }}
+    {{- include "agent.daemonsetLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      name: {{ template "agent.fullname" .}}
+      labels:
+        {{ include "agent.labels" . | nindent 8 }}
+        {{ include "agent.daemonsetLabels" . | nindent 8 }}
+      {{- if (include "agent.gke.autopilot" .) }}
+      annotations:
+        autopilot.gke.io/no-connect: "true"
+      {{- else }}
+      {{- if .Values.daemonset.annotations }}
+      annotations:
+        {{ toYaml .Values.daemonset.annotations | nindent 8 }}
+      {{- end }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ template "agent.serviceAccountName" .}}
+{{- if or .Values.priorityClassName (include "agent.gke.autopilot" .) }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+{{- end }}
+      tolerations:
+        {{ toYaml .Values.tolerations | nindent 8 }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      hostPID: true
+      terminationGracePeriodSeconds: 5
+      {{- if .Values.daemonset.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.daemonset.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if (include "agent.gke.autopilot" .) }}
+      affinity: null
+      {{- else }}
+      affinity:
+      {{- if .Values.daemonset.affinity }}
+        {{ toYaml .Values.daemonset.affinity | nindent 8 }}
+      {{- else }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              {{- if (include "agent.kubeVersionLessThan" (dict "root" . "major" 1 "minor" 14)) }}
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values: {{- toYaml .Values.daemonset.arch | nindent 18 }}
+              - key: beta.kubernetes.io/os
+                operator: In
+                values: {{- toYaml .Values.daemonset.os | nindent 18 }}
+              {{- else }}
+              - key: kubernetes.io/arch
+                operator: In
+                values: {{- toYaml .Values.daemonset.arch | nindent 18 }}
+              - key: kubernetes.io/os
+                operator: In
+                values: {{- toYaml .Values.daemonset.os | nindent 18 }}
+              {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{ toYaml .Values.image.pullSecrets | nindent 8 }}
+      {{- else if .Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{ toYaml .Values.global.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      {{/* When the Universal eBPF is enforced by customer choice there is no reason to start the init container to build the driver */}}
+      {{- if and .Values.slim.enabled (not (include "agent.universalEbpfEnforced" . )) }}
+      initContainers:
+        - name: sysdig-agent-kmodule
+          image: {{ template "agent.image.kmodule" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
+          securityContext:
+            privileged: true
+            runAsNonRoot: false
+            runAsUser: 0
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: true
+          resources:
+            {{- if (include "agent.gke.autopilot" .) }}
+              {{- $resources := merge .Values.slim.resources (dict "requests" (dict "ephemeral-storage" .Values.gke.ephemeralStorage))}}
+              {{- toYaml $resources | nindent 12 }}
+            {{- else }}
+              {{ toYaml .Values.slim.resources | nindent 12 }}
+            {{- end }}
+          env:
+          {{- if or (include "agent.ebpfEnabled" .) (include "agent.gke.autopilot" .) }}
+            - name: SYSDIG_BPF_PROBE
+              value:
+          {{- end }}
+          {{- if and (include "agent.legacyEbpfEnforced" .) (not (include "agent.gke.autopilot" .)) }}
+            - name: SYSDIG_AGENT_DRIVER
+              value: legacy_ebpf
+          {{- end }}
+          {{- range $key, $value := .Values.daemonset.kmodule.env }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- if (.Values.proxy.httpProxy | default .Values.global.proxy.httpProxy) }}
+            - name: http_proxy
+              value: {{ .Values.proxy.httpProxy | default .Values.global.proxy.httpProxy }}
+          {{- end }}
+          {{- if (.Values.proxy.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+            - name: https_proxy
+              value: {{ .Values.proxy.httpsProxy | default .Values.global.proxy.httpsProxy }}
+          {{- end }}
+          {{- if (.Values.proxy.noProxy | default .Values.global.proxy.noProxy) }}
+            - name: no_proxy
+              value: {{ .Values.proxy.noProxy | default .Values.global.proxy.noProxy }}
+          {{- end }}
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+            - name: SSL_CERT_FILE
+              value: /opt/draios/etc/ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.ssl) -}}
+          {{- end }}
+          volumeMounts:
+          {{- /* Always requested */}}
+            {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+            - name: ca-cert
+              mountPath: /opt/draios/etc/ca-certs
+              readOnly: true
+            {{- end }}
+
+          {{- /* Slim = true, Autopilot = false */}}
+          {{- if not (include "agent.gke.autopilot" .) }}
+            - mountPath: /etc/modprobe.d
+              name: modprobe-d
+              readOnly: true
+            - mountPath: /host/boot
+              name: boot-vol
+              readOnly: true
+            - mountPath: /host/etc
+              name: etc-vol
+              readOnly: true
+            - mountPath: /host/lib/modules
+              name: modules-vol
+              readOnly: true
+            - mountPath: /host/usr
+              name: usr-vol
+              readOnly: true
+            {{- if (include "agent.ebpfEnabled" .) }}
+            - mountPath: /root/.sysdig
+              name: bpf-probes
+            - mountPath: /sys/kernel/debug
+              name: sys-tracing
+              readOnly: true
+            {{- end }}
+          {{- end }}
+
+          {{- /* Slim = true, Autopilot = true */}}
+          {{- if (include "agent.gke.autopilot" .) }}
+            - mountPath: /host/boot
+              name: boot-vol
+              readOnly: true
+            - mountPath: /host/etc/os-release
+              name: osrel
+              readOnly: true
+            - mountPath: /root/.sysdig
+              name: bpf-probes
+          {{- end }}
+      {{- end }}
+      containers:
+        - name: sysdig
+          image: {{ template "agent.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.global.image.pullPolicy }}
+          resources:
+            {{- include "agent.resources" . | nindent 12 }}
+          securityContext:
+            privileged: true
+            runAsNonRoot: false
+            runAsUser: 0
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: true
+          env:
+            - name: K8S_NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if and (or (include "agent.ebpfEnabled" .) (include "agent.gke.autopilot" .)) (not (include "agent.universalEbpfEnforced" . )) }}
+            - name: SYSDIG_BPF_PROBE
+              value:
+            {{- end }}
+            {{- if and (include "agent.universalEbpfEnforced" .) (not (include "agent.gke.autopilot" .)) }}
+            - name: SYSDIG_AGENT_DRIVER
+              value: universal_ebpf
+            {{- else if and (include "agent.legacyEbpfEnforced" .) (not (include "agent.gke.autopilot" .)) }}
+            - name: SYSDIG_AGENT_DRIVER
+              value: legacy_ebpf
+            {{- end }}
+            {{- if (.Values.proxy.httpProxy | default .Values.global.proxy.httpProxy) }}
+            - name: http_proxy
+              value: {{ .Values.proxy.httpProxy | default .Values.global.proxy.httpProxy }}
+            {{- end }}
+            {{- if (.Values.proxy.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+            - name: https_proxy
+              value: {{ .Values.proxy.httpsProxy | default .Values.global.proxy.httpsProxy }}
+            {{- end }}
+            {{- if (.Values.proxy.noProxy | default .Values.global.proxy.noProxy) }}
+            - name: no_proxy
+              value: {{ .Values.proxy.noProxy | default .Values.global.proxy.noProxy }}
+            {{- end }}
+            {{- if .Values.timezone }}
+            - name: TZ
+              value: {{ .Values.timezone }}
+            {{- end }}
+            {{- range $key, $value := .Values.daemonset.env }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+            - name: SSL_CERT_FILE
+              value: /opt/draios/etc/ca-certs/{{- include "sysdig.custom_ca.keyName"  (dict "global" .Values.global.ssl "component" .Values.ssl) -}}
+            {{- end }}
+          readinessProbe:
+            {{- if eq (include "agent.enableHttpProbes" .) "true" }}
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 24483
+            {{- else }}
+            exec:
+              command: [ "test", "-e", "/opt/draios/logs/running" ]
+            {{- end }}
+            initialDelaySeconds: {{ .Values.daemonset.probes.initialDelay }}
+            periodSeconds: {{ .Values.daemonset.probes.periodDelay }}
+            failureThreshold: {{ .Values.daemonset.probes.failureThreshold }}
+          volumeMounts:
+          {{- if .Values.localForwarder.enabled }}
+            - mountPath: /opt/draios/etc/local_forwarder_config.yaml
+              subPath: local_forwarder_config.yaml
+              name: local-forwarder-config
+          {{- end }}
+          {{- /* Always requested */}}
+            - mountPath: /host/dev
+              name: dev-vol
+            - mountPath: /host/usr
+              name: usr-vol
+              readOnly: true
+            - mountPath: /host/proc
+              name: proc-vol
+              readOnly: true
+            - mountPath: /host/run
+              name: run-vol
+            - mountPath: /dev/shm
+              name: dshm
+            - mountPath: /opt/draios/etc/kubernetes/config
+              name: sysdig-agent-config
+            - mountPath: /opt/draios/etc/kubernetes/secrets
+              name: sysdig-agent-secrets
+            {{- if and (include "agent.httpProxyCredentials" .) (not (include "agent.gke.autopilot" .)) }}
+            - mountPath: /opt/draios/etc/secrets/http_proxy
+              name: sysdig-agent-http-proxy-secrets
+            {{- end }}
+            - mountPath: /etc/podinfo
+              name: podinfo
+
+          {{- if eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+            - name: ca-cert
+              mountPath: /opt/draios/etc/ca-certs
+              readOnly: true
+          {{- end }}
+
+          {{- /* Slim = false, Autopilot = false */}}
+          {{- if and (not .Values.slim.enabled) (not (include "agent.gke.autopilot" .)) }}
+            - mountPath: /etc/modprobe.d
+              name: modprobe-d
+              readOnly: true
+            - mountPath: /host/etc
+              name: etc-vol
+              readOnly: true
+            - mountPath: /host/boot
+              name: boot-vol
+              readOnly: true
+            - mountPath: /host/lib/modules
+              name: modules-vol
+              readOnly: true
+            - mountPath: /host/var/lib
+              name: varlib-vol
+            - mountPath: /host/var/data
+              name: vardata-vol
+            - mountPath: /host/var/run
+              name: varrun-vol
+            {{- if (include "agent.ebpfEnabled" .) }}
+            - mountPath: /root/.sysdig
+              name: bpf-probes
+            - mountPath: /sys/kernel/debug
+              name: sys-tracing
+              readOnly: true
+            {{- end }}
+          {{- end }}
+
+          {{- /* Slim = true, Autopilot = false */}}
+          {{- if and (.Values.slim.enabled) (not (include "agent.gke.autopilot" .)) }}
+            - mountPath: /host/etc
+              name: etc-vol
+              readOnly: true
+            - mountPath: /host/var/lib
+              name: varlib-vol
+            - mountPath: /host/var/data
+              name: vardata-vol
+            - mountPath: /host/var/run
+              name: varrun-vol
+            {{- if (include "agent.ebpfEnabled" .) }}
+            - mountPath: /root/.sysdig
+              name: bpf-probes
+            - mountPath: /sys/kernel/debug
+              name: sys-tracing
+              readOnly: true
+            {{- end }}
+          {{- end }}
+
+          {{- /* Slim = false, Autopilot = true */}}
+          {{- if and (not .Values.slim.enabled) (include "agent.gke.autopilot" .) }}
+            - mountPath: /host/etc/os-release
+              name: osrel
+              readOnly: true
+            - mountPath: /host/boot
+              name: boot-vol
+              readOnly: true
+            - mountPath: /host/lib/modules
+              name: modules-vol
+              readOnly: true
+            - mountPath: /host/var/run
+              name: varrun-vol
+          {{- end }}
+
+          {{- /* Slim = true, Autopilot = true */}}
+          {{- if and (.Values.slim.enabled) (include "agent.gke.autopilot" .) }}
+            - mountPath: /host/etc/os-release
+              name: osrel
+              readOnly: true
+            - mountPath: /host/var/run/containerd/containerd.sock
+              name: containerdsock-vol
+            - mountPath: /root/.sysdig
+              name: bpf-probes
+          {{- end }}
+
+          {{- if .Values.extraVolumes.mounts }}
+            {{ toYaml .Values.extraVolumes.mounts | nindent 12 }}
+          {{- end }}
+      volumes:
+      {{- /* Always requested */}}
+        - name: dev-vol
+          hostPath:
+            path: /dev
+        - name: usr-vol
+          hostPath:
+            path: /usr
+        - name: proc-vol
+          hostPath:
+            path: /proc
+        - name: run-vol
+          hostPath:
+            path: /run
+        - name: dshm
+          emptyDir:
+            medium: Memory
+        - name: sysdig-agent-config
+          configMap:
+            name: {{ include "agent.configmapName" . }}
+            optional: true
+        {{- if .Values.localForwarder.enabled }}
+        - name: local-forwarder-config
+          configMap:
+            name: {{ include "agent.localForwarderConfigMapName" . }}
+            optional: true
+        {{- end }}
+        - name: sysdig-agent-secrets
+          secret:
+            {{- if not ( include "agent.accessKeySecret" . ) }}
+            secretName: {{ template "agent.fullname" . }}
+            {{- else }}
+            secretName: {{ include "agent.accessKeySecret" . }}
+            {{- end }}
+        {{- if and (include "agent.httpProxyCredentials" .) (not (include "agent.gke.autopilot" .)) }}
+        - name: sysdig-agent-http-proxy-secrets
+          secret:
+            secretName: {{ template "agent.fullname" . }}-proxy
+        {{- end }}
+        - name: podinfo
+          downwardAPI:
+            defaultMode: 420
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+              path: name
+        {{- if eq (include "sysdig.custom_ca.useValues"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "agent.fullname" . }}-ca
+        {{- else if eq (include "sysdig.custom_ca.useExistingSecret"  (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "sysdig.custom_ca.existingSecret" (dict "global" .Values.global.ssl "component" .Values.ssl) }}
+        {{- else if eq (include "sysdig.custom_ca.useExistingConfigMap" (dict "global" .Values.global.ssl "component" .Values.ssl)) "true" }}
+        - name: ca-cert
+          configMap:
+            name: {{ include "sysdig.custom_ca.existingConfigMap" (dict "global" .Values.global.ssl "component" .Values.ssl) }}
+        {{- end }}
+
+      {{- /* Slim = false, Autopilot = false */}}
+      {{- if and (not .Values.slim.enabled) (not (include "agent.gke.autopilot" .)) }}
+        - name: modprobe-d
+          hostPath:
+            path: /etc/modprobe.d
+        - name: etc-vol
+          hostPath:
+            path: /etc
+        - name: boot-vol
+          hostPath:
+            path: /boot
+        - name: modules-vol
+          hostPath:
+            path: /lib/modules
+        - name: varlib-vol
+          hostPath:
+            path: /var/lib
+        - name: vardata-vol
+          hostPath:
+            path: /var/data
+        - name: varrun-vol
+          hostPath:
+            path: /var/run
+        {{- if (include "agent.ebpfEnabled" .) }}
+        - name: bpf-probes
+          emptyDir: {}
+        - name: sys-tracing
+          hostPath:
+            path: /sys/kernel/debug
+        {{- end }}
+      {{- end }}
+
+      {{- /* Slim = true, Autopilot = false */}}
+      {{- if and (.Values.slim.enabled) (not (include "agent.gke.autopilot" .)) }}
+        - name: modprobe-d
+          hostPath:
+            path: /etc/modprobe.d
+        - name: boot-vol
+          hostPath:
+            path: /boot
+        - name: modules-vol
+          hostPath:
+            path: /lib/modules
+        - name: varrun-vol
+          hostPath:
+            path: /var/run
+        - name: etc-vol
+          hostPath:
+            path: /etc
+        - name: varlib-vol
+          hostPath:
+            path: /var/lib
+        - name: vardata-vol
+          hostPath:
+            path: /var/data
+        {{- if (include "agent.ebpfEnabled" .) }}
+        - name: bpf-probes
+          emptyDir: {}
+        - name: sys-tracing
+          hostPath:
+            path: /sys/kernel/debug
+        {{- end }}
+      {{- end }}
+
+      {{- /* Slim = false, Autopilot = true */}}
+      {{- if and (not .Values.slim.enabled) (include "agent.gke.autopilot" .) }}
+        - name: osrel
+          hostPath:
+            path: /etc/os-release
+        - name: boot-vol
+          hostPath:
+            path: /boot
+        - name: modules-vol
+          hostPath:
+            path: /lib/modules
+        - name: varrun-vol
+          hostPath:
+            path: /var/run
+      {{- end }}
+
+      {{- /* Slim = true, Autopilot = true */}}
+      {{- if and (.Values.slim.enabled) (include "agent.gke.autopilot" .) }}
+        - name: boot-vol
+          hostPath:
+            path: /boot
+        - name: osrel
+          hostPath:
+            path: /etc/os-release
+        - name: bpf-probes
+          emptyDir: {}
+        - name: containerdsock-vol
+          hostPath:
+            path: /var/run/containerd/containerd.sock
+      {{- end }}
+
+      {{- if .Values.extraVolumes.volumes }}
+        {{ toYaml .Values.extraVolumes.volumes | nindent 8 }}
+      {{- end }}
+  updateStrategy:
+    type: {{ .Values.daemonset.updateStrategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ include "agent.maxUnavailable" . }}
+      {{- if .Values.daemonset.updateStrategy.rollingUpdate.maxSurge }}
+      maxSurge: {{ .Values.daemonset.updateStrategy.rollingUpdate.maxSurge }}
+      {{- end }}
+{{- end }}

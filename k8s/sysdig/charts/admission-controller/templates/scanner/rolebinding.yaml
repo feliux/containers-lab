@@ -1,0 +1,15 @@
+{{- if and .Values.scanner.psp.create (include "admissionController.kubeVersionLessThan" (dict "root" . "major" 1 "minor" 25)) }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "admissionController.scanner.fullname" . }}
+  namespace: {{ include "admissionController.namespace" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "admissionController.scanner.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "admissionController.scanner.serviceAccountName" . }}
+    namespace: {{ include "admissionController.namespace" . }}
+{{- end }}

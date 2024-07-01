@@ -1,0 +1,341 @@
+# basic Default values for cluster-scanner.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  clusterConfig:
+    # The name of the cluster. Make sure to set a unique value for all the
+    # clusters being inspected.
+    name: ""
+  sysdig:
+    # Your Sysdig Agent Access Key
+    accessKey: ""
+    # Region name for Sysdig. Valid options: `us1`, `us2`, `us3`, `us4`, `eu1`,
+    # `au1`.
+    #
+    # When no region is suitable (e.g. on-premise installations) set the
+    # `global.sysdig.apiHost: ""` parameter.
+    region: "us1"
+    # apiHost: ""
+    # apiHost is used to manually set the Sysdig backend host
+    # Must have the protocol (http:// or https://)
+  image:
+    # The pull secrets for Cluster Scanner
+    pullSecrets: []
+    # The pull policy for Cluster Scanner
+    pullPolicy: IfNotPresent
+  # Global HTTP Proxy settings.
+  proxy: {}
+
+  # Set the logging level to use, useful for troubleshooting. Valid values,
+  # sorted by increasing level of verbosity are: `PANIC`, `FATAL`, `ERROR`,
+  # `WARN`, `INFO`, `DEBUG`, `TRACE`.
+  loggingLevel: "INFO"
+  ssl:
+    ca:
+      # For outbound connections (secure backend, proxy,...)
+      # A PEM-encoded x509 certificate.  This can also be a bundle with multiple certificates.
+      certs: []
+      # Example of certificate
+      # certs:
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYR5SR13E=
+      #       -----END CERTIFICATE-----
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+      #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      #       MMNlTAQ9fvdNOTzZntye0PQYRTTS34D=
+      #       -----END CERTIFICATE-----
+
+      # Filename that is used when creating the secret.  Required if cert is provided.
+      keyName:
+
+      # Provide the name of an existing Secret that contains the CA required
+      existingCaSecret:
+      # Provide the filename that is defined inside the existing Secret
+      existingCaSecretKeyName:
+      # Provide the name of an existing ConfigMap that contains the CA required
+      existingCaConfigMap:
+      # Provide the filename that is defined inside the existing ConfigMap
+      existingCaConfigMapKeyName:
+# Enables Sysdig Eve to retrieve the list of running packages.
+eveEnabled: true
+# Enables the integration with Sysdig Eve. Stores the list of running packages
+# to Sysdig backend. It implies `eveEnabled: true`.
+eveIntegrationEnabled: true
+# The namespace to use to retrieve the cluster UID
+rootNamespace: "kube-system"
+
+replicaCount: 2
+
+# Optional parameter used to check the compatibility of cluster-scanner
+# component versions with the on-premised backend version.
+#
+# If you are running an on-prem version of the Sysdig backend, you MUST set
+# this parameter with the version of Sysdig backend you are using.
+#
+# If you are runinng on SaaS, do NOT provide this parameter.
+#
+# E.g. if `onPremCompatibilityVersion=6.2`, we ensure that the image
+# tag is < 0.5.0 for both the Runtime Status Integrator and the Image SBOM
+# Extractor.
+# onPremCompatibilityVersion: "6.2"
+
+# Can be set to false to allow insecure connections to the Sysdig backend,
+# such as for on-premise installs that use self-signed certificates.
+# By default, certificates are always verified.
+sslVerifyCertificate: true
+
+# Can be set to false to allow insecure connections registries,
+# Such as for registries with self-signed or private certificates.
+# By default, certificates are always verified.
+sslVerifyRegistryCertificate: true
+runtimeStatusIntegrator:
+  image:
+    # The image registry to use for the Runtime Status Integrator component of
+    # Cluster Scanner
+    registry: quay.io
+    # The image repository to use for pulling the Runtime Status Integrator
+    # image
+    repository: sysdig/runtime-status-integrator
+    tag: "0.7.5"
+  # Params to manage leader election
+  # Leader election is implemented leveraging the native capabilities of
+  # Kubernetes see: https://kubernetes.io/blog/2016/01/simple-leader-election-with-kubernetes/
+  # leaderElectionLeaseNameOverride: ""
+  # leaderElectionLeaseNamespaceOverride: ""
+
+  # Restrict access to specific Docker secrets when Cluster Scanner is running.
+  # The default behavior is listing all secrets. See `values.yaml` for an example. Optional.
+  localCluster:
+    # rbac:
+    #   allowedPullSecrets:
+    #     namespaceOneName:
+    #       - myDockerSecretOne
+    #       - myDockerSecretTwo
+    #     anotherNamespace:
+    #       - myOtherDockerSecretOne
+    #       - myOtherDockerSecretTwo
+
+  ports:
+    # The port to be used to expose prometheus metrics for the Runtime Status
+    # Integrator
+    metrics: 25000
+    # The port to be used for healthcheck probes for the Runtime Status
+    # Integrator
+    probes: 7000
+  resources:
+    limits:
+      # Runtime Status Integrator CPU limit per replica
+      cpu: "1"
+      # Runtime Status Integrator Memory limit per replica
+      memory: 350Mi
+    requests:
+      # Runtime Status Integrator CPU requests per replica
+      cpu: "350m"
+      # Runtime Status Integrator Memory requests per replica
+      memory: 350Mi
+
+  # Runtime Status Integrator env allows the definition of environment variables
+  env: {}
+
+  natsJS:
+    # The username to be used in the NATS JetStream instance the Runtime Status
+    # Integrator is going to start
+    user: "default-user"
+    # Default uses a random password for each installation.
+    # password: ""
+
+    tls:
+      enabled: true
+      # Can be set to false to allow insecure connections to the NATS JetStream instance
+      verifyCertificate: true
+      # By default, a self-signed certificate is generated when tls is enabled, unless a custom certificate is provided.
+      # customCerts:
+      #   # Provide the name of an existing Secret that contains the Key required. Mandatory if customCerts is provided.
+      #   existingKeySecret:
+      #   # Provide the filename that is defined inside the existing Secret. [tls.key is the Default value]
+      #   existingKeySecretKeyName:
+      #   # Provide the name of an existing Secret that contains the Cert required. Mandatory if customCerts is provided.
+      #   existingCertSecret:
+      #   # Provide the filename that is defined inside the existing Secret. [tls.crt is the Default value]
+      #   existingCertSecretKeyName:
+      #   # Provide the name of an existing Secret that contains the CA required. Optional.
+      #   existingCaSecret:
+      #   # Provide the filename that is defined inside the existing Secret. Optional.
+      #   existingCaSecretKeyName:
+
+imageSbomExtractor:
+  image:
+    # The image registry to use for the Image SBOM Extractor component of
+    # Cluster Scanner
+    registry: quay.io
+    # The image repository to use for pulling the Image SBOM Extractor image
+    repository: sysdig/image-sbom-extractor
+    tag: "0.7.5"
+  ports:
+    # The port to be used to expose prometheus metrics for the Image SBOM
+    # Extractor
+    metrics: 25001
+    # The port to be used for healthcheck probes for the Image SBOM Extractor
+    probes: 7001
+  resources:
+    limits:
+      # Image SBOM Extractor CPU limit per replica
+      cpu: "1"
+      # Image SBOM Extractor Memory limit per replica
+      memory: 350Mi
+    requests:
+      # Image SBOM Extractor CPU requests per replica
+      cpu: "350m"
+      # Image SBOM Extractor Memory requests per replica
+      memory: 350Mi
+
+  # Image SBOM Extractor env allows the definition of environment variables
+  env: {}
+
+  cache:
+    # The type of cache to use.
+    # Allowed values are `local`, `distributed` and `distributed,local`.
+    # When specified more than one, the cache precedence will be applied from right to left.
+    # Eg: `distributed,local` will try to hit the local one first, than fallback to distributed one (redis)
+    # When setting `distributed`, you should also setup redis settings below accordingly with your redis installation.
+    type: "local"
+    # Additional configuration parameters for the local cache
+    local:
+      # The maximum size in bytes of the local cache. By default it is set to 35MB
+      maxSizeBytes: "36700160"
+      # When using `local` as cache type, restrict the maximum size of elements to be cached.
+      # By default it is set to 100KB
+      maxElementSizeBytes: "102400"
+      # The TTL for items in the local cache. By default it is set to 7 days.
+      ttl: "168h"
+    # Redis connection details (to be provided if the cache type is "distributed")
+    # redis:
+    #   address: ""
+    #   user: ""
+    #   password: ""
+    #   database: ""
+    #   prefix: ""
+    #   tlsEnabled: false
+    #   tlsSkip: ""
+    #   tlsCa: ""
+    #   sentinelMaster: ""
+    #   sentinelAddress: ""
+    #   ttl: "168h" # Default ttl is 7 days
+
+  # Provide optional registry mirrors configuration to be used by Image SBOM Extractor to pull images.
+  # [Only Docker HUB images](https://docs.docker.com/registry/recipes/mirror/#gotcha) are going to be pulled from
+  # the provided mirrors.
+  #
+  # The configuration is similar to the one currently supported by the docker-daemon where multiple mirrors
+  # (potentially insecure), can be specified.
+  #
+  # See https://docs.docker.com/registry/recipes/mirror/#configure-the-docker-daemon and https://docs.docker.com/registry/insecure/ .
+  #
+  # Example:
+  #
+  # mirrors:
+  #   registryMirrors:
+  #     - insecure.mirror.acme.com
+  #     - secure.mirror.acme.com
+  #   insecureRegistries:
+  #     - insecure.mirror.acme.com
+  mirrors: {}
+
+# Chart name override
+nameOverride: ""
+# Chart full name override
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname
+  # template
+  name: ""
+
+# Set Cluster Scanner pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/metrics"
+  prometheus.io/port: "25000"
+
+# Set Cluster Scanner pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Set Cluster Scanner security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Set Cluster Scanner Selector Labels
+selectorLabels: {}
+
+# Set Cluster Scanner Node Selector
+nodeSelector:
+  # Cluster Scanner is only supported on nodes with amd64 architecture
+  kubernetes.io/arch: amd64
+
+# Set Cluster Scanner scheduling tolerations
+tolerations: []
+
+# Set Cluster Scanner affinity
+affinity: {}
+
+ssl:
+  ca:
+    # For outbound connections (secure backend, proxy,...)
+    # A PEM-encoded x509 certificate.  This can also be a bundle with multiple certificates.
+    certs: []
+    # Example of certificate
+    # certs:
+    #   - |
+    #       -----BEGIN CERTIFICATE-----
+    #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+    #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+    #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+    #       MMNlTAQ9fvdNOTzZntye0PQYR5SR13E=
+    #       -----END CERTIFICATE-----
+    #   - |
+    #       -----BEGIN CERTIFICATE-----
+    #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+    #       MRIwEAYDVQQDEwloYXJib3ItY2EwHhcNMjIwMjIzMDY1NjExWhcNMjMwMjIzMDY1
+    #       NjExWjAUMRIwEAYDVQQDEwloYXJib3ItY2EwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+    #       MMNlTAQ9fvdNOTzZntye0PQYRTTS34D=
+    #       -----END CERTIFICATE-----
+
+    # Filename that is used when creating the secret.  Required if cert is provided.
+    keyName:
+
+    # Provide the name of an existing Secret that contains the CA required
+    existingCaSecret:
+    # Provide the filename that is defined inside the existing Secret
+    existingCaSecretKeyName:
+    # Provide the name of an existing ConfigMap that contains the CA required
+    existingCaConfigMap:
+    # Provide the filename that is defined inside the existing ConfigMap
+    existingCaConfigMapKeyName:
+
+# Option to make it possible to disable platform services
+disablePlatformScanning: false
+
+# Set Cluster Scanner pod labels
+podLabels: {}
+
+# Set Cluster Scanner labels
+labels: {}

@@ -1,0 +1,41 @@
+{{- if not (include "nodeAnalyzer.gke.autopilot" .) }}
+{{ if not .Values.secure.vulnerabilityManagement.newEngineOnly }}
+{{- if and .Values.nodeAnalyzer.deploy (include "nodeAnalyzer.deployHostAnalyzer" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-host-analyzer
+  namespace: {{ include "nodeAnalyzer.namespace" . }}
+  labels:
+{{ include "nodeAnalyzer.labels" . | indent 4 }}
+data:
+  collector_endpoint: "https://{{ include "nodeAnalyzer.apiEndpoint" . }}/internal/scanning/scanning-analysis-collector"
+  {{- if .Values.nodeAnalyzer.collectorTimeout }}
+  collector_timeout: {{ .Values.nodeAnalyzer.collectorTimeout }}
+  {{- end }}
+  ssl_verify_certificate: {{ include "hostAnalyzer.sslVerifyCertificate" . }}
+  debug: "{{ .Values.nodeAnalyzer.debug | default false }}"
+  {{- if .Values.nodeAnalyzer.hostAnalyzer.schedule }}
+  schedule: {{ .Values.nodeAnalyzer.hostAnalyzer.schedule | quote }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.hostAnalyzer.analyzeAtStartup }}
+  analyze_at_startup: {{ .Values.nodeAnalyzer.hostAnalyzer.analyzeAtStartup }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.hostAnalyzer.dirsToScan }}
+  dirs_to_scan: {{ .Values.nodeAnalyzer.hostAnalyzer.dirsToScan }}
+  {{- end }}
+  {{- if .Values.nodeAnalyzer.hostAnalyzer.maxSendAttempts }}
+  max_send_attempts: {{ .Values.nodeAnalyzer.hostAnalyzer.maxSendAttempts }}
+  {{- end }}
+  {{- if (.Values.nodeAnalyzer.hostAnalyzer.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy) }}
+  http_proxy: {{ .Values.nodeAnalyzer.hostAnalyzer.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.hostAnalyzer.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+  https_proxy: {{ .Values.nodeAnalyzer.hostAnalyzer.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.hostAnalyzer.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy) }}
+  no_proxy: {{ .Values.nodeAnalyzer.hostAnalyzer.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy }}
+  {{- end -}}
+{{- end }}
+{{- end }}
+{{- end }}

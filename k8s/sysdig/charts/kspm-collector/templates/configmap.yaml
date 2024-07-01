@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "kspmCollector.fullname" . }}
+  namespace: {{ include "kspmCollector.namespace" . }}
+  labels:
+{{ include "kspmCollector.labels" . | indent 4 }}
+data:
+{{- $env := "PRODUCTION" -}}
+{{ if .Values.debug }}
+  {{- $env = "DEVELOPMENT" -}}
+{{ end}}
+  environment: {{ $env }}
+  included_namespaces: {{ .Values.namespaces.included | quote}}
+  excluded_namespaces: {{ .Values.namespaces.excluded | quote }}
+  included_workloads: {{ .Values.workloads.included | quote }}
+  excluded_workloads: {{ .Values.workloads.excluded | quote }}
+  health_interval_minutes: {{ .Values.healthIntervalMin | default 5 | quote }}
+  external_nats_url: {{ include "kspmCollector.natsUrl" . }}
+  nats_max_reconnect: {{ .Values.natsMaxReconnect | default 0 | quote }}
+  nats_max_reconnect_failures: {{ .Values.natsMaxReconnectFailures | default 60 | quote }}
+  cluster_name: {{ required "A valid clusterName is required" (include "kspmCollector.clusterName" .) }}
+  nats_insecure: {{ include "kspmCollector.natsInsecure" . }}
+  {{- if (.Values.httpProxy | default .Values.global.proxy.httpProxy) }}
+  http_proxy: {{ .Values.httpProxy | default .Values.global.proxy.httpProxy }}
+  {{- end -}}
+  {{- if (.Values.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+  https_proxy: {{ .Values.httpsProxy | default .Values.global.proxy.httpsProxy }}
+  {{- end -}}
+  {{- if (.Values.noProxy | default .Values.global.proxy.noProxy) }}
+  no_proxy: {{ .Values.noProxy | default .Values.global.proxy.noProxy }}
+  {{- end -}}
+  {{- if .Values.port }}
+  agent_port: {{ .Values.port | quote }}
+  {{- end -}}

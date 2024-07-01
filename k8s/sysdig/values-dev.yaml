@@ -1,0 +1,217 @@
+
+# Helm chart sysdig-deploy-1.51.3
+# Images tags asociated to this chart:
+# admission-controller 3.9.41
+# sha256:b6004cfaf632587d06ce99b6342e815f23bf2d4e98f8076dd171b5d5d2609d32
+# agent-kmodule 13.0.3
+# sha256:979813c4ba0d5baf0256623455264ba1730c0a4c97844ca371d806761931395b
+# agent-slim 13.0.3
+# sha256:314d2f149bd8dcc4f14971c3462c961505a17a76e2e089a26dcf8fd3ca7feae4
+# kspm-analyzer 1.42.5
+# sha256:6921bba7cf8e5cc8be1255103fee505796195ca941e8155f8a371e67c673fbf2
+# kspm-collector 1.38.5
+# sha256:55eaf4d6d783b892ec455251ee259842dd264aa9bf606e218134e18ca3838556
+# vuln-host-scanner 0.8.0
+# sha256:2ae854898d45305fe1409653f88032f3be928b4b7c6b3fd2162bc636922a34a0
+# vuln-runtime-scanner 1.6.10
+# sha256:62c5346f530bb7a5109d372d7d64b381c948d8869f934445146a7fc7c529b9e4
+
+global:
+  imageRegistry: "registryName"
+  clusterConfig:
+    name: "clusterName" # name to identify this cluster for events and metrics
+  sysdig:
+    # Secrets that contain the Sysdig Access Key and the Sysdig Secure API Token
+    # That secrets needs data called 
+    # AUTH_BEARER_TOKEN: <Sysdig Secure Token>
+    # SECURE_API_TOKEN: <Sysdig Secure Token>
+    # access-key: <Sysdig Access Key>
+    accessKeySecret: sysdig-agent-secret 
+    secureAPITokenSecret: sysdig-agent-secret
+    region: "eu1"
+    tags: {}
+  proxy: 
+    httpProxy: http://proxy.domain.com:443
+    httpsProxy: http://proxy.domain.com:443
+    noProxy: localhost,.svc,.corp.com,svc.cluster.local,100.90.114.0/25,100.90.114.128/25,172.20.0.0/16
+  kspm:
+    deploy: true
+  agentConfigmapName: "sysdig-agent"
+  gke:
+    autopilot: false
+  image:
+    pullSecrets: []
+    pullPolicy: IfNotPresent
+  ssl:
+    ca:
+      # For outbound connections (secure backend, proxy,...)
+      # A PEM-encoded x509 certificate.  This can also be a bundle with multiple certificates.
+      # certs: []
+      # Example of certificate
+      # certs:
+      #   - |
+      #     -----BEGIN CERTIFICATE-----
+      #     MIIDVTCCAj2gAwIBAgIEHMCD4jANBgkqhkiG9w0BAQsFADBBMQ4wDAYDVQQKDAVD
+      #     ...
+      #     tg9UJjKPjVFI0F0eWKTiXPdVGHoYZl6er76lnmzvCuIIGJf8jkETCiU=
+      #     -----END CERTIFICATE-----
+      #   - |
+      #       -----BEGIN CERTIFICATE-----
+      #       MIIDEzCCAfugAwIBAgIQKiv9U+KxPJzu1adXwC06RzANBgkqhkiG9w0BAQsFADAU
+      #       ...
+      #       MMNlTAQ9fvdNOTzZntye0PQYRTTS34D=
+      #       -----END CERTIFICATE-----
+      # Filename that is used when creating the secret.  Required if cert is provided.
+      keyName:
+      # Provide the name of an existing Secret that contains the CA required
+      existingCaSecret:
+      # Provide the filename that is defined inside the existing Secret
+      existingCaSecretKeyName:
+      # Provide the name of an existing ConfigMap that contains the CA required
+      existingCaConfigMap: proxy-ca
+      # Provide the filename that is defined inside the existing ConfigMap
+      existingCaConfigMapKeyName: proxy_ca.crt
+
+agent:
+  enabled: true
+  image:
+    tag: 13.0.3
+    # digest: "sha256:314d2f149bd8dcc4f14971c3462c961505a17a76e2e089a26dcf8fd3ca7feae4"
+  sysdig:
+    settings:
+      feature:
+        mode: secure_light
+      http_proxy:
+        proxy_host: proxy.domain.com
+        proxy_port: 443
+      network_topology: # This should be enabled only if it is required for your cluster
+        enabled: false
+      k8s_extra_resources:
+        include: {}
+  resources:
+    limits:
+      cpu: "1"
+      memory: 1024Mi
+    requests:
+      cpu: 280m
+      memory: 512Mi
+  daemonset:
+    deploy: true
+  slim:
+    enabled: true
+  monitor:
+    enabled: false
+  secure:
+    enabled: true
+  auditLog:
+    enabled: false
+  logPriority: info
+
+nodeAnalyzer:
+  enabled: true
+  secure:
+    vulnerabilityManagement:
+      newEngineOnly: true
+  nodeAnalyzer:
+    deploy: true
+    runtimeScanner:
+      deploy: true
+      image:
+        tag: 1.6.10
+        # digest: "sha256:62c5346f530bb7a5109d372d7d64b381c948d8869f934445146a7fc7c529b9e4"
+      debug: false
+      resources:
+        requests:
+          cpu: 400m
+          memory: 512Mi
+          ephemeral-storage: 512Mi
+        limits:
+          cpu: "1"
+          # memory limit must be 2 times the size of the largest image size
+          memory: 1024Mi # this must be 8 GB according to the "maxImageSizeAllowed"
+          # ephemeral-storage limit must be 3 times the largest image size in the cluster
+          ephemeral-storage: 2Gi # this must be 12 GB according the "maxImageSizeAllowed"
+      settings:
+        eveEnabled: true
+        maxImageSizeAllowed: "4294967296" # This must match the largest image size in the cluster
+        maxFileSizeAllowed: "262144000"
+    hostScanner:
+      deploy: true
+      image:
+        tag: 0.8.0
+        # digest: "sha256:2ae854898d45305fe1409653f88032f3be928b4b7c6b3fd2162bc636922a34a0"
+      debug: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+          ephemeral-storage: 512Mi
+        limits:
+          cpu: 150m
+          memory: 256Mi
+          ephemeral-storage: 1Gi
+    kspmAnalyzer:
+      deploy: true
+      image:
+        tag: 1.42.5
+        # digest: "sha256:6921bba7cf8e5cc8be1255103fee505796195ca941e8155f8a371e67c673fbf2"
+      debug: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 516Mi
+        limits:
+          cpu: 150m
+          memory: 1024Mi
+    imageAnalyzer: # Not applicable at this moment
+      deploy: false
+    hostAnalyzer: # Not applicable at this moment
+      deploy: false
+    benchmarkRunner: # Not applicable at this moment
+      deploy: false
+
+kspmCollector:
+  image:
+    tag: 1.38.5
+    # digest: "sha256:55eaf4d6d783b892ec455251ee259842dd264aa9bf606e218134e18ca3838556"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  port: 6443
+
+admissionController:
+  enabled: true
+  resources:  
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  features:
+    k8sAuditDetections: true
+  webhook:
+    logLevel: info
+    image:
+      tag: 3.9.41
+      # digest: "sha256:b6004cfaf632587d06ce99b6342e815f23bf2d4e98f8076dd171b5d5d2609d32"
+  autoscaling: # Enable horizontal pod autoscaling
+    enabled: true
+    minReplicas: 2 # Min replicas to use while autoscaling the webhook
+    maxReplicas: 5 # Max replicas to use while autoscaling the webhook
+    targetCPUUtilizationPercentage: 80 # Target CPU to use when the number of replicas must be increased
+  scanner:
+    enabled: false
+
+clusterScanner: # Not applicable at this moment
+  enabled: false
+
+rapidResponse: # Not applicable at this moment
+  enabled: false
+  rapidResponse:
+    passphrase: ""
+    existingPassphraseSecret: ""

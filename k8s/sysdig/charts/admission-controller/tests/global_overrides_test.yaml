@@ -1,0 +1,428 @@
+suite: Test subchart overrides of global values
+templates:
+  - scanner/deployment.yaml
+  - scanner/configmap.yaml
+  - scanner/secret.yaml
+  - webhook/deployment.yaml
+  - webhook/configmap.yaml
+  - webhook/secret.yaml
+  - webhook/admissionregistration.yaml
+tests:
+  - it: check value of secure_API_TOKEN without local chart override - local value provided
+    documentIndex: 0
+    set:
+      sysdig:
+        secureAPIToken: standard_token
+        url: secure.sysdigcloud.com
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: standard_token
+        template: scanner/secret.yaml
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: standard_token
+        template: webhook/secret.yaml
+
+  - it: check value of secure_API_TOKEN without local chart override - global value provided
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPIToken: standard_token
+      sysdig:
+        url: secure.sysdigcloud.com
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: standard_token
+        template: scanner/secret.yaml
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: standard_token
+        template: webhook/secret.yaml
+
+  - it: check value of secure_API_TOKEN with local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPIToken: standard_token
+      clusterName: test-k8s
+      sysdig:
+        url: secure_url.com
+        secureAPIToken: override_token
+    asserts:
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: override_token
+        template: scanner/secret.yaml
+      - equal:
+          path: stringData.SECURE_API_TOKEN
+          value: override_token
+        template: webhook/secret.yaml
+
+  - it: check value of Access Key without local chart override - local value provided
+    documentIndex: 0
+    set:
+      sysdig:
+        accessKey: standard_key
+        url: secure.sysdigcloud.com
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: data.access-key
+          value: standard_key
+          decodeBase64: true
+        template: webhook/secret.yaml
+
+  - it: check value of Access Key without local chart override - global value provided
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          accessKey: standard_key
+      sysdig:
+        url: secure.sysdigcloud.com
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: data.access-key
+          value: standard_key
+          decodeBase64: true
+        template: webhook/secret.yaml
+
+  - it: check value of Access Key with local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          accessKey: standard_key
+      clusterName: test-k8s
+      sysdig:
+        url: secure_url.com
+        accessKey: override_key
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+    asserts:
+      - equal:
+          path: data.access-key
+          value: override_key
+          decodeBase64: true
+        template: webhook/secret.yaml
+
+  - it: check value of secureAPITokenSecret without local chart override - local value provided
+    documentIndex: 0
+    set:
+      sysdig:
+        existingSecureAPITokenSecret: standard_token
+        url: secure_url.com
+      clusterName: test-k8s
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: standard_token
+        template: scanner/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: standard_token
+        template: webhook/deployment.yaml
+
+  - it: check value of secureAPITokenSecret without local chart override - global value provided
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      sysdig:
+        url: secure_url.com
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: standard_token
+        template: scanner/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: standard_token
+        template: webhook/deployment.yaml
+
+  - it: check value of secureAPITokenSecret with local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      sysdig:
+        url: secure_url.com
+        existingSecureAPITokenSecret: override_token
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: override_token
+        template: scanner/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: override_token
+        template: webhook/deployment.yaml
+
+  - it: check value of existingAccessKeySecret without local chart override - local value provided
+    documentIndex: 0
+    set:
+      sysdig:
+        existingAccessKeySecret: some-secret
+        url: secure.sysdigcloud.com
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: some-secret
+        template: webhook/deployment.yaml
+
+  - it: check value of existingAccessKeySecret without local chart override - global value provided
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          existingAccessKeySecret: some-secret
+      sysdig:
+        url: secure.sysdigcloud.com
+        existingAccessKeySecret: override-secret
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: override-secret
+        template: webhook/deployment.yaml
+
+  - it: check value of existingAccessKeySecret with local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          existingAccessKeySecret: some-secret
+      sysdig:
+        url: secure.sysdigcloud.com
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: some-secret
+        template: webhook/deployment.yaml
+
+  - it: check value of accessKeySecret without local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          accessKeySecret: some-secret
+      sysdig:
+        url: secure.sysdigcloud.com
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: some-secret
+        template: webhook/deployment.yaml
+
+  - it: check value of accessKeySecret with local chart override
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          accessKeySecret: some-secret
+      sysdig:
+        url: secure.sysdigcloud.com
+        existingAccessKeySecret: override-secret
+      features:
+        kspmAdmissionController: true
+        k8sAuditDetections: false
+      clusterName: test-k8s
+      version: 0.7.3
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: override-secret
+        template: webhook/deployment.yaml
+
+  - it: uses the specified region
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          region: eu1
+      sysdig:
+        accessKey: some_access_key
+      clusterName: test-k8s
+      features:
+        kspmAdmissionController: true
+    asserts:
+      - equal:
+          path: data.SECURE_BASE_URL
+          value: https://eu1.app.sysdig.com
+        template: scanner/configmap.yaml
+      - equal:
+          path: data.SECURE_URL
+          value: https://eu1.app.sysdig.com
+        template: webhook/configmap.yaml
+      - equal:
+          path: data.EXTERNAL_NATS_URL
+          value: wss://eu1.app.sysdig.com:443
+        template: webhook/configmap.yaml
+
+  - it: check imagePullSecrets with global
+    documentIndex: 0
+    set:
+      global:
+        image:
+          pullSecrets:
+          - test
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - test
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml
+
+  - it: check imagePullSecrets with legacy
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      scanner:
+        imagePullSecrets:
+          - test
+      webhook:
+        imagePullSecrets:
+          - test
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - test
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml
+
+  - it: check imagePullSecrets with local override
+    documentIndex: 0
+    set:
+      global:
+        image:
+          pullSecrets:
+          - test
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      scanner:
+        imagePullSecrets:
+          - test_override
+      webhook:
+        imagePullSecrets:
+          - test_override
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - test_override
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml
+
+  - it: check imagePullPolicy with global
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPITokenSecret: standard_token
+        image:
+          pullPolicy: Always
+      clusterName: test-k8s
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml
+
+  - it: check imagePullPolicy with legacy
+    documentIndex: 0
+    set:
+      global:
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      scanner:
+        image:
+          pullPolicy: Always
+      webhook:
+        image:
+          pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml
+
+  - it: check imagePullPolicy with local override
+    documentIndex: 0
+    set:
+      global:
+        image:
+          pullPolicy: Always
+        sysdig:
+          secureAPITokenSecret: standard_token
+      clusterName: test-k8s
+      scanner:
+        image:
+          pullPolicy: Never
+      webhook:
+        image:
+          pullPolicy: Never
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Never
+    templates:
+      - scanner/deployment.yaml
+      - webhook/deployment.yaml

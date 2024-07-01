@@ -1,0 +1,215 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "admissionController.webhook.fullname" . }}
+  namespace: {{ include "admissionController.namespace" . }}
+  labels:
+    {{- include "admissionController.webhook.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.webhook.autoscaling.enabled }}
+  replicas: {{ .Values.webhook.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "admissionController.webhook.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "admissionController.webhook.podAnnotations" . | nindent 8 }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/webhook/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/webhook/secret.yaml") . | sha256sum }}
+        checksum/certs: {{ include (print $.Template.BasePath "/webhook/admissionregistration.yaml") . | sha256sum }}
+      labels:
+        {{- include "admissionController.webhook.labels" . | nindent 8 }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    {{- include "admissionController.webhook.selectorLabels" . | nindent 20 }}
+              weight: 10
+      {{- if .Values.webhook.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.webhook.imagePullSecrets | nindent 8 }}
+      {{- else if .Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "admissionController.webhook.serviceAccountName" . }}
+      securityContext:
+        {{- if .Values.webhook.podSecurityContext }}
+        {{- toYaml .Values.webhook.podSecurityContext | nindent 8 }}
+        {{- else }}
+        {{- include "admissionController.webhook.defaultSecurityContext" . | nindent 8 }}
+        {{- end }}
+      {{- if .Values.webhook.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      containers:
+      {{- if .Values.features.kspmAdmissionController}}
+        - name: kspm-admission-controller
+          image: {{ include "admissionController.kspm.image" . }}
+          imagePullPolicy: {{ .Values.webhook.v2.image.pullPolicy | default .Values.global.image.pullPolicy }}
+          env:
+            - name: DEFAULT_TIMEOUT
+              value: {{ .Values.webhook.timeoutSeconds | quote }}
+            {{- if (or (include "webhook.httpProxy" .) (include "webhook.httpsProxy" .) (include "webhook.noProxy" .) )}}
+            - name: HTTP_PROXY
+              value: {{ include "webhook.httpProxy" . }}
+            - name: HTTPS_PROXY
+              value: {{ include "webhook.httpsProxy" . }}
+            - name: NO_PROXY
+              value: {{ include "webhook.noProxy" . }},{{ include "admissionController.scanner.fullname" . }}
+            {{- end }}
+            {{- if or .Values.webhook.ssl.ca.cert (eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true") }}
+            - name: SSL_CERT_DIR
+              value: /ca-certs
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.webhook.v2.http.port }}
+              protocol: TCP
+              name: vac
+          envFrom:
+            - configMapRef:
+                name: {{ include "admissionController.webhook.fullname" . }}
+          volumeMounts:
+            - name: cert
+              mountPath: /cert
+              readOnly: true
+            - name: configs
+              mountPath: /configs
+              readOnly: true
+            {{- if or .Values.webhook.ssl.ca.cert (eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true") }}
+            - name: ca-cert
+              mountPath: /ca-certs
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.webhook.resources | nindent 12 }}
+      {{- end}}
+      {{- if (or .Values.features.k8sAuditDetections .Values.scanner.enabled .Values.webhook.acConfig) }}
+        - name: admission-controller
+          image: "{{ include "admissionController.webhook.image" . }}"
+          {{- if .Values.webhook.customEntryPoint }}
+          command: {{ .Values.webhook.customEntryPoint | toYaml | nindent 10 }}
+          {{- else }}
+          args:
+            {{- with .Values.webhook.http.port }}
+            - --http_port
+            - {{ . | quote }}
+            {{- end }}
+            - --tls_cert_file
+            - /cert/tls.crt
+            - --tls_private_key_file
+            - /cert/tls.key
+          {{- end }}
+          securityContext:
+            {{- if .Values.webhook.securityContext }}
+            {{- toYaml .Values.webhook.securityContext | nindent 12 }}
+            {{- else }}
+            {{- include "admissionController.webhook.defaultSecurityContext" . | nindent 12}}
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            {{- end }}
+          imagePullPolicy: {{ .Values.webhook.image.pullPolicy | default .Values.global.image.pullPolicy }}
+          env:
+            {{- if (or (include "webhook.httpProxy" .) (include "webhook.httpsProxy" .) (include "webhook.noProxy" .) )}}
+            - name: HTTP_PROXY
+              value: {{ include "webhook.httpProxy" . }}
+            - name: HTTPS_PROXY
+              value: {{ include "webhook.httpsProxy" . }}
+            - name: NO_PROXY
+              value: {{ include "webhook.noProxy" . }},{{ include "admissionController.scanner.fullname" . }}
+            {{- end }}
+            {{- if or .Values.webhook.ssl.ca.cert (eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true") }}
+            - name: SSL_CERT_DIR
+              value: /ca-certs
+            {{- end }}
+            {{- if .Values.webhook.acConfig }}
+            - name: VM_ENGINE_V2_ENABLED
+              value: "true"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.webhook.http.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+          envFrom:
+            {{- if or (include "sysdig.secureAPIToken" .) (include "sysdig.secureAPITokenSecret" .) }}
+            - secretRef:
+                {{- if (include "sysdig.secureAPIToken" .) }}
+                name: {{ include "admissionController.webhook.fullname" . }}
+                {{- else }}
+                name: {{ include "sysdig.secureAPITokenSecret" . }}
+                {{- end }}
+            {{- end }}
+            - configMapRef:
+                name: {{ include "admissionController.webhook.fullname" . }}
+          volumeMounts:
+            - name: cert
+              mountPath: /cert
+              readOnly: true
+            {{- if or .Values.webhook.ssl.ca.cert (eq (include "sysdig.custom_ca.enabled"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true") }}
+            - name: ca-cert
+              mountPath: /ca-certs
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.webhook.resources | nindent 12 }}
+      {{- end}}
+      volumes:
+        {{- if .Values.features.kspmAdmissionController }}
+        - name: configs
+          secret:
+            {{- if (include "sysdig.accessKey" .) }}
+            secretName: {{ include "admissionController.webhook.fullname" . }}-access-key
+            {{- else }}
+            secretName: {{ include "sysdig.existingAccessKeySecret" . }}
+            {{- end}}
+        {{- end}}
+        - name: cert
+          secret:
+            secretName: {{ include "admissionController.webhook.fullname" . }}-tls
+        {{- if or .Values.webhook.ssl.ca.cert (eq (include "sysdig.custom_ca.useValues"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true") }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "admissionController.webhook.fullname" . }}-ca
+        {{- else if eq (include "sysdig.custom_ca.useExistingSecret"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true" }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "sysdig.custom_ca.existingSecret" (dict "global" .Values.global.ssl "component" .Values.scanner.ssl) }}
+        {{- else if eq (include "sysdig.custom_ca.useExistingConfigMap"  (dict "global" .Values.global.ssl "component" .Values.webhook.ssl)) "true" }}
+        - name: ca-cert
+          configMap:
+            name: {{ include "sysdig.custom_ca.existingConfigMap" (dict "global" .Values.global.ssl "component" .Values.scanner.ssl) }}
+        {{- end }}
+    {{- with .Values.webhook.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.webhook.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.webhook.priorityClassName }}
+      priorityClassName: "{{ .Values.webhook.priorityClassName }}"
+    {{- end }}
+    {{- with .Values.webhook.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

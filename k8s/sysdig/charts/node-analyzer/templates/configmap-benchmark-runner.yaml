@@ -1,0 +1,24 @@
+{{- if not (include "nodeAnalyzer.gke.autopilot" .) }}
+{{- if and .Values.nodeAnalyzer.deploy (include "nodeAnalyzer.deployBenchmarkRunner" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-benchmark-runner
+  namespace: {{ include "nodeAnalyzer.namespace" . }}
+  labels:
+{{ include "nodeAnalyzer.labels" . | indent 4 }}
+data:
+  collector_endpoint: "https://{{ include "nodeAnalyzer.apiEndpoint" . }}"
+  ssl_verify_certificate: {{ include "benchmarkRunner.sslVerifyCertificate" . }}
+  debug: "{{ .Values.nodeAnalyzer.debug | default false }}"
+  {{- if (.Values.nodeAnalyzer.benchmarkRunner.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy) }}
+  http_proxy: {{ .Values.nodeAnalyzer.benchmarkRunner.httpProxy | default .Values.nodeAnalyzer.httpProxy | default .Values.global.proxy.httpProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.benchmarkRunner.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy) }}
+  https_proxy: {{ .Values.nodeAnalyzer.benchmarkRunner.httpsProxy | default .Values.nodeAnalyzer.httpsProxy | default .Values.global.proxy.httpsProxy }}
+  {{- end -}}
+  {{- if (.Values.nodeAnalyzer.benchmarkRunner.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy) }}
+  no_proxy: {{ .Values.nodeAnalyzer.benchmarkRunner.noProxy | default .Values.nodeAnalyzer.noProxy | default .Values.global.proxy.noProxy }}
+  {{- end -}}
+{{- end }}
+{{- end }}
