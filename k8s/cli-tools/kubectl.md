@@ -1,12 +1,90 @@
 # Kube Control
 
 ```sh
+$ kubectl api-resources
+$ kubectl api-versions
+
 $ kubectl explain pod.spec.volumes
 
-$ kubectl port-forward <podName> <sourcePort>:<podPort>
+$ kubectl get po,rs,deploy,svc,ingress
+$ kubectl describe <po,rs,deploy,svc,ingress> <name>
+
+# Resources
+$ kubectl -n kube-system get events
+$ kubectl top pods
 
 $ kubectl get po -A --selector foo=bar
+$ kubectl exec -it <podName> -- bash
+
+$ kubectl cp <podName>:/path/to/container/file /path/to/local/file
+$ kubectl cp /path/to/local/file <podName>:/path/to/container/file
+
 $ kubectl scale deploy <deployName> --replicas=3
+$ kubectl expose deploy <deployName>
+$ kubectl get svc -o wide
+$ kubectl get endpoints --watch
+$ kubectl describe endpoints <svcName>
+
+$ kubectl rollout status deploy <deployName>
+$ kubectl rollout pause deploy <deployName>
+$ kubectl rollout resume deploy <deployName>
+$ kubectl rollout history deploy <deployName> --revision=2
+$ kubectl rollout undo deploy <deployName> --to-revision=1
+
+# Labeling
+$ kubectl get po --show-labels
+$ kubectl label pods foo color=red
+$ kubectl label pods foo color=red --overwrite # overwrite an existing label
+$ kubectl label pods foo color- # remove label color
+
+$ kubectl label deploy <deployName> "canary=true"
+$ kubectl label deploy <deployName> "canary-"
+$ kubectl get deploy -L canary
+
+$ kubectl get po --selector="app=test,ver=2"
+$ kubectl get po --selector="app in (alpaca,bandicoot)"
+$ kubectl get po --selector="app notin (alpaca,bandicoot)"
+$ kubectl get po --selector="app!=alpaca"
+
+$ kubectl get po -l "ver=2,!canary"
+$ kubectl get deploy --selector="!canary"
+
+# Debugging
+# If do not have a terminal available within your container, you can always attach to the running process
+$ kubectl attach -it <podName>
+# Similar to kubectl logs but will allow to send input to the running process, assuming that process is set up to read from standard input
+
+# Port forward
+$ kubectl port-forward <podName> <sourcePort>:<podPort>
+
+# Proxies the Kubernetes API to our local machine and also takes care of the authentication and authorization bits
+$ kubectl proxy --port=8080
+$ curl http://127.0.0.1:8080/apis/batch/v1
+# Same as
+$ kubectl get --raw /apis/batch/v1
+```
+
+**RBAC**
+
+Verbs are
+
+- create
+- delete
+- get
+- list
+- patch
+- update
+- watch
+- proxy
+
+```bash
+$ kubectl auth can-i create pods
+$ kubectl auth can-i create pods --subresource=logs # logs or port-forwarding
+
+$ kubectl get clusterroles
+$ kubectl get clusterrolebindings
+
+$ kubectl auth reconcile -f some-rbac-config.yaml --dry-run
 ```
 
 **Contexts**
@@ -39,6 +117,9 @@ $ kubectl get nodes
 $ kubectl top nodes
 $ kubectl describe node <nodeName>
 
+$ kubectl label nodes <nodeName> ssd=true # usefull for DaemonSets with the flag selector.matchLabels
+$ kubectl get nodes --selector ssd=true
+
 # Mark a node as schedulable
 $ kubectl cordon <nodeName>
 # Mark a node as schedulable and remove all pods
@@ -57,10 +138,38 @@ $ journalctl -u kubelet
 $ systemctl status containerd
 
 $ ls -l /var/log
+```
 
-**Certs**
+**Horizontal Pod Autoscaling**
+
+This feature requires the metric-server already installed.
 
 ```bash
+$ kubectl autoscale rs <rsName> --min=2 --max=5 --cpu-percent=80
+$ kubectl get hpa
+```
+
+**ConfigMaps and Secrets**
+
+```bash
+$ kubectl get cm
+$ kubectl get secrets 
+
+$ kubectl create secret generic <secretName> --from-file=file.crt --from-file=file.key
+
+# --from-file=<fileName>
+# load from the file with the secret data key that's the same as the filename
+
+# --from-file=<key>=<fileName>
+# load from the file with the secret data key explicitly specified
+
+# --from-file=<directory>
+# load all the files in the specified directory where the filename is an acceptable key name
+
+# --from-literal=<key>=<value>
+# use the specified key/value pair directly
+
+# Certs
 $ openssl x509 -inform der -in file.txt -out file.crt
 
 $ kubectl create configmap-cacerts -n <namespace> --from-file=cacerts=./cacerts-nueva --dry-run=client -o yaml > configmap-cacerts.yaml
