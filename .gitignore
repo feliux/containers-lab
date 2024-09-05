@@ -16,6 +16,9 @@ k8s/kind/kind
 k8s/minikube/minikube
 
 # Secrets
+*.crt
+*.key
+
 *secrets*
 !secrets.yaml
 !01-secrets.yaml
@@ -25,3 +28,6 @@ k8s/minikube/minikube
 
 *creds*
 *credentials*
+
+keystore
+truststore
