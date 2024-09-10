@@ -54,3 +54,5 @@ $ go run kinesisToIceberg.go
 [RisingWave configuration](https://github.com/risingwavelabs/helm-charts/blob/main/docs/CONFIGURATION.md#customize-meta-store)
 
 [RisingWave examples](https://github.com/risingwavelabs/helm-charts/tree/main/examples)
+
+[Ingest from Kinesis](https://github.com/risingwavelabs/risingwave-docs/blob/main/versioned_docs/version-1.4/ingest/ingest-from-kinesis.md)
