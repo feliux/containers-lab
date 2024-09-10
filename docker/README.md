@@ -17,6 +17,7 @@
 - [**gpu**](./gpu/). Run GPU tensorflow container.
 - [**guacamole-mysql-nginx**](./guacamole-mysql-nginx/). Remote access to servers.
 - [**hortonworks**](./hortonworks/). Deploy Hortonworks ecosystem on Docker.
+- [**iceberg**](./iceberg/). Deploy a Tabular Iceberg Docker Stack.
 - [**intellij**](./intellij/). Dockerfile for IntelliJ.
 - [**jenkins-gitlab-registry**](./jenkins-gitlab-registry/). Tools for code versioning and CI/CD.
 - [**minio-registry**](./minio-registry/). Use Minio to save docker images and python packages.
