@@ -41,6 +41,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**operator-sdk-memcache**](./operator-sdk-memcache/). Build your own CRD with the Operator SDK.
 - [**pinponfel**](./pinponfel/). Personal app.
 - [**rabbitmq**](./rabbitmq/). Deploy RabbitMQ Helm Chart.
+- [**risingwave**](./risingwave/). Deploy RisingWave Helm Chart.
 - [**sonarqube**](./sonarqube/). Deploy SonarQube Helm Chart.
 - [**sysdig**](./sysdig/). Harden and check security concerns using sysdig installed on your cluster.
 - [**tekton**](./tekton/). Run your pipelines in k8s.

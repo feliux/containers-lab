@@ -1,0 +1,1377 @@
+# Copyright RisingWave Labs.
+# SPDX-License-Identifier: APACHE-2.0
+
+## @section Tags to control the dependencies to be installed.
+## Ref: https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
+##
+tags:
+  ## @param tags.bundle Tag to control all bundled dependencies, including bitnami/postgresql
+  ## and bitnami/minio. Please refer to tags.postgresql and tags.minio for more details.
+  ## @values true, false
+  ##
+  bundle: false
+
+  ## @param tags.etcd Tag to control the bitnami/etcd dependency.
+  ## @values true,false
+  ##
+  etcd: false
+
+  ## @param tags.postgresql Tag to control the bitnami/postgresql dependency.
+  ## @values true, false
+  postgresql: true
+
+  ## @param tags.minio Tag to control the bitnami/minio dependency.
+  ## @values true,false
+  ## Note that even if it is true, when the state store isn't minio, it won't be installed.
+  ##
+  minio: true
+
+## @section Values for the bitnami/etcd dependency.
+## Ref: https://github.com/bitnami/charts/blob/main/bitnami/etcd/values.yaml
+##
+etcd:
+  service:
+    ports:
+      client: 2379
+      peer: 2380
+
+  replicaCount: 1
+
+  livenessProbe:
+    initialDelaySeconds: 5
+
+  readinessProbe:
+    initialDelaySeconds: 5
+
+  auth:
+    rbac:
+      create: false
+      allowNoneAuthentication: true
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenScaled: Retain
+    whenDeleted: Delete
+
+  extraEnvVars:
+  - name: "ETCD_MAX_REQUEST_BYTES"
+    value: "104857600"
+  - name: "MAX_QUOTA_BACKEND_BYTES"
+    value: "8589934592"
+  - name: "ETCD_AUTO_COMPACTION_MODE"
+    value: "periodic"
+  - name: "ETCD_AUTO_COMPACTION_RETENTION"
+    value: "1m"
+  - name: "ETCD_SNAPSHOT_COUNT"
+    value: "10000"
+  - name: "ETCD_MAX_TXN_OPS"
+    value: "999999"
+
+## @section Values for the bitnami/postgresql dependency.
+## Ref: https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
+##
+postgresql:
+  auth:
+    postgresPassword: "postgres"
+    database: "risingwave"
+
+  primary:
+    resourcesPreset: "none"
+    persistence:
+      enabled: true
+      size: 8Gi
+    persistentVolumeClaimRetentionPolicy:
+      enabled: true
+      whenScaled: Retain
+      whenDeleted: Delete
+    service:
+      ports:
+        postgresql: 5432
+
+## @section Values for the bitnami/minio dependency.
+## Ref: https://github.com/bitnami/charts/blob/main/bitnami/minio/values.yaml
+##
+minio:
+  defaultBuckets: risingwave
+
+  auth:
+    rootUser: root
+    rootPassword: ""
+
+  persistence:
+    enabled: true
+    size: 50Gi
+
+## @section Common values.
+##
+
+## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
+##
+nameOverride: ""
+
+## @param fullnameOverride String to fully override common.names.fullname template
+##
+fullnameOverride: ""
+
+## @param commonLabels [object] Labels to add to all deployed objects
+##
+commonLabels: { }
+
+## @param commonAnnotations [object] Annotations to add to all deployed objects
+##
+commonAnnotations: { }
+
+## Enable diagnostic mode in the deployment
+##
+diagnosticMode:
+  ## @param diagnosticMode.enabled Enable diagnostic mode (all probes will be disabled and the command will be overridden)
+  ##
+  enabled: false
+  ## @param diagnosticMode.command Command to override all containers in the deployment
+  ##
+  command:
+  - sleep
+  ## @param diagnosticMode.args Args to override all containers in the deployment
+  ##
+  args:
+  - infinity
+
+## @section RisingWave values.
+##
+
+## RisingWave image version.
+## Ref: https://github.com/risingwavelabs/risingwave/pkgs/container/risingwave
+## @param image.registry RisingWave image registry
+## @param image.repository RisingWave image name
+## @param image.tag RisingWave image tag
+## @param image.digest RisingWave image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
+##
+image:
+  registry: docker.risingwave.com
+  repository: risingwavelabs/risingwave
+  tag: "v1.10.1"
+  digest: ""
+  ## @param image.pullPolicy RisingWave image pull policy
+  ## Specify a imagePullPolicy
+  ## Ref: https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+  ##
+  pullPolicy: IfNotPresent
+  ## @param image.pullSecrets [array] RisingWave image pull secrets
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ## e.g:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets: [ ]
+
+## @section Service account parameters
+##
+
+serviceAccount:
+  ## @param serviceAccount.create Enable/disable service account creation
+  ##
+  create: true
+  ## @param serviceAccount.name Name of the service account to create or use
+  ##
+  name: risingwave
+  ## @param serviceAccount.automountServiceAccountToken Enable/disable auto mounting of service account token
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+  ##
+  automountServiceAccountToken: true
+  ## @param serviceAccount.labels [object] Additional labels to be included on the service account
+  ##
+  labels: { }
+  ## @param serviceAccount.annotations [object] Additional annotations to be included on the service account
+  ##
+  annotations: { }
+
+## @section RisingWave service values. The service is used to expose RisingWave's PostgreSQL compatible access.
+##
+
+service:
+  ## @param service.type Kubernetes Service type
+  ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  ##
+  type: ClusterIP
+  ## @param service.ports Kubernetes Service ports, exposing the SQL port
+  ##
+  port: 4567
+  ## @param service.nodePorts Kubernetes Service node ports, exposing the SQL port.
+  ## Only take effect when service.type is NodePort or LoadBalancer.
+  ##
+  nodePort: ""
+  ## @param service.loadBalancerSourceRanges [array] Load Balancer source ranges
+  ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+  ## e.g:
+  ## loadBalancerSourceRanges:
+  ##   - 10.10.10.0/24
+  ##
+  loadBalancerSourceRanges: [ ]
+  ## @param service.externalIPs [array] Kubernetes Service external IPs
+  ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+  ##
+  externalIPs: [ ]
+  ## @param service.externalTrafficPolicy Service external traffic policy
+  ## Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-policies
+  ##
+  externalTrafficPolicy: ""
+  ## @param service.sessionAffinity Session Affinity for Kubernetes service, can be "None" or "ClientIP"
+  ## If "ClientIP", consecutive client requests will be directed to the same Pod
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
+  ##
+  sessionAffinity: None
+  ## @param service.sessionAffinityConfig Additional settings for the sessionAffinity
+  ## sessionAffinityConfig:
+  ##   clientIP:
+  ##     timeoutSeconds: 300
+  ##
+  sessionAffinityConfig: { }
+  ## @param service.annotations [object] Additional annotations for the RisingWave service
+  ##
+  annotations: { }
+  ## @param service.labels [object] Additional labels for the RisingWave service
+  ##
+  labels: { }
+
+## @section TLS configuration.
+##
+
+tls:
+  ## @param tls.existingSecretName If provided, the helm chart will use the keys and certs in the Secret to secure the
+  ## PostgreSQL access. The Secret must contain `tls.key` and `tls.cert` to include public/private key pairs. The public
+  ## key certificate must be .PEM encoded and match the given private key.
+  ##
+  ## Defaults to empty, meaning TLS/SSL isn't enabled.
+  ##
+  existingSecretName: tls-secret-risingwave
+
+## @section RisingWave standalone mode.
+##
+
+standalone:
+  ## @param standalone.enabled Enable standalone mode. If enabled, the fields for each component will be ignore.
+  enabled: false
+
+  ## @param standalone.podLabels Labels to add to the component pods.
+  ##
+  podLabels: { }
+
+  ## @param standalone.podAnnotations Annotations to add to the component pods.
+  ##
+  podAnnotations: { }
+
+  ## @param standalone.extraEnvVars Extra environment variables to add to the component pods.
+  ##
+  extraEnvVars: [ ]
+
+  ## @param standalone.extraEnvVarsConfigMap Name of existing ConfigMap containing extra environment variables.
+  ##
+  extraEnvVarsConfigMap: ""
+
+  ## @param standalone.extraEnvVarsSecret Name of existing Secret containing extra environment variables.
+  ##
+  extraEnvVarsSecret: ""
+
+  ## @param standalone.extraVolumes Extra volumes to add to the component pods.
+  extraVolumes: []
+
+  ## @param standalone.extraVolumeMounts Extra volume mounts to add to the component pods.
+  extraVolumeMounts: []
+
+  ## @param standalone.replicas Number of replicas.
+  ##
+  replicas: 1
+
+  ## @param standalone.resources Resource requests and limits.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  resources:
+    limits: { }
+    requests: { }
+
+  ## @param standalone.podSecurityContext Pod security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  podSecurityContext: { }
+
+  ## @param standalone.securityContext Container security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  ## @param standalone.additionalContainers Additional containers to add to the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/
+  ##
+  additionalContainers: [ ]
+
+  ## @param standalone.nodeSelector Node labels for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  nodeSelector: { }
+
+  ## @param standalone.tolerations Tolerations for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: [ ]
+
+  ## @param standalone.affinity Affinity for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: { }
+
+  ## @param standalone.terminationGracePeriodSeconds Termination grace period in seconds.
+  ## Defaults to 1 seconds.
+  ##
+  terminationGracePeriodSeconds: 1
+
+  ## @param standalone.schedulerName Name of an alternate scheduler.
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## @param standalone.priorityClassName Name of an alternate priority class.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  ##
+  priorityClassName: ""
+
+  ## @param standalone.runtimeClassName Runtime class of the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
+
+  ## @param standalone.shareProcessNamespace Share a single process namespace between all the containers in a pod.
+  ## When this is set containers will be able to view and signal processes from other containers in the same pod,
+  ## and the first process in each container will not be assigned PID 1.
+  ## Defaults to false.
+  ##
+  shareProcessNamespace: false
+
+  ## @param standalone.rustLog Customize the RUST_LOG value.
+  ## See https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/config_log.html for how to
+  ## configure the logging for modules.
+  ## Defaults to INFO.
+  rustLog: INFO
+
+  ## @param standalone.rustBacktrace Customize the RUST_BACKTRACE value.
+  ## Defaults to full.
+  rustBacktrace: full
+
+  ## @param standalone.volumeClaimTemplates Persistent volume claim templates that can be referenced.
+  volumeClaimTemplates: []
+
+  ## @param standalone.persistentVolumeClaimRetentionPolicy Policy that controls how PVCs are deleted.
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+
+## @section RisingWave meta store values.
+##
+
+metaStore:
+  ## @section metaStore.etcd only takes effect when tags.etcd is false.
+  ##
+  etcd:
+    ## @param metaStore.etcd.enabled Enable/disable the meta store backend.
+    ##
+    enabled: false
+
+    ## @param metaStore.etcd.endpoints [array] Etcd endpoints
+    ##
+    endpoints: [ ]
+
+    authentication:
+      ## @param metaStore.etcd.authentication.enabled Enable/disable authentication.
+      ## If enabled, a Secret will be created to store the username and password.
+      ##
+      enabled: false
+      ## @param metaStore.etcd.authentication.username Etcd username
+      ##
+      username: ""
+      ## @param metaStore.etcd.authentication.password Etcd password
+      ##
+      password: ""
+      ## @param metaStore.etcd.authentication.existingSecretName Use existing Secret for etcd authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain `username` and `password` keys.
+      ##
+      existingSecretName: ""
+
+  ## @section metaStore.sqlite Values for sqlite backend.
+  sqlite:
+    ## @param metaStore.sqlite.enabled Enable/disable the meta store backend.
+    ##
+    enabled: false
+
+    ## @param metaStore.sqlite.path Path to the sqlite file. Defaults to risingwave.db.
+    ## Note that the file is not in a persistent volume by default. If you would like to persist
+    ## the file during pod restarts, please create and mount a pvc and change the path.
+    ##
+    path: risingwave.db
+
+  ## @section metaStore.mysql Values for PostgreSQL backend.
+  postgresql:
+    ## @param metaStore.postgresql.enabled Enable/disable the meta store backend.
+    ##
+    enabled: false
+
+    ## @param metaStore.postgresql.host Host of the PostgreSQL server.
+    ##
+    host: ""
+
+    ## @param metaStore.postgresql.port Port of the PostgreSQL server. Defaults to 5432.
+    ##
+    port: 5432
+
+    ## @param metaStore.postgresql.database Database of the PostgreSQL server.
+    ##
+    database: ""
+
+    ## @param metaStore.postgresql.options Options to connect.
+    ##
+    options: {}
+
+    ## @param metaStore.postgresql.authentication Authentication information.
+    ##
+    authentication:
+      ## @param metaStore.postgresql.authentication.username Username to connect the DB.
+      ## If existingSecretName is specified, the field is ignored.
+      ##
+      username: ""
+      ## @param metaStore.postgresql.authentication.password Password to connect the DB.
+      ## If existingSecretName is specified, the field is ignored.
+      ##
+      password: ""
+      ## @param metaStore.postgresql.authentication.existingSecretName Existing secret name.
+      ## The Secret must contain `username` and `password` keys.
+      ## If it is specified, username and password above are ignored.
+      ##
+      existingSecretName: ""
+
+  ## @section metaStore.mysql Values for MySQL backend.
+  mysql:
+    ## @param metaStore.mysql.enabled Enable/disable the meta store backend.
+    ##
+    enabled: false
+
+    ## @param metaStore.mysql.host Host of the MySQL server.
+    ##
+    host: ""
+
+    ## @param metaStore.mysql.port Port of the MySQL server. Defaults to 3306.
+    ##
+    port: 3306
+
+    ## @param metaStore.mysql.database Database of the MySQL server.
+    ##
+    database: ""
+
+    ## @param metaStore.mysql.options Options to connect.
+    ##
+    options: {}
+
+    ## @param metaStore.mysql.authentication Authentication information.
+    ##
+    authentication:
+      ## @param metaStore.mysql.authentication.username Username to connect the DB.
+      ## If existingSecretName is specified, the field is ignored.
+      ##
+      username: ""
+      ## @param metaStore.mysql.authentication.password Password to connect the DB.
+      ## If existingSecretName is specified, the field is ignored.
+      ##
+      password: ""
+      ## @param metaStore.mysql.authentication.existingSecretName Existing secret name.
+      ## The Secret must contain `username` and `password` keys.
+      ## If it is specified, username and password above are ignored.
+      ##
+      existingSecretName: ""
+
+## @section RisingWave state store values.
+##
+
+stateStore:
+  ## @param stateStore.dataDirectory RisingWave state store data directory.
+  ## Must be a relative path. Max length is 800 characters.
+  ## Default to "hummock" if set to empty.
+  ##
+  dataDirectory: "hummock"
+
+  ## @section stateStore.s3 S3 values.
+  ##
+
+  s3:
+    ## @param stateStore.s3.enabled Use S3 state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+
+    ## @param stateStore.s3.endpoint S3 endpoint URL for S3-compatible object storages.
+    ##
+    endpoint: ""
+    ## @param stateStore.s3.region S3 region.
+    ##
+    region: ""
+    ## @param stateStore.s3.bucket S3 bucket.
+    ##
+    bucket: ""
+
+    ## @param stateStore.s3.forcePathStyle Enforce path style requests. If the value is false, the path could be one
+    ## of path style and virtual hosted style, depending on the endpoint format. For more details of the two styles, 
+    ## please refer to the documentation: https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+    ##
+    forcePathStyle: false
+    
+    authentication:
+      ## @param stateStore.s3.authentication.useServiceAccount Use S3 service account authentication.
+      ## If enabled, accessKey and secretAccessKey will be ignored.
+      ## Otherwise, accessKey and secretAccessKey are required and will be stored in a Secret.
+      ##
+      useServiceAccount: false
+      ## @param stateStore.s3.authentication.accessKey S3 access key.
+      ##
+      accessKey: ""
+      ## @param stateStore.s3.authentication.secretAccessKey S3 secret access key.
+      ##
+      secretAccessKey: ""
+      ## @param stateStore.s3.authentication.existingSecretName Use existing Secret for S3 authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY keys.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.minio MinIO values.
+  ## Parameters except stateStore.minio.enabled be ignored if tags.minio is enabled.
+  ##
+
+  minio:
+    ## @param stateStore.minio.enabled Use MinIO state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.minio.endpoint MinIO endpoint.
+    ##
+    endpoint: ""
+    ## @param stateStore.minio.bucket MinIO bucket.
+    ##
+    bucket: ""
+
+    authentication:
+      ## @param stateStore.minio.authentication.username MinIO username.
+      ##
+      username: ""
+      ## @param stateStore.minio.authentication.password MinIO password.
+      ##
+      password: ""
+      ## @param stateStore.minio.authentication.existingSecretName Use existing Secret for MinIO authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain MINIO_USERNAME and MINIO_PASSWORD keys.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.gcs GCS values.
+  ##
+
+  gcs:
+    ## @param stateStore.gcs.enabled Use GCS state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.gcs.bucket GCS bucket.
+    ##
+    bucket: ""
+
+    authentication:
+      ## @param stateStore.gcs.authentication.useServiceAccount Use GCS service account authentication.
+      ## If enabled, credentials will be ignored.
+      ## Otherwise, credentials is required and will be stored in a Secret.
+      ##
+      useServiceAccount: false
+      ## @param stateStore.gcs.authentication.credentials GCS credentials.
+      ##
+      credentials: ""
+      ## @param stateStore.gcs.authentication.existingSecretName Use existing Secret for GCS authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain GOOGLE_APPLICATION_CREDENTIALS key.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.oss Aliyun OSS values.
+  ##
+
+  oss:
+    ## @param stateStore.oss.enabled Use OSS state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.oss.region OSS region.
+    ##
+    region: ""
+    ## @param stateStore.oss.bucket OSS bucket.
+    ##
+    bucket: ""
+    ## @param stateStore.oss.root OSS root.
+    ##
+    root: ""
+    ## @param stateStore.oss.endpoint use internal OSS endpoint. Useful when using Alibaba Cloud ECS.
+    ##
+    useInternalEndpoint: false
+
+    authentication:
+      ## @param stateStore.oss.authentication.useServiceAccount Use OSS service account authentication.
+      ## If enabled, accessKey and secretAccessKey will be ignored.
+      ## Otherwise, accessKey and secretAccessKey are required and will be stored in a Secret.
+      ##
+      useServiceAccount: false
+      ## @param stateStore.oss.authentication.accessKey OSS access key.
+      ##
+      accessKey: ""
+      ## @param stateStore.oss.authentication.secretAccessKey OSS secret access key.
+      ##
+      secretAccessKey: ""
+      ## @param stateStore.oss.authentication.existingSecretName Use existing Secret for OSS authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain OSS_ACCESS_KEY_ID and OSS_ACCESS_KEY_SECRET keys.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.obs Huawei Cloud OBS values.
+  ##
+
+  obs:
+    ## @param stateStore.obs.enabled Use OSS state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.obs.region OSS region.
+    ##
+    region: ""
+    ## @param stateStore.obs.bucket OSS bucket.
+    ##
+    bucket: ""
+
+    authentication:
+      ## @param stateStore.obs.authentication.useServiceAccount Use OBS service account authentication.
+      ## If enabled, accessKey and secretAccessKey will be ignored.
+      ## Otherwise, accessKey and secretAccessKey are required and will be stored in a Secret.
+      ##
+      useServiceAccount: false
+      ## @param stateStore.obs.authentication.accessKey OBS access key.
+      ##
+      accessKey: ""
+      ## @param stateStore.obs.authentication.secretAccessKey OBS secret access key.
+      ##
+      secretAccessKey: ""
+      ## @param stateStore.obs.authentication.existingSecretName Use existing Secret for OBS authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain OBS_ACCESS_KEY_ID and OBS_SECRET_ACCESS_KEY keys.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.azblob Azure Blob Storage values.
+  ##
+
+  azblob:
+    ## @param stateStore.azblob.enabled Use Azure Blob Storage state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.azblob.endpoint Azure Blob Storage endpoint.
+    ##
+    endpoint: ""
+    ## @param stateStore.azblob.container Azure Blob Storage container.
+    ##
+    container: ""
+
+    authentication:
+      ## @param stateStore.azblob.authentication.useServiceAccount Use Azure Blob Storage service account authentication.
+      ## If enabled, accountName and accountKey will be ignored.
+      ## Otherwise, accountName and accountKey are required and will be stored in a Secret.
+      ##
+      useServiceAccount: false
+      ## @param stateStore.azblob.authentication.accountName Azure Blob Storage account name.
+      ##
+      accountName: ""
+      ## @param stateStore.azblob.authentication.accountKey Azure Blob Storage account key.
+      ##
+      accountKey: ""
+      ## @param stateStore.azblob.authentication.existingSecretName Use existing Secret for Azure Blob authentication.
+      ## If set, use the existing Secret instead of creating a new one.
+      ## Secret must contain AZBLOB_ACCOUNT_NAME and AZBLOB_ACCOUNT_KEY keys.
+      ##
+      existingSecretName: ""
+
+  ## @section stateStore.hdfs HDFS values.
+  ##
+
+  hdfs:
+    ## @param stateStore.hdfs.enabled Use HDFS state store. Only one state store backend can be enabled.
+    ##
+    enabled: false
+    ## @param stateStore.hdfs.nameNode HDFS name node.
+    ##
+    nameNode: ""
+
+  ## @section stateStore.localFs Local FS values.
+  ##
+
+  localFs:
+    ## @param stateStore.localFs.enabled Use local file system. For test purpose only.
+    ##
+    enabled: false
+
+    ## @param stateStore.localFs.path Local path.
+    ## Note: the path is non-persistent by default.
+    ##   If you would like to persist data, please create and mount PVCs to the path.
+    ##
+    path: data
+
+## @section RisingWave configuration values.
+##
+
+## @param configuration RisingWave configuration in toml.
+## Ref: https://github.com/risingwavelabs/risingwave/blob/main/src/config/example.toml
+##
+configuration: ""
+
+## @param existingConfigMap Name of existing ConfigMap containing RisingWave configuration.
+## The ConfigMap must contain a key named `risingwave.toml`. If set, `configuration` will be ignored.
+##
+existingConfigMap: ""
+
+## @section RisingWave components values.
+##
+
+compactMode:
+  ## @param compactMode.enabled Enable compact mode. Compact mode will merge frontend into compute pods.
+  ## When enabled, frontend.replicas and frontend.additionalContainers will be ignored.
+  ##
+  enabled: false
+
+metaComponent:
+  ## @param metaComponent.podLabels Labels to add to the component pods.
+  ##
+  podLabels: { }
+
+  ## @param metaComponent.podAnnotations Annotations to add to the component pods.
+  ##
+  podAnnotations: { }
+
+  ## @param metaComponent.extraEnvVars Extra environment variables to add to the component pods.
+  ##
+  extraEnvVars: [ ]
+
+  ## @param metaComponent.extraEnvVarsConfigMap Name of existing ConfigMap containing extra environment variables.
+  ##
+  extraEnvVarsConfigMap: ""
+
+  ## @param metaComponent.extraEnvVarsSecret Name of existing Secret containing extra environment variables.
+  ##
+  extraEnvVarsSecret: ""
+
+  ## @param metaComponent.extraVolumes Extra volumes to add to the component pods.
+  extraVolumes: []
+
+  ## @param metaComponent.extraVolumeMounts Extra volume mounts to add to the component pods.
+  extraVolumeMounts: []
+
+  ## @param metaComponent.replicas Number of replicas.
+  ##
+  replicas: 1
+
+  ## @param metaComponent.resources Resource requests and limits.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  resources:
+    limits: { }
+    requests: { }
+
+  ## @param metaComponent.podSecurityContext Pod security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  podSecurityContext: { }
+
+  ## @param metaComponent.securityContext Container security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  ## @param metaComponent.additionalContainers Additional containers to add to the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/
+  ##
+  additionalContainers: [ ]
+
+  ## @param metaComponent.nodeSelector Node labels for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  nodeSelector: { }
+
+  ## @param metaComponent.tolerations Tolerations for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: [ ]
+
+  ## @param metaComponent.affinity Affinity for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: { }
+
+  ## @param metaComponent.terminationGracePeriodSeconds Termination grace period in seconds.
+  ## Defaults to 1 seconds.
+  ##
+  terminationGracePeriodSeconds: 1
+
+  ## @param metaComponent.schedulerName Name of an alternate scheduler.
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## @param metaComponent.priorityClassName Name of an alternate priority class.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  ##
+  priorityClassName: ""
+
+  ## @param metaComponent.runtimeClassName Runtime class of the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
+
+  ## @param metaComponent.shareProcessNamespace Share a single process namespace between all the containers in a pod.
+  ## When this is set containers will be able to view and signal processes from other containers in the same pod,
+  ## and the first process in each container will not be assigned PID 1.
+  ## Defaults to false.
+  ##
+  shareProcessNamespace: false
+
+  ## @param metaComponent.rustLog Customize the RUST_LOG value.
+  ## See https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/config_log.html for how to
+  ## configure the logging for modules.
+  ## Defaults to INFO.
+  rustLog: INFO
+
+  ## @param metaComponent.rustBacktrace Customize the RUST_BACKTRACE value.
+  ## Defaults to full.
+  rustBacktrace: full
+
+  ## @param metaComponent.volumeClaimTemplates Persistent volume claim templates that can be referenced.
+  volumeClaimTemplates: [ ]
+
+  ## @param metaComponent.persistentVolumeClaimRetentionPolicy Policy that controls how PVCs are deleted.
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+
+  ## @param metaComponent.advertisingWithIP Enable advertising with IP.
+  ## Defaults to false.
+  ##
+  advertisingWithIP: false
+
+frontendComponent:
+  ## @param frontendComponent.podLabels Labels to add to the component pods.
+  ##
+  podLabels: { }
+
+  ## @param frontendComponent.podAnnotations Annotations to add to the component pods.
+  ##
+  podAnnotations: { }
+
+  ## @param frontendComponent.extraEnvVars Extra environment variables to add to the component pods.
+  ##
+  extraEnvVars: [ ]
+
+  ## @param frontendComponent.extraEnvVarsConfigMap Name of existing ConfigMap containing extra environment variables.
+  ##
+  extraEnvVarsConfigMap: ""
+
+  ## @param frontendComponent.extraEnvVarsSecret Name of existing Secret containing extra environment variables.
+  ##
+  extraEnvVarsSecret: ""
+
+  ## @param frontendComponent.extraVolumes Extra volumes to add to the component pods.
+  extraVolumes: []
+
+  ## @param frontendComponent.extraVolumeMounts Extra volume mounts to add to the component pods.
+  extraVolumeMounts: []
+
+  ## @param frontendComponent.replicas Number of replicas.
+  ##
+  replicas: 1
+
+  ## @param frontendComponent.resources Resource requests and limits.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  resources:
+    limits: { }
+    requests: { }
+
+  ## @param frontendComponent.podSecurityContext Pod security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  podSecurityContext: { }
+
+  ## @param frontendComponent.securityContext Container security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  ## @param frontendComponent.additionalContainers Additional containers to add to the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/
+  ##
+  additionalContainers: [ ]
+
+  ## @param frontendComponent.nodeSelector Node labels for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  nodeSelector: { }
+
+  ## @param frontendComponent.tolerations Tolerations for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: [ ]
+
+  ## @param frontendComponent.affinity Affinity for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: { }
+
+  ## @param frontendComponent.terminationGracePeriodSeconds Termination grace period in seconds.
+  ## Defaults to 10 seconds.
+  ##
+  terminationGracePeriodSeconds: 10
+
+  ## @param frontendComponent.schedulerName Name of an alternate scheduler.
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## @param frontendComponent.priorityClassName Name of an alternate priority class.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  ##
+  priorityClassName: ""
+
+  ## @param frontendComponent.runtimeClassName Runtime class of the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
+
+  ## @param frontendComponent.shareProcessNamespace Share a single process namespace between all the containers in a pod.
+  ## When this is set containers will be able to view and signal processes from other containers in the same pod,
+  ## and the first process in each container will not be assigned PID 1.
+  ## Defaults to false.
+  ##
+  shareProcessNamespace: false
+
+  ## @param frontendComponent.rustLog Customize the RUST_LOG value.
+  ## See https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/config_log.html for how to
+  ## configure the logging for modules.
+  ## Defaults to INFO.
+  rustLog: INFO
+
+  ## @param frontendComponent.rustBacktrace Customize the RUST_BACKTRACE value.
+  ## Defaults to full.
+  rustBacktrace: full
+
+  ## @param frontendComponent.embeddedServing Embed serving node in frontend.
+  ## If enabled, the compute nodes will be used for streaming only.
+  ## Defaults to false.
+  ##
+  embeddedServing: false
+
+computeComponent:
+  ## @param computeComponent.podLabels Labels to add to the component pods.
+  ##
+  podLabels: { }
+
+  ## @param computeComponent.podAnnotations Annotations to add to the component pods.
+  ##
+  podAnnotations: { }
+
+  ## @param computeComponent.extraEnvVars Extra environment variables to add to the component pods.
+  ##
+  extraEnvVars: [ ]
+
+  ## @param computeComponent.extraEnvVarsConfigMap Name of existing ConfigMap containing extra environment variables.
+  ##
+  extraEnvVarsConfigMap: ""
+
+  ## @param computeComponent.extraEnvVarsSecret Name of existing Secret containing extra environment variables.
+  ##
+  extraEnvVarsSecret: ""
+
+  ## @param computeComponent.extraVolumes Extra volumes to add to the component pods.
+  extraVolumes: []
+
+  ## @param computeComponent.extraVolumeMounts Extra volume mounts to add to the component pods.
+  extraVolumeMounts: []
+
+  ## @param computeComponent.replicas Number of replicas.
+  ##
+  replicas: 1
+
+  ## @param computeComponent.autoscaling Compute Pod horizontal Pod Autoscalers
+  ## Reference: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#container-resource-metrics
+  autoscaling:
+    enabled: false
+    maxReplicas: 5
+    metrics: { }
+    behavior: { }
+
+  ## @param computeComponent.resources Resource requests and limits.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  resources:
+    limits: { }
+    requests: { }
+
+  ## @param computeComponent.podSecurityContext Pod security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  podSecurityContext: { }
+
+  ## @param computeComponent.securityContext Container security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  ## @param computeComponent.additionalContainers Additional containers to add to the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/
+  ##
+  additionalContainers: [ ]
+
+  ## @param computeComponent.nodeSelector Node labels for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  nodeSelector: { }
+
+  ## @param computeComponent.tolerations Tolerations for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: [ ]
+
+  ## @param computeComponent.affinity Affinity for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: { }
+
+  ## @param computeComponent.terminationGracePeriodSeconds Termination grace period in seconds.
+  ## Defaults to 1 seconds.
+  ##
+  terminationGracePeriodSeconds: 1
+
+  ## @param computeComponent.schedulerName Name of an alternate scheduler.
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## @param computeComponent.priorityClassName Name of an alternate priority class.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  ##
+  priorityClassName: ""
+
+  ## @param computeComponent.runtimeClassName Runtime class of the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
+
+  ## @param computeComponent.shareProcessNamespace Share a single process namespace between all the containers in a pod.
+  ## When this is set containers will be able to view and signal processes from other containers in the same pod,
+  ## and the first process in each container will not be assigned PID 1.
+  ## Defaults to false.
+  ##
+  shareProcessNamespace: false
+
+  ## @param computeComponent.rustLog Customize the RUST_LOG value.
+  ## See https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/config_log.html for how to
+  ## configure the logging for modules.
+  ## Defaults to INFO.
+  rustLog: INFO
+
+  ## @param computeComponent.rustBacktrace Customize the RUST_BACKTRACE value.
+  ## Defaults to full.
+  rustBacktrace: full
+
+  ## @param computeComponent.volumeClaimTemplates Persistent volume claim templates that can be referenced.
+  volumeClaimTemplates: [ ]
+
+  ## @param computeComponent.persistentVolumeClaimRetentionPolicy Policy that controls how PVCs are deleted.
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+
+  ## @param autoDeregistration Auto-deregistration of compute pods. If enabled, compute pods will be
+  ## automatically deregistered from the meta store when they are deleted.
+  ##
+  autoDeregistration:
+    ## @param autoDeregistration.enabled Enable auto-deregistration.
+    enabled: false
+
+  ## @param metaComponent.advertisingWithIP Enable advertising with IP.
+  ## Defaults to false.
+  ##
+  advertisingWithIP: false
+
+compactorComponent:
+  ## @param compactorComponent.podLabels Labels to add to the component pods.
+  ##
+  podLabels: { }
+
+  ## @param compactorComponent.podAnnotations Annotations to add to the component pods.
+  ##
+  podAnnotations: { }
+
+  ## @param compactorComponent.extraEnvVars Extra environment variables to add to the component pods.
+  ##
+  extraEnvVars: [ ]
+
+  ## @param compactorComponent.extraEnvVarsConfigMap Name of existing ConfigMap containing extra environment variables.
+  ##
+  extraEnvVarsConfigMap: ""
+
+  ## @param compactorComponent.extraEnvVarsSecret Name of existing Secret containing extra environment variables.
+  ##
+  extraEnvVarsSecret: ""
+
+  ## @param compactorComponent.extraVolumes Extra volumes to add to the component pods.
+  extraVolumes: []
+
+  ## @param compactorComponent.extraVolumeMounts Extra volume mounts to add to the component pods.
+  extraVolumeMounts: []
+
+  ## @param compactorComponent.replicas Number of replicas.
+  ##
+  replicas: 1
+
+  ## @param compactorComponent.resources Resource requests and limits.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  resources:
+    limits: { }
+    requests: { }
+
+  ## @param compactorComponent.podSecurityContext Pod security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  podSecurityContext: { }
+
+  ## @param compactorComponent.securityContext Container security context.
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  ## @param compactorComponent.additionalContainers Additional containers to add to the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/
+  ##
+  additionalContainers: [ ]
+
+  ## @param compactorComponent.nodeSelector Node labels for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  nodeSelector: { }
+
+  ## @param compactorComponent.tolerations Tolerations for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: [ ]
+
+  ## @param compactorComponent.affinity Affinity for pod assignment.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: { }
+
+  ## @param compactorComponent.terminationGracePeriodSeconds Termination grace period in seconds.
+  ## Defaults to 1 seconds.
+  ##
+  terminationGracePeriodSeconds: 1
+
+  ## @param compactorComponent.schedulerName Name of an alternate scheduler.
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## @param compactorComponent.priorityClassName Name of an alternate priority class.
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  ##
+  priorityClassName: ""
+
+  ## @param compactorComponent.runtimeClassName Runtime class of the component pods.
+  ## Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
+
+  ## @param compactorComponent.shareProcessNamespace Share a single process namespace between all the containers in a pod.
+  ## When this is set containers will be able to view and signal processes from other containers in the same pod,
+  ## and the first process in each container will not be assigned PID 1.
+  ## Defaults to false.
+  ##
+  shareProcessNamespace: false
+
+  ## @param compactorComponent.rustLog Customize the RUST_LOG value.
+  ## See https://rust-lang-nursery.github.io/rust-cookbook/development_tools/debugging/config_log.html for how to
+  ## configure the logging for modules.
+  ## Defaults to INFO.
+  rustLog: INFO
+
+  ## @param compactorComponent.rustBacktrace Customize the RUST_BACKTRACE value.
+  ## Defaults to full.
+  rustBacktrace: full
+
+## @section RisingWave container ports. No need to change in most cases.
+##
+
+ports:
+  meta:
+    ## @param ports.meta.svc Port for the meta service.
+    ##
+    svc: 5690
+    ## @param ports.meta.dashboard Port for the meta dashboard service.
+    ##
+    dashboard: 5691
+    ## @param ports.meta.metrics Port for the meta metrics service.
+    ##
+    metrics: 1250
+  compute:
+    ## @param ports.compute.svc Port for the compute service.
+    ##
+    svc: 5688
+    ## @param ports.compute.metrics Port for the compute metrics service.
+    ##
+    metrics: 1222
+  frontend:
+    ## @param ports.frontend.svc Port for the frontend service.
+    ##
+    svc: 4567
+    ## @param ports.frontend.metrics Port for the frontend metrics service.
+    ##
+    metrics: 8080
+  compactor:
+    ## @param ports.compactor.svc Port for the compactor service.
+    ##
+    svc: 6660
+    ## @param ports.compactor.metrics Port for the compactor metrics service.
+    ##
+    metrics: 1260
+
+## @section RisingWave monitor.
+##
+
+monitor:
+  ## Annotations for Prometheus job discovery.
+  ## ref: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+  ##
+  annotations:
+    ## @param monitor.annotations.enabled Enable annotations for Prometheus job discovery.
+    ## If enabled, annotations will be added to the pods for Prometheus job discovery. The following annotations
+    ## will be added to the pods:
+    ##    prometheus.io/scrape: "true"
+    ##    prometheus.io/port: "<port-number>"
+    ##    prometheus.io/path: "/metrics"
+    ##
+    enabled: false
+
+  ## Prometheus Pod Monitor
+  ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#endpoint
+  ##
+  podMonitor:
+    ## @param monitor.podMonitor.enabled Create PodMonitor Resource for scraping metrics using PrometheusOperator
+    ##
+    enabled: false
+    ## @param monitor.podMonitor.namespace Namespace in which Prometheus is running. If set to empty, the PodMonitor
+    ## will be created in release namespace.
+    ##
+    namespace: ""
+    ## @param monitor.podMonitor.interval Specify the interval at which metrics should be scraped
+    ##
+    interval: 5s
+    ## @param monitor.podMonitor.scrapeTimeout Specify the timeout after which the scrape is ended
+    ##
+    scrapeTimeout: 5s
+    ## @param monitor.podMonitor.additionalLabels [object] Additional labels that can be used so PodMonitors will be discovered by Prometheus
+    ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+    ##
+    additionalLabels: { }
+    ## @param monitor.podMonitor.scheme Scheme to use for scraping
+    ##
+    scheme: http
+    ## @param monitor.podMonitor.tlsConfig [object] TLS configuration used for scrape endpoints used by Prometheus
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#tlsconfig
+    ## e.g:
+    ## tlsConfig:
+    ##   ca:
+    ##     secret:
+    ##       name: existingSecretName
+    ##
+    tlsConfig: { }
+    ## @param monitor.podMonitor.relabelings [array] Prometheus relabeling rules
+    ##
+    relabelings: [ ]
+
+## @section RisingWave auth.
+##
+
+auth:
+  ## @param auth.rootUser Root username.
+  ##
+  rootUser: root
+  ## @param auth.rootPassword Root password.
+  ## Empty string means no password.
+  ##
+  rootPassword: ""
+  ## @param auth.existingSecretName Use existing Secret to provide root password.
+  ## If set, value of rootPassword will be ignored.
+  ## Secret must contain `root-password` key.
+  ##
+  existingSecretName: ""
+
+## @section RisingWave databases.
+##
+
+## @param databases [array] List of databases.
+## Will be used to create databases after the first start.
+##
+databases: [ ]
+
+## @section Misc.
+##
+
+## @param wait Wait for the RisingWave cluster to be ready.
+##
+wait: false
+
+postgresqlClient:
+  ## @param postgresqlClient.image PostgreSQL image for client usages.
+  ##
+  image: postgres:16.2
+
+busybox:
+  ## @param busybox.image Busybox image.
+  ##
+  image: busybox:1.36
+
+bash:
+  ## @param bash.image Bash image.
+  ##
+  image: bash:5.2
+
+## @section Cloud.
+##
+
+cloud:
+  ## @param cloud.aliyun Aliyun cloud configuration.
+  ##
+  aliyun:
+    ## @param Aliyun STS configuration.
+    ##
+    sts:
+      ## @param sts.endpoint Aliyun STS endpoint. If not set, the default endpoint will be used.
+      ## The default endpoint is https://sts.aliyuncs.com. If set, the following parameters will be ignored.
+      ## Ref: https://www.alibabacloud.com/help/en/ram/developer-reference/api-sts-2015-04-01-endpoint
+      ##
+      endpoint: ""
+
+      ## @param sts.region Aliyun STS region. If not set, the default STS region will be used.
+      ##
+      region: ""
+
+      ## @param sts.useVPCEndpoint Whether to use VPC endpoint to access STS service.
+      ## This only works when endpoint is not set and region is set.
+      ##
+      useVPCEndpoint: false
