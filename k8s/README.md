@@ -31,6 +31,7 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**knative**](./knative/). Deploy serverless workloads with Knative.
 - [**kubebuilder-at**](./kubebuilder-at/). Build your own CRD with the Kubebuilder tool.
 - [**kubeflow-aws**](./kubeflow-aws/). Deploy Kubeflow on AWS.
+- [**localstack**](./localstack/). Deploy AWS localstack for simulating AWS services.
 - [**manifests**](./manifests/). Bunch of k8s manifest samples.
 - [**metrics-server**](./metrics-server/). Install the metrics server into your k8s.
 - [**minikube**](./minikube/). Run a minikube cluster.
