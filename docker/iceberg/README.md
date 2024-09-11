@@ -2,6 +2,8 @@
 
 ```sh
 $ git clone git@github.com:tabular-io/docker-spark-iceberg.git
+$ cd docker-spark-iceberg
+$ docker-compose up -d
 $ docker exec -it spark-iceberg pyspark
 ```
 

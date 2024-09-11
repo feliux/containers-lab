@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	connStr string = "postgres://root@localhost:4567/dev"
-	sqlFile string = "./sql/kinesis-to-iceberg.sql"
+	connStr       string = "postgres://root@localhost:4567/dev"
+	sqlFile       string = "./sql/kinesis-to-iceberg.sql"
+	sourceJobName string = "create-kinesis-source"
+	sinkJobName   string = "create-iceberg-sink"
 )
 
 func main() {
@@ -26,13 +28,13 @@ func main() {
 		log.Fatalf("Error loading sql: %v\n", err)
 	}
 	// Source
-	_, err = dot.Exec(db, "create-kinesis-source")
+	_, err = dot.Exec(db, sourceJobName)
 	if err != nil {
 		log.Fatalf("Error executing create table: %v\n", err)
 	}
 
 	// Sink
-	_, err = dot.Exec(db, "create-iceberg-sink")
+	_, err = dot.Exec(db, sinkJobName)
 	if err != nil {
 		log.Fatalf("Error executing create sink: %v\n", err)
 	}
