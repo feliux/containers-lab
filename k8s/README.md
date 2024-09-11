@@ -29,7 +29,9 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**kafka-kraft**](./kafka-kraft/). Deploy Kafka over Kraft (without ZooKeper).
 - [**kind**](./kind/). Run a cluster using kind.
 - [**knative**](./knative/). Deploy serverless workloads with Knative.
+- [**kubebuilder-at**](./kubebuilder-at/). Build your own CRD with the Kubebuilder tool.
 - [**kubeflow-aws**](./kubeflow-aws/). Deploy Kubeflow on AWS.
+- [**localstack**](./localstack/). Deploy AWS localstack for simulating AWS services.
 - [**manifests**](./manifests/). Bunch of k8s manifest samples.
 - [**metrics-server**](./metrics-server/). Install the metrics server into your k8s.
 - [**minikube**](./minikube/). Run a minikube cluster.
@@ -37,8 +39,10 @@ Go to [k8s-hardening](https://github.com/powned/k8s-hardening) to checkout my pr
 - [**nginx**](./nginx/). Deploy Nginx Helm Chart ingress controller.
 - [**nuclio**](./nuclio/). Deploy serverless workloads with Nuclio.
 - [**openfaas**](./openfaas/). Deploy OpenFaaS on k8s.
+- [**operator-sdk-memcache**](./operator-sdk-memcache/). Build your own CRD with the Operator SDK.
 - [**pinponfel**](./pinponfel/). Personal app.
 - [**rabbitmq**](./rabbitmq/). Deploy RabbitMQ Helm Chart.
+- [**risingwave**](./risingwave/). Deploy RisingWave Helm Chart.
 - [**sonarqube**](./sonarqube/). Deploy SonarQube Helm Chart.
 - [**sysdig**](./sysdig/). Harden and check security concerns using sysdig installed on your cluster.
 - [**tekton**](./tekton/). Run your pipelines in k8s.
