@@ -26,6 +26,7 @@
 - [**mssql**](./mssql/). Deploy a simple Microsoft Server SQL.
 - [**mysql**](./mysql/). Deploy a simple MySQL instance.
 - [**nessus**](./nessus/). Scan vulnerabilities with Nessus.
+- [**odoo**](./odoo/). ERP and CRM open source.
 - [**postman**](./postman/). Dockerfile for Postman.
 - [**R**](./R). Deploy R services for data science.
 - [**rabbitmq**](./rabbitmq/).
